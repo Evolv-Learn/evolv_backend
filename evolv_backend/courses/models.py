@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django_countries.fields import CountryField
 
 # Create your models here.
 LOCATION_TYPE_CHOICES = [
@@ -42,6 +43,7 @@ class Course(models.Model):
     software_tools = models.TextField(help_text="List of software and languages covered")
     instructor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='courses')
     locations = models.ManyToManyField(Location, related_name='courses')  # A course can be offered at multiple locations
+    partners = models.ManyToManyField('Partner', related_name='courses')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -56,6 +58,7 @@ class Alumni(models.Model):
     graduation_year = models.IntegerField()
     current_position = models.CharField(max_length=255)
     success_story = models.TextField()
+    course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='alumni')
     location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, blank=True, related_name="alumni")
 
     def __str__(self):
@@ -69,6 +72,8 @@ class Event(models.Model):
     description = models.TextField()
     date = models.DateTimeField()
     location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, blank=True, related_name="events")
+    course = models.ForeignKey('Course', on_delete=models.SET_NULL, null=True)
+    partners = models.ManyToManyField('Partner', related_name='events')
     is_virtual = models.BooleanField(default=False)
 
     def __str__(self):
@@ -95,6 +100,7 @@ class TeamMember(models.Model):
     bio = models.TextField(blank=True, null=True)
     linkedin = models.URLField(blank=True, null=True)
     twitter = models.URLField(blank=True, null=True)
+    core_values = models.ManyToManyField('CoreValue', related_name='team_members')
 
     def __str__(self):
         return f"{self.name} - {self.role}"
@@ -112,7 +118,9 @@ class CoreValue(models.Model):
 class Review(models.Model):
     about_us = models.ForeignKey(AboutUs, on_delete=models.CASCADE, related_name="reviews")
     name = models.CharField(max_length=255)
-    review_text = models.TextField()
+    review_text_comment = models.TextField()
+    course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='reviews')
+    alumni = models.ForeignKey('Alumni', on_delete=models.CASCADE, related_name='reviews')
     rating = models.IntegerField(default=5, help_text="Rating out of 5")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -158,3 +166,72 @@ class Lesson(models.Model):
 
     def __str__(self):
         return f"{self.module.title} - {self.title}"
+
+
+class Student(models.Model):
+    GENDER_CHOICES = [
+        ('Male', 'Male'),
+        ('Female', 'Female'),
+        ('Other', 'Other'),
+    ]
+
+    DIPLOMA_LEVEL_CHOICES = [
+        ('PhD', 'PhD'),
+        ('Master', 'Master'),
+        ('Bachelor', 'Bachelor'),
+        ('Secondary School', 'Secondary School'),
+        ('No Option', 'No Option'),
+    ]
+
+    ENGLISH_LEVEL_CHOICES = [(i, str(i)) for i in range(1, 6)]  # Levels 1-5
+
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=20)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
+    birth_date = models.DateField()
+    zip_code = models.CharField(max_length=20)
+    country_of_birth = CountryField()  # Dropdown with all countries
+    nationality = CountryField()  # Dropdown with all countries
+    register_number = models.CharField(max_length=50, blank=True, null=True)
+    diploma_level = models.CharField(max_length=20, choices=DIPLOMA_LEVEL_CHOICES)
+    job_status = models.CharField(max_length=50)
+    motivation = models.TextField()
+    future_goals = models.TextField()
+    proudest_moment = models.TextField()
+    english_level = models.IntegerField(choices=ENGLISH_LEVEL_CHOICES)
+    how_heard = models.CharField(max_length=100)
+    referral_person = models.CharField(max_length=100, blank=True, null=True)
+    has_laptop = models.BooleanField()
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.email}"
+    
+# Partners model
+class Partner(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    website = models.URLField(blank=True, null=True)
+    contact_email = models.EmailField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+# Selection Procedure model
+class SelectionProcedure(models.Model):
+    step_name = models.CharField(max_length=200)
+    description = models.TextField()
+    order = models.PositiveIntegerField()  # To define the order of steps in the procedure
+
+    def __str__(self):
+        return self.step_name
+    
+
+class ContactUs(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)  # Email is required and must be unique
+    message = models.TextField()
+
+    def __str__(self):
+        return f"Message from {self.name} - {self.email}"
