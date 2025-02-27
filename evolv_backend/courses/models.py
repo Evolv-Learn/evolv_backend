@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django_countries.fields import CountryField
+from dateutil.relativedelta import relativedelta
 
 # Create your models here.
 LOCATION_TYPE_CHOICES = [
@@ -118,7 +119,7 @@ class CoreValue(models.Model):
 class Review(models.Model):
     about_us = models.ForeignKey(AboutUs, on_delete=models.CASCADE, related_name="reviews")
     name = models.CharField(max_length=255)
-    review_text_comment = models.TextField()
+    review_text= models.TextField()
     course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='reviews')
     alumni = models.ForeignKey('Alumni', on_delete=models.CASCADE, related_name='reviews')
     rating = models.IntegerField(default=5, help_text="Rating out of 5")
@@ -135,9 +136,20 @@ class LearningSchedule(models.Model):
     end_date = models.DateField()
     instructor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="schedules")
     location = models.ForeignKey("Location", on_delete=models.CASCADE, related_name="schedules")
+    duration = models.IntegerField(blank=True, null=True)  # Duration in months (optional field)
+
+    def save(self, *args, **kwargs):
+        # Automatically calculate the duration in months when saving
+        if self.start_date and self.end_date:
+            # Calculate the difference using relativedelta
+            delta = relativedelta(self.end_date, self.start_date)
+            # The duration is calculated as the number of full months
+            self.duration = (delta.years * 12) + delta.months
+        super(LearningSchedule, self).save(*args, **kwargs)
     
+
     def __str__(self):
-        return f"{self.course.name} - {self.start_date} to {self.end_date}"
+        return f"Schedule for {self.course.name} from {self.start_date} to {self.end_date}"
 
 # Module Model (Course Breakdown)
 class Module(models.Model):
