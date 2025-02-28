@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Course, Location, Alumni, Event, AboutUs, TeamMember, CoreValue, Review, LearningSchedule
-from .models import Module, Lesson, Student, ContactUs, Partner, SelectionProcedure
+from .models import Module, Lesson, Student, ContactUs, Partner, SelectionProcedure, StudentSelection, Profile, EventAttendance
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
@@ -36,3 +36,6 @@ admin.site.register(Review)
 admin.site.register(LearningSchedule)
 admin.site.register(Module)
 admin.site.register(Lesson)
+admin.site.register(StudentSelection)
+admin.site.register(EventAttendance)
+admin.site.register(Profile)
