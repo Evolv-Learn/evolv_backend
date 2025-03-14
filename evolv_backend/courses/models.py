@@ -83,7 +83,7 @@ class Alumni(models.Model):
     current_position = models.CharField(max_length=255)
     success_story = models.TextField()
     course = models.ForeignKey(
-        "Course", on_delete=models.CASCADE, related_name="alumni"
+        "Course", on_delete=models.CASCADE, related_name="alumni", null=True, blank=True
     )
     location = models.ForeignKey(
         Location,
@@ -161,15 +161,15 @@ class CoreValue(models.Model):
 # Reviews/Testimonials Model
 class Review(models.Model):
     about_us = models.ForeignKey(
-        AboutUs, on_delete=models.CASCADE, related_name="reviews"
+        AboutUs, on_delete=models.CASCADE, related_name="reviews", null=True, blank=True
     )
     name = models.CharField(max_length=255)
     review_text = models.TextField()
     course = models.ForeignKey(
-        "Course", on_delete=models.CASCADE, related_name="reviews"
+        "Course", on_delete=models.CASCADE, related_name="reviews", null=True, blank=True
     )
     alumni = models.ForeignKey(
-        "Alumni", on_delete=models.CASCADE, related_name="reviews"
+        "Alumni", on_delete=models.CASCADE, related_name="reviews", null=True, blank=True
     )
     rating = models.IntegerField(default=5, help_text="Rating out of 5")
     created_at = models.DateTimeField(auto_now_add=True)
