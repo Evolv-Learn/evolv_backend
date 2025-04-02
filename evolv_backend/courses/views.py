@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import generics, permissions
@@ -11,13 +12,24 @@ from .serializers import (ProfileSerializer, LocationSerializer, PartnerSerializ
                         CourseSerializer, StudentSerializer, SelectionProcedureSerializer, 
                         StudentSelectionSerializer, ContactUsSerializer,EventAttendanceSerializer,
                         AlumniSerializer, EventSerializer, AboutUsSerializer, TeamMemberSerializer,
-                        CoreValueSerializer, ReviewSerializer, LearningScheduleSerializer, ModuleSerializer, LessonSerializer)
+                        CoreValueSerializer, ReviewSerializer, LearningScheduleSerializer, 
+                        ModuleSerializer, LessonSerializer, UserProfileCreateSerializer)
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def secure_data(request):
     return Response({"message": "This is a protected API!"})
+
+
+class RegisterUserView(generics.CreateAPIView):
+    """
+    API endpoint for user registration.
+    """
+    queryset = get_user_model().objects.all()
+    serializer_class = UserProfileCreateSerializer
+   #permission_classes = [permissions.AllowAny] 
+
 
 
 class ProfileDetailView(generics.RetrieveUpdateAPIView):
@@ -37,7 +49,7 @@ class LocationListCreateView(generics.ListCreateAPIView):
     """
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
-    permission_classes = [permissions.AllowAny]  # Open to all users
+    permission_classes = []  # Open to all users
 
 
 class LocationDetailView(generics.RetrieveUpdateDestroyAPIView):
