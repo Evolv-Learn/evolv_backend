@@ -1,8 +1,23 @@
+from django.contrib.auth.models import User, AbstractUser, Group, Permission
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django_countries.fields import CountryField
 from dateutil.relativedelta import relativedelta
 
+class CustomUser(AbstractUser):
+    """
+    Custom user model that extends Django's AbstractUser.
+    """
+    email = models.EmailField(unique=True)  # Ensure unique emails
+
+    # Fix the reverse accessor issue
+    groups = models.ManyToManyField(Group, related_name="customuser_groups", blank=True)
+    user_permissions = models.ManyToManyField(
+        Permission, related_name="customuser_permissions", blank=True
+    )
+
+    def __str__(self):
+        return self.username
 
 class Profile(models.Model):
     USER_ROLES = [
@@ -10,7 +25,7 @@ class Profile(models.Model):
         ("Instructor", "Instructor"),
         ("Alumni", "Alumni"),
     ]
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
     role = models.CharField(max_length=20, choices=USER_ROLES)
 
 
@@ -62,7 +77,7 @@ class Course(models.Model):
         help_text="List of software and languages covered"
     )
     instructor = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="courses"
+        get_user_model(), on_delete=models.SET_NULL, null=True, related_name="courses"
     )
     locations = models.ManyToManyField(
         Location, related_name="courses"
@@ -78,7 +93,7 @@ class Course(models.Model):
 
 # Alumni Model (Linked to Location)
 class Alumni(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
     graduation_year = models.IntegerField()
     current_position = models.CharField(max_length=255)
     success_story = models.TextField()
@@ -186,7 +201,7 @@ class LearningSchedule(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     instructor = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="schedules"
+        get_user_model(), on_delete=models.SET_NULL, null=True, blank=True, related_name="schedules"
     )
     location = models.ForeignKey(
         "Location", on_delete=models.CASCADE, related_name="schedules"

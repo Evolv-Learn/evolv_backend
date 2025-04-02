@@ -7,10 +7,11 @@ from .views import (ProfileDetailView, LocationListCreateView, LocationDetailVie
                     AlumniListCreateView, AlumniDetailView, EventListCreateView, EventDetailView,
                     AboutUsListCreateView, TeamMemberListCreateView, CoreValueListCreateView,
                     ReviewListCreateView, LearningScheduleListCreateView, ModuleListCreateView,
-                    LessonListCreateView)
+                    LessonListCreateView, RegisterUserView)
 
 
 urlpatterns = [
+    path("register/", RegisterUserView.as_view(), name="register"),
     path("profile/", ProfileDetailView.as_view(), name="profile-detail"),
 
     path("locations/", LocationListCreateView.as_view(), name="location-list"),

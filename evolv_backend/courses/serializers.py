@@ -20,6 +20,44 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ["id", "user", "role"]
 
 
+class UserProfileCreateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating a User and Profile together.
+    """
+    role = serializers.ChoiceField(choices=Profile.USER_ROLES)  # Allow role selection
+    password = serializers.CharField(write_only=True)  # Ensure password is hidden
+    token = serializers.SerializerMethodField()  # Add token field
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "first_name", "last_name", "email", "password", "role", "token"]
+
+    def validate_email(self, value):
+        """Ensure email is unique"""
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("This email is already registered.")
+        return value
+
+    def get_token(self, obj):
+        """Return authentication token after user creation"""
+        from rest_framework.authtoken.models import Token
+        token, created = Token.objects.get_or_create(user=obj)
+        return token.key
+
+    def create(self, validated_data):
+        """Create both User and Profile, and return authentication token"""
+        role = validated_data.pop("role")  # Extract role from data
+        password = validated_data.pop("password")  # Extract password
+        user = User(**validated_data)
+        user.set_password(password)  # Hash password before saving
+        user.save()
+
+        # Create Profile
+        Profile.objects.create(user=user, role=role)
+
+        return user  # Will return with token due to get_token method
+
+
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
