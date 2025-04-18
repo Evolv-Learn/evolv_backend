@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'authentication',
     'rest_framework',
+    'rest_framework.authtoken',
     'rest_framework_simplejwt',
 
     'django.contrib.admin',
@@ -92,7 +93,7 @@ DATABASES = {
     }
 }
 
-AUTH_USER_MODEL = "courses.CustomUser"
+AUTH_USER_MODEL = 'courses.CustomUser'
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -136,12 +137,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',  # Require authentication by default
-    ),
+    ],
 }
 
 SIMPLE_JWT = {

@@ -4,10 +4,12 @@ from django.contrib.auth import get_user_model
 from django_countries.fields import CountryField
 from dateutil.relativedelta import relativedelta
 
+
 class CustomUser(AbstractUser):
     """
     Custom user model that extends Django's AbstractUser.
     """
+
     email = models.EmailField(unique=True)  # Ensure unique emails
 
     # Fix the reverse accessor issue
@@ -18,6 +20,7 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+
 
 class Profile(models.Model):
     USER_ROLES = [
@@ -54,6 +57,17 @@ class Location(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.location_type})"
+
+
+# Partners model
+class Partner(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    website = models.URLField(blank=True, null=True)
+    contact_email = models.EmailField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
 
 
 # Course Model
@@ -181,10 +195,18 @@ class Review(models.Model):
     name = models.CharField(max_length=255)
     review_text = models.TextField()
     course = models.ForeignKey(
-        "Course", on_delete=models.CASCADE, related_name="reviews", null=True, blank=True
+        "Course",
+        on_delete=models.CASCADE,
+        related_name="reviews",
+        null=True,
+        blank=True,
     )
     alumni = models.ForeignKey(
-        "Alumni", on_delete=models.CASCADE, related_name="reviews", null=True, blank=True
+        "Alumni",
+        on_delete=models.CASCADE,
+        related_name="reviews",
+        null=True,
+        blank=True,
     )
     rating = models.IntegerField(default=5, help_text="Rating out of 5")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -201,7 +223,11 @@ class LearningSchedule(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     instructor = models.ForeignKey(
-        get_user_model(), on_delete=models.SET_NULL, null=True, blank=True, related_name="schedules"
+        get_user_model(),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="schedules",
     )
     location = models.ForeignKey(
         "Location", on_delete=models.CASCADE, related_name="schedules"
@@ -304,17 +330,6 @@ class Student(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} - {self.email}"
-
-
-# Partners model
-class Partner(models.Model):
-    name = models.CharField(max_length=200)
-    description = models.TextField()
-    website = models.URLField(blank=True, null=True)
-    contact_email = models.EmailField(blank=True, null=True)
-
-    def __str__(self):
-        return self.name
 
 
 # Selection Procedure model
