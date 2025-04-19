@@ -169,22 +169,9 @@ class TeamMember(models.Model):
     bio = models.TextField(blank=True, null=True)
     linkedin = models.URLField(blank=True, null=True)
     twitter = models.URLField(blank=True, null=True)
-    core_values = models.ManyToManyField("CoreValue", related_name="team_members")
 
     def __str__(self):
         return f"{self.name} - {self.role}"
-
-
-# Core Values Model
-class CoreValue(models.Model):
-    about_us = models.ForeignKey(
-        AboutUs, on_delete=models.CASCADE, related_name="values"
-    )
-    title = models.CharField(max_length=255)
-    description = models.TextField()
-
-    def __str__(self):
-        return self.title
 
 
 # Reviews/Testimonials Model
@@ -332,28 +319,6 @@ class Student(models.Model):
         return f"{self.first_name} {self.last_name} - {self.email}"
 
 
-# Selection Procedure model
-class SelectionProcedure(models.Model):
-    step_name = models.CharField(max_length=200)
-    description = models.TextField()
-    order = (
-        models.PositiveIntegerField()
-    )  # To define the order of steps in the procedure
-
-    def __str__(self):
-        return self.step_name
-
-
-class StudentSelection(models.Model):
-    student = models.ForeignKey(
-        Student, on_delete=models.CASCADE, related_name="selection_steps"
-    )
-    step = models.ForeignKey(SelectionProcedure, on_delete=models.CASCADE)
-    status = models.CharField(
-        max_length=50, choices=[("Pending", "Pending"), ("Completed", "Completed")]
-    )
-    updated_at = models.DateTimeField(auto_now=True)
-
 
 class ContactUs(models.Model):
     name = models.CharField(max_length=100)
@@ -362,13 +327,3 @@ class ContactUs(models.Model):
 
     def __str__(self):
         return f"Message from {self.name} - {self.email}"
-
-
-class EventAttendance(models.Model):
-    event = models.ForeignKey(
-        Event, on_delete=models.CASCADE, related_name="attendances"
-    )
-    student = models.ForeignKey(
-        Student, on_delete=models.CASCADE, related_name="event_attendances"
-    )
-    attended = models.BooleanField(default=False)

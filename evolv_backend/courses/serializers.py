@@ -1,9 +1,8 @@
 from rest_framework import serializers
 #rom django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
-from .models import (Profile, Location, Partner, Course, Student, LearningSchedule, SelectionProcedure, 
-                    StudentSelection,  ContactUs, EventAttendance,  Alumni, Event, AboutUs, TeamMember,
-                    CoreValue, Review, LearningSchedule, Module, Lesson)
+from .models import (Profile, Location, Partner, Course, Student, LearningSchedule, ContactUs, Alumni, Event, AboutUs, TeamMember,
+                    Review, LearningSchedule, Module, Lesson)
 from rest_framework.authtoken.models import Token
 
 User = get_user_model()
@@ -104,24 +103,45 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class StudentSerializer(serializers.ModelSerializer):
-    courses = serializers.StringRelatedField(many=True)  # Display course names
-    schedules = serializers.StringRelatedField(many=True)  # Display schedule details
-
+class AlumniSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Student
+        model = Alumni
         fields = "__all__"
 
 
-class SelectionProcedureSerializer(serializers.ModelSerializer):
+class EventSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SelectionProcedure
+        model = Event
         fields = "__all__"
 
 
-class StudentSelectionSerializer(serializers.ModelSerializer):
+class AboutUsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = StudentSelection
+        model = AboutUs
+        fields = "__all__"
+
+
+class TeamMemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeamMember
+        fields = "__all__"
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = "__all__"
+
+
+class LearningScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LearningSchedule
+        fields = "__all__"
+
+
+class ModuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Module
         fields = "__all__"
 
 
@@ -131,50 +151,27 @@ class ContactUsSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class EventAttendanceSerializer(serializers.ModelSerializer):
+
+
+
+class StudentSerializer(serializers.ModelSerializer):
+    courses = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Course.objects.all(), required=False
+    )
+    schedules = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=LearningSchedule.objects.all(), required=False
+    )
+
+
     class Meta:
-        model = EventAttendance
+        model = Student
         fields = "__all__"
 
 
-class AlumniSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Alumni
-        fields = "__all__"
 
-class EventSerializer(serializers.ModelSerializer):
+class ContactUsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Event
-        fields = "__all__"
-
-class AboutUsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AboutUs
-        fields = "__all__"
-
-class TeamMemberSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TeamMember
-        fields = "__all__"
-
-class CoreValueSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CoreValue
-        fields = "__all__"
-
-class ReviewSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Review
-        fields = "__all__"
-
-class LearningScheduleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LearningSchedule
-        fields = "__all__"
-
-class ModuleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Module
+        model = ContactUs
         fields = "__all__"
 
 class LessonSerializer(serializers.ModelSerializer):

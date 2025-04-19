@@ -11,15 +11,11 @@ from .models import (
     Partner,
     Course,
     Student,
-    SelectionProcedure,
-    StudentSelection,
     ContactUs,
-    EventAttendance,
     Alumni,
     Event,
     AboutUs,
     TeamMember,
-    CoreValue,
     Review,
     LearningSchedule,
     Module,
@@ -31,15 +27,11 @@ from .serializers import (
     PartnerSerializer,
     CourseSerializer,
     StudentSerializer,
-    SelectionProcedureSerializer,
-    StudentSelectionSerializer,
     ContactUsSerializer,
-    EventAttendanceSerializer,
     AlumniSerializer,
     EventSerializer,
     AboutUsSerializer,
     TeamMemberSerializer,
-    CoreValueSerializer,
     ReviewSerializer,
     LearningScheduleSerializer,
     ModuleSerializer,
@@ -48,6 +40,7 @@ from .serializers import (
 )
 
 User = get_user_model()
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -58,7 +51,7 @@ def secure_data(request):
 class RegisterUserView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserProfileCreateSerializer
-    permission_classes = [permissions.AllowAny] 
+    permission_classes = [permissions.AllowAny]
 
 
 # permission_classes = [permissions.AllowAny]
@@ -140,60 +133,6 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.AllowAny]
 
 
-class StudentListCreateView(generics.ListCreateAPIView):
-    queryset = Student.objects.all()
-    serializer_class = StudentSerializer
-    permission_classes = [permissions.AllowAny]  # Open to all users
-
-
-class StudentDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Student.objects.all()
-    serializer_class = StudentSerializer
-    permission_classes = [permissions.AllowAny]
-
-
-class SelectionProcedureListCreateView(generics.ListCreateAPIView):
-    queryset = SelectionProcedure.objects.all()
-    serializer_class = SelectionProcedureSerializer
-    permission_classes = [permissions.AllowAny]
-
-
-class SelectionProcedureDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = SelectionProcedure.objects.all()
-    serializer_class = SelectionProcedureSerializer
-    permission_classes = [permissions.AllowAny]
-
-
-class StudentSelectionListCreateView(generics.ListCreateAPIView):
-    queryset = StudentSelection.objects.all()
-    serializer_class = StudentSelectionSerializer
-    permission_classes = [permissions.AllowAny]
-
-
-class StudentSelectionDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = StudentSelection.objects.all()
-    serializer_class = StudentSelectionSerializer
-    permission_classes = [permissions.AllowAny]
-
-
-class ContactUsCreateView(generics.CreateAPIView):
-    queryset = ContactUs.objects.all()
-    serializer_class = ContactUsSerializer
-    permission_classes = [permissions.AllowAny]
-
-
-class EventAttendanceListCreateView(generics.ListCreateAPIView):
-    queryset = EventAttendance.objects.all()
-    serializer_class = EventAttendanceSerializer
-    permission_classes = [permissions.AllowAny]
-
-
-class EventAttendanceDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = EventAttendance.objects.all()
-    serializer_class = EventAttendanceSerializer
-    permission_classes = [permissions.AllowAny]
-
-
 class AlumniListCreateView(generics.ListCreateAPIView):
     queryset = Alumni.objects.all()
     serializer_class = AlumniSerializer
@@ -224,19 +163,31 @@ class AboutUsListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.AllowAny]
 
 
+class AboutUsDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = AboutUs.objects.all()
+    serializer_class = AboutUsSerializer
+    permission_classes = [permissions.AllowAny]  # Same here for control
+
+
 class TeamMemberListCreateView(generics.ListCreateAPIView):
     queryset = TeamMember.objects.all()
     serializer_class = TeamMemberSerializer
     permission_classes = [permissions.AllowAny]
 
 
-class CoreValueListCreateView(generics.ListCreateAPIView):
-    queryset = CoreValue.objects.all()
-    serializer_class = CoreValueSerializer
-    permission_classes = [permissions.AllowAny]
+class TeamMemberDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = TeamMember.objects.all()
+    serializer_class = TeamMemberSerializer
+    permission_classes = [permissions.AllowAny]  # Adjust as needed
 
 
 class ReviewListCreateView(generics.ListCreateAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.AllowAny]
+
+
+class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [permissions.AllowAny]
@@ -248,7 +199,19 @@ class LearningScheduleListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.AllowAny]
 
 
+class LearningScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = LearningSchedule.objects.all()
+    serializer_class = LearningScheduleSerializer
+    permission_classes = [permissions.AllowAny]
+
+
 class ModuleListCreateView(generics.ListCreateAPIView):
+    queryset = Module.objects.all()
+    serializer_class = ModuleSerializer
+    permission_classes = [permissions.AllowAny]
+
+
+class ModuleDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Module.objects.all()
     serializer_class = ModuleSerializer
     permission_classes = [permissions.AllowAny]
@@ -258,3 +221,35 @@ class LessonListCreateView(generics.ListCreateAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     permission_classes = [permissions.AllowAny]
+
+
+class LessonDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+    permission_classes = [permissions.AllowAny]
+
+
+class ContactUsListCreateView(generics.ListCreateAPIView):
+    queryset = ContactUs.objects.all()
+    serializer_class = ContactUsSerializer
+    permission_classes = [permissions.AllowAny]
+
+
+class ContactUsDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ContactUs.objects.all()
+    serializer_class = ContactUsSerializer
+    permission_classes = [permissions.AllowAny]   
+
+
+class StudentListCreateView(generics.ListCreateAPIView):
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializer
+    permission_classes = [permissions.AllowAny]  # Open to all users
+
+
+class StudentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializer
+    permission_classes = [permissions.AllowAny]
+
+
