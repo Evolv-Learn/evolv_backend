@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User, AbstractUser, Group, Permission
 from django.db import models
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django_countries.fields import CountryField
 from dateutil.relativedelta import relativedelta
@@ -8,7 +9,7 @@ class CustomUser(AbstractUser):
     """
     Custom user model that extends Django's AbstractUser.
     """
-    email = models.EmailField(unique=True)  # Ensure unique emails
+    email = models.EmailField(unique=True)  
 
     # Fix the reverse accessor issue
     groups = models.ManyToManyField(Group, related_name="customuser_groups", blank=True)
@@ -19,14 +20,22 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.username
 
+
 class Profile(models.Model):
     USER_ROLES = [
         ("Student", "Student"),
         ("Instructor", "Instructor"),
         ("Alumni", "Alumni"),
     ]
-    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE, 
+        related_name="profile")
+
     role = models.CharField(max_length=20, choices=USER_ROLES)
+
+    def __str__(self):
+        return f"{self.user.username} ({self.role})"
 
 
 # Create your models here.

@@ -12,30 +12,40 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-*ztk16=kz&(=4d6p2hb&8-lqr_*=c3c)sikub=tbw@dqgb@wdx'
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS =  [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS","").split(",") if h.strip()]
+
 
 
 # Application definition
 
 INSTALLED_APPS = [
     'authentication',
+    'courses',
+
+    # third-party
     'rest_framework',
     'rest_framework_simplejwt',
+    'drf_spectacular',
+    'corsheaders',
 
+    # django
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,13 +53,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_countries',
-    
-    'courses'
+    'django_filters',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware", 
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -84,15 +94,26 @@ WSGI_APPLICATION = 'evolv_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'evolv_db',  # Database name
-        'USER': 'evolv_user',  # Database username
-        'PASSWORD': 'justbekind@1234',  # Database password
-        'HOST': 'localhost',  # Change if using a remote server
-        'PORT': '5432',  # Default PostgreSQL port
+        'NAME': os.getenv("DB_NAME"), 
+        'USER': os.getenv("DB_USER"),  
+        'PASSWORD': os.getenv("DB_PASSWORD"),  
+        'HOST': os.getenv("DB_HOST", "localhost"),
+        'PORT': os.getenv("DB_PORT", "5432"),
     }
 }
 
 AUTH_USER_MODEL = "courses.CustomUser"
+
+
+# CORS/CSRF
+_frontends = [o.strip() for o in os.getenv("FRONTEND_ORIGINS","").split(",") if o.strip()]
+CORS_ALLOWED_ORIGINS = _frontends
+CORS_ALLOW_CREDENTIALS = False  # keep False if using pure JWT; set True only if using cookies
+CSRF_TRUSTED_ORIGINS = [o.replace("http://", "http://").replace("https://","https://") for o in _frontends if o.startswith("https://")]
+
+
+
+
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -139,9 +160,25 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',  # Require authentication by default
     ),
+
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
+
+    "DEFAULT_FILTER_BACKENDS": [
+            "django_filters.rest_framework.DjangoFilterBackend",
+            "rest_framework.filters.OrderingFilter",
+            "rest_framework.filters.SearchFilter",
+        ],
+
+    "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
+
+    "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
 }
 
 SIMPLE_JWT = {
@@ -152,4 +189,16 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
+
+# Static (adjust for prod)
+STATIC_URL = "static/"
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# API docs
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Evolv API",
+    "DESCRIPTION": "Backend for Evolv learning platform",
+    "VERSION": "1.0.0",
+}
 

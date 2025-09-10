@@ -1,24 +1,111 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+
 from .models import (Profile, Location, Partner, Course, Student, LearningSchedule, SelectionProcedure, 
                     StudentSelection,  ContactUs, EventAttendance,  Alumni, Event, AboutUs, TeamMember,
-                    CoreValue, Review, LearningSchedule, Module, Lesson)
+                    CoreValue, Review, Module, Lesson)
 
-
+User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "first_name", "last_name", "email"]
-        
+        fields = ["id","username", "first_name", "last_name", "email"]
+        read_only_fields = fields
+
 
 class ProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)  # Nested user data
+    #Allow admin to list all Profile
+    user = UserSerializer(read_only=True) 
+    role = serializers.CharField(read_only=True)
 
     class Meta:
         model = Profile
         fields = ["id", "user", "role"]
 
+
+class ProfileSelfSerializer(serializers.ModelSerializer):
+    # editable user fields (mapped to related user)
+    username   = serializers.CharField(source="user.username",   required=False)
+    first_name = serializers.CharField(source="user.first_name", required=False, allow_blank=True)
+    last_name  = serializers.CharField(source="user.last_name",  required=False, allow_blank=True)
+    email      = serializers.EmailField(source="user.email",     required=False)
+    # keep role locked for normal users
+    role       = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Profile
+        fields = ["id", "role", "username", "first_name", "last_name", "email"]
+
+    def validate(self, attrs):
+        user_data = attrs.get("user", {})
+        me = self.context["request"].user
+
+        uname = user_data.get("username")
+        if uname and User.objects.exclude(pk=me.pk).filter(username__iexact=uname).exists():
+            raise serializers.ValidationError({"username": "Username already taken."})
+
+        mail = user_data.get("email")
+        if mail and User.objects.exclude(pk=me.pk).filter(email__iexact=mail).exists():
+            raise serializers.ValidationError({"email": "This email is already in use."})
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop("user", {})
+        for attr, val in user_data.items():
+            setattr(instance.user, attr, val)
+        instance.user.save()
+        return super().update(instance, validated_data)
+
+
+class AdminProfileUpdateSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Profile
+        fields = ["id", "user", "role"]  
+
+
+
+
+class RegisterUserSerializer(serializers.Serializer):
+    username   = serializers.CharField()
+    email      = serializers.EmailField()
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name  = serializers.CharField(required=False, allow_blank=True)
+    # role = serializers.ChoiceField(choices=Profile.USER_ROLES)  # drop or ignore for now
+    password   = serializers.CharField(write_only=True, min_length=8, trim_whitespace=False)
+
+    def validate_username(self, value):
+        if User.objects.filter(username__iexact=value).exists():
+            raise serializers.ValidationError("Username already taken.")
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("This email is already registered.")
+        return value
+
+    def create(self, validated_data):
+        user = User(
+            username=validated_data["username"],
+            email=validated_data["email"],
+            first_name=validated_data.get("first_name", ""),
+            last_name=validated_data.get("last_name", ""),
+        )
+        user.set_password(validated_data["password"])
+        user.save()
+
+        # default every new user to Student role
+        Profile.objects.get_or_create(user=user, defaults={"role": "Student"})
+
+        return user
+
+
+
+        
 
 class UserProfileCreateSerializer(serializers.ModelSerializer):
     """

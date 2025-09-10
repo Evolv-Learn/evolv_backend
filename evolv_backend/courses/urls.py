@@ -1,18 +1,24 @@
 from django.urls import path
+from rest_framework.urlpatterns import format_suffix_patterns
+
 from .views import (ProfileDetailView, LocationListCreateView, LocationDetailView,
                      PartnerListCreateView, PartnerDetailView, CourseListCreateView,
-                    CourseDetailView, StudentListCreateView, StudentDetailView, 
+                    CourseDetailView, StudentListCreateView,
                     StudentDetailView, SelectionProcedureDetailView, SelectionProcedureListCreateView, StudentSelectionListCreateView,
                     StudentSelectionDetailView, ContactUsCreateView, EventAttendanceListCreateView, EventAttendanceDetailView,
                     AlumniListCreateView, AlumniDetailView, EventListCreateView, EventDetailView,
                     AboutUsListCreateView, TeamMemberListCreateView, CoreValueListCreateView,
                     ReviewListCreateView, LearningScheduleListCreateView, ModuleListCreateView,
-                    LessonListCreateView, RegisterUserView)
+                    LessonListCreateView, RegisterUserView, AdminProfileListView, AdminUserProfileDetailView)
 
+app_name = "courses"
 
 urlpatterns = [
     path("register/", RegisterUserView.as_view(), name="register"),
+
     path("profile/", ProfileDetailView.as_view(), name="profile-detail"),
+    path("admin/profiles/", AdminProfileListView.as_view(), name="admin-profile-list"),
+    path("admin/users/<int:user_id>/profile/", AdminUserProfileDetailView.as_view(), name="admin-user-profile-detail"),
 
     path("locations/", LocationListCreateView.as_view(), name="location-list"),
     path("locations/<int:pk>/", LocationDetailView.as_view(), name="location-detail"),
@@ -48,3 +54,6 @@ urlpatterns = [
     path("modules/", ModuleListCreateView.as_view(), name="modules"),
     path("lessons/", LessonListCreateView.as_view(), name="lessons"),
 ]
+
+# Allow /path.json for quick testing/debug           
+urlpatterns = format_suffix_patterns(urlpatterns)
