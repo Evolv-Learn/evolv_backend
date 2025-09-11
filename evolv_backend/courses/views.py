@@ -10,7 +10,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import generics, permissions,status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from .permissions import IsAdmin
+from .permissions import IsAdmin,  IsAdminOrReadOnly
 
 from .models import (Profile, Location, Partner, Course, Student, SelectionProcedure, 
                     StudentSelection, ContactUs, EventAttendance, Alumni, Event, AboutUs, TeamMember,
@@ -114,9 +114,6 @@ class AdminUserProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-
-
-
 class RegisterUserView(generics.CreateAPIView):
     """
     POST /api/v1/register/
@@ -152,20 +149,28 @@ class RegisterUserView(generics.CreateAPIView):
 
 class LocationListCreateView(generics.ListCreateAPIView):
     """
-    List all locations or create a new one.
+    GET: List all locations or create a new one (public)
+    POST: create a location (admin only)
     """
-    queryset = Location.objects.all()
+    queryset = Location.objects.all().order_by("name")
     serializer_class = LocationSerializer
-    permission_classes = []  # Open to all users
+    permission_classes = [IsAdminOrReadOnly]
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["location_type", "online_region", "country", "state"]
+    search_fields = ["name", "country", "state", "online_region"]
+    ordering_fields = ["name", "country", "state", "location_type"]
+    ordering = ["name"]
 
 
 class LocationDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
-    Retrieve, update, or delete a specific location.
+    GET: Retrieve public
+    PATCH/DELETE: admin only
     """
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
-    permission_classes = [permissions.AllowAny]  # Adjust permissions as needed
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class PartnerListCreateView(generics.ListCreateAPIView):

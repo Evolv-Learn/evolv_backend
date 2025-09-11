@@ -68,8 +68,6 @@ class AdminProfileUpdateSerializer(serializers.ModelSerializer):
         fields = ["id", "user", "role"]  
 
 
-
-
 class RegisterUserSerializer(serializers.Serializer):
     username   = serializers.CharField()
     email      = serializers.EmailField()
@@ -103,9 +101,6 @@ class RegisterUserSerializer(serializers.Serializer):
 
         return user
 
-
-
-        
 
 class UserProfileCreateSerializer(serializers.ModelSerializer):
     """
@@ -149,6 +144,33 @@ class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
         fields = "__all__"
+
+    def validate(self, attrs):
+        loc_type = attrs.get("location_type", getattr(self.instance, "location_type", None))
+        online_region = attrs.get("online_region", getattr(self.instance, "online_region", None))
+        country = attrs.get("country", getattr(self.instance, "country", None))
+        state = attrs.get("state", getattr(self.instance, "state", None))
+
+        errors = {}
+
+        if loc_type == "Online":
+            if not online_region:
+                errors["online_region"] = "online_region is required for Online locations."
+            if country:
+                errors["country"] = "country must be empty for Online locations."
+            if state:
+                errors["state"] = "state must be empty for Online locations."
+
+        elif loc_type == "Campus":
+            if not country:
+                errors["country"] = "country is required for Campus locations."
+            if online_region:
+                errors["online_region"] = "online_region must be empty for Campus locations."
+
+        if errors:
+            raise serializers.ValidationError(errors)
+        return attrs
+
 
 
 class PartnerSerializer(serializers.ModelSerializer):

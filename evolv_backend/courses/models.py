@@ -53,11 +53,9 @@ ONLINE_REGION_CHOICES = [
 
 # Location Model
 class Location(models.Model):
-    name = models.CharField(max_length=255)  # e.g., "Lagos Campus", "Online - Nigeria"
+    name = models.CharField(max_length=255, unique=True)
     location_type = models.CharField(max_length=10, choices=LOCATION_TYPE_CHOICES)
-    online_region = models.CharField(
-        max_length=20, choices=ONLINE_REGION_CHOICES, blank=True, null=True
-    )
+    online_region = models.CharField(max_length=20, choices=ONLINE_REGION_CHOICES, blank=True, null=True)
     country = models.CharField(max_length=100, blank=True, null=True)
     state = models.CharField(max_length=100, blank=True, null=True)
 
