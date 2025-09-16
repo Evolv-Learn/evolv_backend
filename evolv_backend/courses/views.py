@@ -10,13 +10,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import generics, permissions,status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+
 from .permissions import IsAdmin,  IsAdminOrReadOnly
 
 from .models import (Profile, Location, Partner, Course, Student, SelectionProcedure, 
                     StudentSelection, ContactUs, EventAttendance, Alumni, Event, AboutUs, TeamMember,
                     CoreValue, Review, LearningSchedule, Module, Lesson) 
 from .serializers import (ProfileSerializer, LocationSerializer, PartnerSerializer, ProfileSelfSerializer,
-                        CourseSerializer, StudentSerializer, SelectionProcedureSerializer, 
+                        CourseReadSerializer, CourseWriteSerializer, StudentSerializer, SelectionProcedureSerializer, 
                         StudentSelectionSerializer, ContactUsSerializer,EventAttendanceSerializer,
                         AlumniSerializer, EventSerializer, AboutUsSerializer, TeamMemberSerializer,
                         CoreValueSerializer, ReviewSerializer, LearningScheduleSerializer, 
@@ -176,25 +177,53 @@ class LocationDetailView(generics.RetrieveUpdateDestroyAPIView):
 class PartnerListCreateView(generics.ListCreateAPIView):
     queryset = Partner.objects.all()
     serializer_class = PartnerSerializer
-    permission_classes = [permissions.AllowAny]  # Open to all users
+    permission_classes = [IsAdminOrReadOnly]
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["name"]
+    search_fields = ["name", "description"]
+    ordering_fields = ["name"]
+    ordering = ["name"]
 
 
 class PartnerDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Partner.objects.all()
     serializer_class = PartnerSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class CourseListCreateView(generics.ListCreateAPIView):
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes =[IsAdminOrReadOnly]
+    queryset = (
+        Course.objects
+        .select_related("instructor", "parent")
+        .prefetch_related("locations", "partners")
+        .all()
+    )
+    
+    def get_serializer_class(self):
+        return CourseWriteSerializer if self.request.method == "POST" else CourseReadSerializer
+
+    # filters
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["category", "instructor", "partners", "locations", "parent"]
+    search_fields = ["name", "description", "software_tools"]
+    ordering_fields = ["name", "created_at", "instructor"]
+    ordering = ["name"]
 
 
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
+    queryset = (
+        Course.objects
+        .select_related("instructor", "parent")
+        .prefetch_related("locations", "partners")
+        .all()
+    )
+
+    def get_serializer_class(self):
+        # write for PATCH/PUT, read for GET
+        return CourseWriteSerializer if self.request.method in ("PUT", "PATCH") else CourseReadSerializer
 
 
 class StudentListCreateView(generics.ListCreateAPIView):

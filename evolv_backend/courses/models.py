@@ -72,25 +72,17 @@ class Course(models.Model):
     ]
     name = models.CharField(max_length=255)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
-    parent = models.ForeignKey(
-        "self",
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="subcourses",
-    )  # Self-referencing field to create hierarchy
+    parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.CASCADE, related_name="subcourses")  
     description = models.TextField()
-    software_tools = models.TextField(
-        help_text="List of software and languages covered"
-    )
-    instructor = models.ForeignKey(
-        get_user_model(), on_delete=models.SET_NULL, null=True, related_name="courses"
-    )
-    locations = models.ManyToManyField(
-        Location, related_name="courses"
-    )  # A course can be offered at multiple locations
+    software_tools = models.TextField(help_text="List of software and languages covered")
+    instructor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="courses")
+    locations = models.ManyToManyField(Location, related_name="courses")  # A course can be offered at multiple locations
     partners = models.ManyToManyField("Partner", related_name="courses")
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]  
+
 
     def __str__(self):
         if self.parent:
@@ -315,10 +307,13 @@ class Student(models.Model):
 
 # Partners model
 class Partner(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, unique=True)
     description = models.TextField()
     website = models.URLField(blank=True, null=True)
     contact_email = models.EmailField(blank=True, null=True)
+
+    class Meta:
+        ordering = ["name"]
 
     def __str__(self):
         return self.name

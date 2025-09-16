@@ -178,16 +178,71 @@ class PartnerSerializer(serializers.ModelSerializer):
         model = Partner
         fields = "__all__"
 
+    def validate_name(self, value):
+        qs = Partner.objects.filter(name__iexact=value)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError("Partner with this name already exists.")
+        return value
 
-class CourseSerializer(serializers.ModelSerializer):
+
+class CourseReadSerializer(serializers.ModelSerializer):
     instructor = serializers.StringRelatedField()  # Display instructor name
     locations = serializers.StringRelatedField(many=True)  # Display location names
     partners = serializers.StringRelatedField(many=True)  # Display partner names
     parent = serializers.StringRelatedField()  # Display parent course name if applicable
+    parent_id  = serializers.PrimaryKeyRelatedField(source="parent", read_only=True)
 
     class Meta:
         model = Course
-        fields = "__all__"
+        fields =  [
+            "id", "name", "category", "description", "software_tools",
+            "instructor", "locations", "partners", "parent", "parent_id",
+            "created_at",
+        ]
+
+class CourseWriteSerializer(serializers.ModelSerializer):
+    instructor = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(is_active=True), allow_null=True, required=False
+    )
+    locations = serializers.PrimaryKeyRelatedField(
+        queryset=Location.objects.all(), many=True
+    )
+    partners = serializers.PrimaryKeyRelatedField(
+        queryset=Partner.objects.all(), many=True, required=False
+    )
+    parent = serializers.PrimaryKeyRelatedField(
+        queryset=Course.objects.all(), allow_null=True, required=False
+    )
+
+    class Meta:
+        model = Course
+        fields = [
+            "id", "name", "category", "description", "software_tools",
+            "instructor", "locations", "partners", "parent",
+        ]
+
+    def validate(self, attrs):
+        # prevent parent=self and simple cycle on updates
+        instance = getattr(self, "instance", None)
+        parent = attrs.get("parent", getattr(instance, "parent", None))
+
+        if instance and parent and parent.pk == instance.pk:
+            raise serializers.ValidationError({"parent": "A course cannot be its own parent."})
+
+        # Optional: prevent multi-level cycles (simple walk up)
+        if instance and parent:
+            seen = set()
+            cur = parent
+            while cur:
+                if cur.pk == instance.pk:
+                    raise serializers.ValidationError({"parent": "Cycle detected in course hierarchy."})
+                if cur.pk in seen:
+                    break
+                seen.add(cur.pk)
+                cur = cur.parent
+        return attrs
 
 
 class StudentSerializer(serializers.ModelSerializer):
