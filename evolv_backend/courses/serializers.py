@@ -278,10 +278,33 @@ class EventAttendanceSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class AlumniSerializer(serializers.ModelSerializer):
+class AlumniReadSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)   
+    course = serializers.StringRelatedField()
+    location = serializers.StringRelatedField()
+
     class Meta:
         model = Alumni
-        fields = "__all__"
+        fields = ["id", "user", "graduation_year", "current_position", "success_story","course", "location",]
+
+
+class AlumniWriteSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True))
+    course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all(), required=False, allow_null=True)
+    location = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all(), required=False, allow_null=True)
+
+    class Meta:
+        model = Alumni
+        fields = ["id", "user", "graduation_year", "current_position", "success_story","course", "location",]
+
+    def validate_user(self, value):
+        if self.instance is None and Alumni.objects.filter(user=value).exists():
+            raise serializers.ValidationError("An alumni record for this user already exists.")
+        return value
+
+
+
+
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:

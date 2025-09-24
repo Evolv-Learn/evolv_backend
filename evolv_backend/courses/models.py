@@ -5,17 +5,16 @@ from django.contrib.auth import get_user_model
 from django_countries.fields import CountryField
 from dateutil.relativedelta import relativedelta
 
+from django.core.validators import MinValueValidator, MaxValueValidator
+from datetime import date
+
 class CustomUser(AbstractUser):
     """
     Custom user model that extends Django's AbstractUser.
     """
     email = models.EmailField(unique=True)  
-
-    # Fix the reverse accessor issue
     groups = models.ManyToManyField(Group, related_name="customuser_groups", blank=True)
-    user_permissions = models.ManyToManyField(
-        Permission, related_name="customuser_permissions", blank=True
-    )
+    user_permissions = models.ManyToManyField(Permission, related_name="customuser_permissions", blank=True)
 
     def __str__(self):
         return self.username
@@ -27,11 +26,7 @@ class Profile(models.Model):
         ("Instructor", "Instructor"),
         ("Alumni", "Alumni"),
     ]
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE, 
-        related_name="profile")
-
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
     role = models.CharField(max_length=20, choices=USER_ROLES)
 
     def __str__(self):
@@ -86,32 +81,25 @@ class Course(models.Model):
 
     def __str__(self):
         if self.parent:
-            return f"{self.parent.name} -> {self.name}"  # Display as hierarchy
+            return f"{self.parent.name} -> {self.name}"  
         return self.name
 
 
-# Alumni Model (Linked to Location)
 class Alumni(models.Model):
-    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
-    graduation_year = models.IntegerField()
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    graduation_year = models.IntegerField(validators=[MinValueValidator(1950), MaxValueValidator(date.today().year + 1)])
     current_position = models.CharField(max_length=255)
     success_story = models.TextField()
-    course = models.ForeignKey(
-        "Course", on_delete=models.CASCADE, related_name="alumni", null=True, blank=True
-    )
-    location = models.ForeignKey(
-        Location,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="alumni",
-    )
+    course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="alumni", null=True, blank=True)
+    location = models.ForeignKey( Location, on_delete=models.SET_NULL, null=True, blank=True, related_name="alumni")
+
+    class Meta:
+        ordering = ["-graduation_year", "user__username"]
 
     def __str__(self):
         return self.user.username
 
 
-# Event Model (Linked to Location)
 class Event(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
@@ -131,7 +119,6 @@ class Event(models.Model):
         return self.title
 
 
-# About Us Model
 class AboutUs(models.Model):
     title = models.CharField(max_length=255, default="About EvolvLearn")
     description = models.TextField(help_text="Brief description about the organization")
@@ -143,11 +130,8 @@ class AboutUs(models.Model):
         return self.title
 
 
-# Team Members Model
 class TeamMember(models.Model):
-    about_us = models.ForeignKey(
-        AboutUs, on_delete=models.CASCADE, related_name="team_members"
-    )
+    about_us = models.ForeignKey(AboutUs, on_delete=models.CASCADE, related_name="team_members")
     name = models.CharField(max_length=255)
     role = models.CharField(max_length=255)
     image = models.ImageField(upload_to="team_images/", blank=True, null=True)
@@ -160,11 +144,8 @@ class TeamMember(models.Model):
         return f"{self.name} - {self.role}"
 
 
-# Core Values Model
 class CoreValue(models.Model):
-    about_us = models.ForeignKey(
-        AboutUs, on_delete=models.CASCADE, related_name="values"
-    )
+    about_us = models.ForeignKey(AboutUs, on_delete=models.CASCADE, related_name="values")
     title = models.CharField(max_length=255)
     description = models.TextField()
 
@@ -172,19 +153,12 @@ class CoreValue(models.Model):
         return self.title
 
 
-# Reviews/Testimonials Model
 class Review(models.Model):
-    about_us = models.ForeignKey(
-        AboutUs, on_delete=models.CASCADE, related_name="reviews", null=True, blank=True
-    )
+    about_us = models.ForeignKey(AboutUs, on_delete=models.CASCADE, related_name="reviews", null=True, blank=True)
     name = models.CharField(max_length=255)
     review_text = models.TextField()
-    course = models.ForeignKey(
-        "Course", on_delete=models.CASCADE, related_name="reviews", null=True, blank=True
-    )
-    alumni = models.ForeignKey(
-        "Alumni", on_delete=models.CASCADE, related_name="reviews", null=True, blank=True
-    )
+    course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="reviews", null=True, blank=True)
+    alumni = models.ForeignKey("Alumni", on_delete=models.CASCADE, related_name="reviews", null=True, blank=True)
     rating = models.IntegerField(default=5, help_text="Rating out of 5")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -192,43 +166,26 @@ class Review(models.Model):
         return f"Review by {self.name} - {self.rating}⭐"
 
 
-# Learning Schedule Model
 class LearningSchedule(models.Model):
-    course = models.ForeignKey(
-        "Course", on_delete=models.CASCADE, related_name="schedules"
-    )
+    course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="schedules")
     start_date = models.DateField()
     end_date = models.DateField()
-    instructor = models.ForeignKey(
-        get_user_model(), on_delete=models.SET_NULL, null=True, blank=True, related_name="schedules"
-    )
-    location = models.ForeignKey(
-        "Location", on_delete=models.CASCADE, related_name="schedules"
-    )
-    duration = models.IntegerField(
-        blank=True, null=True
-    )  # Duration in months (optional field)
+    instructor = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True, related_name="schedules")
+    location = models.ForeignKey("Location", on_delete=models.CASCADE, related_name="schedules")
+    duration = models.IntegerField(blank=True, null=True) 
 
     def save(self, *args, **kwargs):
-        # Automatically calculate the duration in months when saving
         if self.start_date and self.end_date:
-            # Calculate the difference using relativedelta
             delta = relativedelta(self.end_date, self.start_date)
-            # The duration is calculated as the number of full months
             self.duration = (delta.years * 12) + delta.months
         super(LearningSchedule, self).save(*args, **kwargs)
 
     def __str__(self):
-        return (
-            f"Schedule for {self.course.name} from {self.start_date} to {self.end_date}"
-        )
+        return (f"Schedule for {self.course.name} from {self.start_date} to {self.end_date}")
 
 
-# Module Model (Course Breakdown)
 class Module(models.Model):
-    schedule = models.ForeignKey(
-        LearningSchedule, on_delete=models.CASCADE, related_name="modules"
-    )
+    schedule = models.ForeignKey(LearningSchedule, on_delete=models.CASCADE, related_name="modules")
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     order = models.PositiveIntegerField(help_text="Order of the module in the schedule")
@@ -240,15 +197,12 @@ class Module(models.Model):
         return f"{self.schedule.course.name} - {self.title}"
 
 
-# Lesson Model (Individual Lessons)
 class Lesson(models.Model):
     module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name="lessons")
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     content = models.TextField(blank=True, null=True)
-    resources = models.URLField(
-        blank=True, null=True, help_text="Link to additional learning resources"
-    )
+    resources = models.URLField(blank=True, null=True, help_text="Link to additional learning resources")
     order = models.PositiveIntegerField(help_text="Order of the lesson in the module")
 
     class Meta:
@@ -273,7 +227,7 @@ class Student(models.Model):
         ("No Option", "No Option"),
     ]
 
-    ENGLISH_LEVEL_CHOICES = [(i, str(i)) for i in range(1, 6)]  # Levels 1-5
+    ENGLISH_LEVEL_CHOICES = [(i, str(i)) for i in range(1, 6)]  
 
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20)
@@ -282,8 +236,8 @@ class Student(models.Model):
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     birth_date = models.DateField()
     zip_code = models.CharField(max_length=20)
-    country_of_birth = CountryField()  # Dropdown with all countries
-    nationality = CountryField()  # Dropdown with all countries
+    country_of_birth = CountryField()  
+    nationality = CountryField()  
     register_number = models.CharField(max_length=50, blank=True, null=True)
     diploma_level = models.CharField(max_length=20, choices=DIPLOMA_LEVEL_CHOICES)
     job_status = models.CharField(max_length=50)
@@ -294,18 +248,13 @@ class Student(models.Model):
     how_heard = models.CharField(max_length=100)
     referral_person = models.CharField(max_length=100, blank=True, null=True)
     has_laptop = models.BooleanField()
-    courses = models.ManyToManyField(
-        "Course", related_name="students"
-    )  # Track course enrollment
-    schedules = models.ManyToManyField(
-        "LearningSchedule", related_name="students"
-    )  # Track specific schedule enrollment
+    courses = models.ManyToManyField("Course", related_name="students") 
+    schedules = models.ManyToManyField("LearningSchedule", related_name="students") 
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} - {self.email}"
 
 
-# Partners model
 class Partner(models.Model):
     name = models.CharField(max_length=200, unique=True)
     description = models.TextField()
@@ -319,32 +268,25 @@ class Partner(models.Model):
         return self.name
 
 
-# Selection Procedure model
 class SelectionProcedure(models.Model):
     step_name = models.CharField(max_length=200)
     description = models.TextField()
-    order = (
-        models.PositiveIntegerField()
-    )  # To define the order of steps in the procedure
+    order = (models.PositiveIntegerField()) 
 
     def __str__(self):
         return self.step_name
 
 
 class StudentSelection(models.Model):
-    student = models.ForeignKey(
-        Student, on_delete=models.CASCADE, related_name="selection_steps"
-    )
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="selection_steps")
     step = models.ForeignKey(SelectionProcedure, on_delete=models.CASCADE)
-    status = models.CharField(
-        max_length=50, choices=[("Pending", "Pending"), ("Completed", "Completed")]
-    )
+    status = models.CharField(max_length=50, choices=[("Pending", "Pending"), ("Completed", "Completed")])
     updated_at = models.DateTimeField(auto_now=True)
 
 
 class ContactUs(models.Model):
     name = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)  # Email is required and must be unique
+    email = models.EmailField(unique=True)  
     message = models.TextField()
 
     def __str__(self):
@@ -352,10 +294,6 @@ class ContactUs(models.Model):
 
 
 class EventAttendance(models.Model):
-    event = models.ForeignKey(
-        Event, on_delete=models.CASCADE, related_name="attendances"
-    )
-    student = models.ForeignKey(
-        Student, on_delete=models.CASCADE, related_name="event_attendances"
-    )
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="attendances")
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="event_attendances")
     attended = models.BooleanField(default=False)

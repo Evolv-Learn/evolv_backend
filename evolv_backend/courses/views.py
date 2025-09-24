@@ -19,7 +19,7 @@ from .models import (Profile, Location, Partner, Course, Student, SelectionProce
 from .serializers import (ProfileSerializer, LocationSerializer, PartnerSerializer, ProfileSelfSerializer,
                         CourseReadSerializer, CourseWriteSerializer, StudentSerializer, SelectionProcedureSerializer, 
                         StudentSelectionSerializer, ContactUsSerializer,EventAttendanceSerializer,
-                        AlumniSerializer, EventSerializer, AboutUsSerializer, TeamMemberSerializer,
+                       AlumniReadSerializer, AlumniWriteSerializer, EventSerializer, AboutUsSerializer, TeamMemberSerializer,
                         CoreValueSerializer, ReviewSerializer, LearningScheduleSerializer, 
                         ModuleSerializer, LessonSerializer, UserProfileCreateSerializer, RegisterUserSerializer, AdminProfileUpdateSerializer)
 
@@ -33,9 +33,6 @@ def secure_data(request):
 User = get_user_model()
 
 class ProfileDetailView(generics.RetrieveUpdateAPIView):
-    """
-    Retrieve or update the profile of the logged-in user.
-    """
     serializer_class = ProfileSelfSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -45,17 +42,10 @@ class ProfileDetailView(generics.RetrieveUpdateAPIView):
 
 
 class AdminProfileListView(generics.ListAPIView):
-    """
-    GET /api/v1/admin/profiles/
-    Admin-only: list all profiles with filter/search/ordering + pagination
-    """
     permission_classes = [IsAdmin]
     serializer_class = ProfileSerializer
     queryset = Profile.objects.select_related("user").all()  
 
-    # proper queryset:
-    #def get_queryset(self):
-    #    return Profile.objects.select_related("user").all()
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["role", "user__is_active", "user__is_staff"]
@@ -65,10 +55,6 @@ class AdminProfileListView(generics.ListAPIView):
 
 
 class AdminUserProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    GET/PATCH/DELETE /api/v1/admin/users/<int:user_id>/profile/
-    Admin-only: manage a specific user's profile.
-    """
     permission_classes = [IsAdmin]
     serializer_class = AdminProfileUpdateSerializer
     lookup_url_kwarg = "user_id"
@@ -79,24 +65,19 @@ class AdminUserProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
         except Profile.DoesNotExist:
             raise NotFound(detail=f"Profile for user id {user_id} not found.")
 
-
- # ----- Retrieve -----
     def get_object(self):
         user_id = int(self.kwargs[self.lookup_url_kwarg])
         return self._get_or_404(user_id)
 
-    # ----- Update (upsert) -----
     def patch(self, request, *args, **kwargs):
         user_id = int(kwargs[self.lookup_url_kwarg])
         try:
             instance = Profile.objects.select_related("user").get(user_id=user_id)
         except Profile.DoesNotExist:
-            # create profile then apply incoming partial data
             try:
                 user = User.objects.get(pk=user_id)
             except User.DoesNotExist:
                 raise NotFound(detail=f"User id {user_id} not found.")
-            # default role if none provided
             role = request.data.get("role", "Student")
             instance = Profile.objects.create(user=user, role=role)
 
@@ -105,21 +86,15 @@ class AdminUserProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
         self.perform_update(serializer)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # ----- Delete (idempotent) -----
     def delete(self, request, *args, **kwargs):
         user_id = int(kwargs[self.lookup_url_kwarg])
         qs = Profile.objects.filter(user_id=user_id)
         if qs.exists():
             qs.delete()
-        # Always 204 even if nothing was deleted
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class RegisterUserView(generics.CreateAPIView):
-    """
-    POST /api/v1/register/
-    Creates a user + profile, returns JWT {access, refresh} and user info.
-    """
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterUserSerializer
 
@@ -149,10 +124,6 @@ class RegisterUserView(generics.CreateAPIView):
 
 
 class LocationListCreateView(generics.ListCreateAPIView):
-    """
-    GET: List all locations or create a new one (public)
-    POST: create a location (admin only)
-    """
     queryset = Location.objects.all().order_by("name")
     serializer_class = LocationSerializer
     permission_classes = [IsAdminOrReadOnly]
@@ -165,10 +136,6 @@ class LocationListCreateView(generics.ListCreateAPIView):
 
 
 class LocationDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    GET: Retrieve public
-    PATCH/DELETE: admin only
-    """
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
     permission_classes = [IsAdminOrReadOnly]
@@ -204,7 +171,6 @@ class CourseListCreateView(generics.ListCreateAPIView):
     def get_serializer_class(self):
         return CourseWriteSerializer if self.request.method == "POST" else CourseReadSerializer
 
-    # filters
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["category", "instructor", "partners", "locations", "parent"]
     search_fields = ["name", "description", "software_tools"]
@@ -222,7 +188,6 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
     )
 
     def get_serializer_class(self):
-        # write for PATCH/PUT, read for GET
         return CourseWriteSerializer if self.request.method in ("PUT", "PATCH") else CourseReadSerializer
 
 
@@ -279,14 +244,25 @@ class EventAttendanceDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AlumniListCreateView(generics.ListCreateAPIView):
-    queryset = Alumni.objects.all()
-    serializer_class = AlumniSerializer
-    permission_classes = [permissions.AllowAny]
+    queryset = Alumni.objects.select_related("user", "course", "location")
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_serializer_class(self):
+        return AlumniWriteSerializer if self.request.method == "POST" else AlumniReadSerializer
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["graduation_year", "course", "location", "user"]
+    search_fields = ["user__username", "user__email", "current_position", "success_story"]
+    ordering_fields = ["graduation_year", "user__username"]
+    ordering = ["-graduation_year"]
+
 
 class AlumniDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Alumni.objects.all()
-    serializer_class = AlumniSerializer
-    permission_classes = [permissions.AllowAny]
+    queryset = Alumni.objects.select_related("user", "course", "location")
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_serializer_class(self):
+        return AlumniWriteSerializer if self.request.method in ("PUT", "PATCH") else AlumniReadSerializer
 
 class EventListCreateView(generics.ListCreateAPIView):
     queryset = Event.objects.all()
