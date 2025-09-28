@@ -119,6 +119,21 @@ class Event(models.Model):
         return self.title
 
 
+
+class Event(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    date = models.DateTimeField()
+    location = models.ForeignKey("Location", on_delete=models.SET_NULL, null=True, blank=True, related_name="events")
+    course = models.ForeignKey("Course", on_delete=models.SET_NULL, null=True, blank=True)
+    partners = models.ManyToManyField("Partner", related_name="events", blank=True)
+    is_virtual = models.BooleanField(default=False)
+    image = models.ImageField(upload_to="events/", blank=True, null=True, help_text="Upload an image for the event (flyer, poster, banner)")
+
+    def __str__(self):
+        return self.title
+
+
 class AboutUs(models.Model):
     title = models.CharField(max_length=255, default="About EvolvLearn")
     description = models.TextField(help_text="Brief description about the organization")

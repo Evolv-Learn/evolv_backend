@@ -303,13 +303,38 @@ class AlumniWriteSerializer(serializers.ModelSerializer):
         return value
 
 
+class EventReadSerializer(serializers.ModelSerializer):
+    location = serializers.StringRelatedField()
+    course   = serializers.StringRelatedField()
+    partners = serializers.StringRelatedField(many=True)
+    image    = serializers.ImageField(read_only=True)   
 
-
-
-class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
-        fields = "__all__"
+        fields = ["id", "title", "description", "date", "is_virtual","location", "course", "partners", "image"]
+
+
+class EventWriteSerializer(serializers.ModelSerializer):
+    location = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all(), required=False, allow_null=True)
+    course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all(), required=False, allow_null=True)
+    partners = serializers.PrimaryKeyRelatedField(queryset=Partner.objects.all(), many=True, required=False)
+    image = serializers.ImageField(required=False, allow_null=True)
+
+    class Meta:
+        model = Event
+        fields = ["id", "title", "description", "date", "is_virtual","location", "course", "partners", "image"]
+
+    def validate(self, attrs):
+        is_virtual = attrs.get("is_virtual", getattr(self.instance, "is_virtual", False))
+        location   = attrs.get("location", getattr(self.instance, "location", None))
+
+        if is_virtual and location:
+            raise serializers.ValidationError({"location": "Virtual events must not have a location."})
+        if not is_virtual and not location:
+            raise serializers.ValidationError({"location": "Physical events must have a location."})
+        return attrs
+
+
 
 class AboutUsSerializer(serializers.ModelSerializer):
     class Meta:
