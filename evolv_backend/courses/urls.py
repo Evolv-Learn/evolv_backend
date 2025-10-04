@@ -1,13 +1,19 @@
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
 
+from django.conf import settings                                 # ✅ for settings.DEBUG
+from django.conf.urls.static import static    
+
+
+
+
 from .views import (ProfileDetailView, LocationListCreateView, LocationDetailView,
                      PartnerListCreateView, PartnerDetailView, CourseListCreateView,
-                    CourseDetailView, StudentListCreateView,
+                    CourseDetailView, StudentListCreateView,TeamMemberDetailView,
                     StudentDetailView, SelectionProcedureDetailView, SelectionProcedureListCreateView, StudentSelectionListCreateView,
                     StudentSelectionDetailView, ContactUsCreateView, EventAttendanceListCreateView, EventAttendanceDetailView,
-                    AlumniListCreateView, AlumniDetailView, EventListCreateView, EventDetailView,
-                    AboutUsListCreateView, TeamMemberListCreateView, CoreValueListCreateView,
+                    AlumniListCreateView, AlumniDetailView, EventListCreateView, EventDetailView,AboutUsDetailView,
+                     TeamMemberListCreateView, CoreValueListCreateView, CoreValueDetailView,
                     ReviewListCreateView, LearningScheduleListCreateView, ModuleListCreateView,
                     LessonListCreateView, RegisterUserView, AdminProfileListView, AdminUserProfileDetailView)
 
@@ -45,15 +51,19 @@ urlpatterns = [
     path("events/", EventListCreateView.as_view(), name="event-list"),
     path("events/<int:pk>/", EventDetailView.as_view(), name="event-detail"),
 
-    path("about-us/", AboutUsListCreateView.as_view(), name="about-us"),
+    path("about-us/", AboutUsDetailView.as_view(), name="about-us"),
     path("team-members/", TeamMemberListCreateView.as_view(), name="team-members"),
+    path("team-members/<int:pk>/", TeamMemberDetailView.as_view(), name="team-member-detail"),
+
     path("core-values/", CoreValueListCreateView.as_view(), name="core-values"),
+    path("core-values/<int:pk>/", CoreValueDetailView.as_view(), name="core-value-detail"),
+
+
     path("reviews/", ReviewListCreateView.as_view(), name="reviews"),
 
     path("schedules/", LearningScheduleListCreateView.as_view(), name="schedules"),
     path("modules/", ModuleListCreateView.as_view(), name="modules"),
     path("lessons/", LessonListCreateView.as_view(), name="lessons"),
 ]
-
-# Allow /path.json for quick testing/debug           
+          
 urlpatterns = format_suffix_patterns(urlpatterns)

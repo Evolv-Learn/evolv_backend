@@ -7,21 +7,60 @@ from rest_framework.exceptions import NotFound
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework import generics, permissions,status
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .permissions import IsAdmin,  IsAdminOrReadOnly
+from .permissions import IsAdmin, IsAdminOrReadOnly
 
-from .models import (Profile, Location, Partner, Course, Student, SelectionProcedure, 
-                    StudentSelection, ContactUs, EventAttendance, Alumni, Event, AboutUs, TeamMember,
-                    CoreValue, Review, LearningSchedule, Module, Lesson) 
-from .serializers import (ProfileSerializer, LocationSerializer, PartnerSerializer, ProfileSelfSerializer,
-                        CourseReadSerializer, CourseWriteSerializer, StudentSerializer, SelectionProcedureSerializer, 
-                        StudentSelectionSerializer, ContactUsSerializer,EventAttendanceSerializer,
-                       AlumniReadSerializer, AlumniWriteSerializer, EventSerializer, AboutUsSerializer, TeamMemberSerializer,
-                        CoreValueSerializer, ReviewSerializer, LearningScheduleSerializer, 
-                        ModuleSerializer, LessonSerializer, UserProfileCreateSerializer, RegisterUserSerializer, AdminProfileUpdateSerializer)
+from .models import (
+    Profile,
+    Location,
+    Partner,
+    Course,
+    Student,
+    SelectionProcedure,
+    StudentSelection,
+    ContactUs,
+    EventAttendance,
+    Alumni,
+    Event,
+    AboutUs,
+    TeamMember,
+    CoreValue,
+    Review,
+    LearningSchedule,
+    Module,
+    Lesson,
+)
+from .serializers import (
+    ProfileSerializer,
+    LocationSerializer,
+    PartnerSerializer,
+    ProfileSelfSerializer,
+    CourseReadSerializer,
+    CourseWriteSerializer,
+    StudentSerializer,
+    SelectionProcedureSerializer,
+    StudentSelectionSerializer,
+    ContactUsSerializer,
+    EventAttendanceSerializer,
+    AlumniReadSerializer,
+    AlumniWriteSerializer,
+    EventWriteSerializer,
+    EventReadSerializer,
+    AboutUsSerializer,
+    TeamMemberReadSerializer,
+    TeamMemberWriteSerializer,
+    CoreValueSerializer,
+    ReviewSerializer,
+    LearningScheduleSerializer,
+    ModuleSerializer,
+    LessonSerializer,
+    UserProfileCreateSerializer,
+    RegisterUserSerializer,
+    AdminProfileUpdateSerializer,
+)
 
 
 @api_view(["GET"])
@@ -31,6 +70,7 @@ def secure_data(request):
 
 
 User = get_user_model()
+
 
 class ProfileDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = ProfileSelfSerializer
@@ -44,12 +84,17 @@ class ProfileDetailView(generics.RetrieveUpdateAPIView):
 class AdminProfileListView(generics.ListAPIView):
     permission_classes = [IsAdmin]
     serializer_class = ProfileSerializer
-    queryset = Profile.objects.select_related("user").all()  
-
+    queryset = Profile.objects.select_related("user").all()
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["role", "user__is_active", "user__is_staff"]
-    search_fields = ["user__username", "user__email", "user__first_name", "user__last_name", "role"]
+    search_fields = [
+        "user__username",
+        "user__email",
+        "user__first_name",
+        "user__last_name",
+        "role",
+    ]
     ordering_fields = ["user__username", "user__email", "user__date_joined", "role"]
     ordering = ["user__username"]
 
@@ -98,7 +143,6 @@ class RegisterUserView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterUserSerializer
 
-
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -119,8 +163,6 @@ class RegisterUserView(generics.CreateAPIView):
             },
         }
         return Response(data, status=status.HTTP_201_CREATED)
-
-
 
 
 class LocationListCreateView(generics.ListCreateAPIView):
@@ -160,16 +202,19 @@ class PartnerDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class CourseListCreateView(generics.ListCreateAPIView):
-    permission_classes =[IsAdminOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
     queryset = (
-        Course.objects
-        .select_related("instructor", "parent")
+        Course.objects.select_related("instructor", "parent")
         .prefetch_related("locations", "partners")
         .all()
     )
-    
+
     def get_serializer_class(self):
-        return CourseWriteSerializer if self.request.method == "POST" else CourseReadSerializer
+        return (
+            CourseWriteSerializer
+            if self.request.method == "POST"
+            else CourseReadSerializer
+        )
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["category", "instructor", "partners", "locations", "parent"]
@@ -181,26 +226,29 @@ class CourseListCreateView(generics.ListCreateAPIView):
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdminOrReadOnly]
     queryset = (
-        Course.objects
-        .select_related("instructor", "parent")
+        Course.objects.select_related("instructor", "parent")
         .prefetch_related("locations", "partners")
         .all()
     )
 
     def get_serializer_class(self):
-        return CourseWriteSerializer if self.request.method in ("PUT", "PATCH") else CourseReadSerializer
+        return (
+            CourseWriteSerializer
+            if self.request.method in ("PUT", "PATCH")
+            else CourseReadSerializer
+        )
 
 
 class StudentListCreateView(generics.ListCreateAPIView):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
-    permission_classes = [permissions.AllowAny]  # Open to all users
+    permission_classes = [permissions.AllowAny]
+
 
 class StudentDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
     permission_classes = [permissions.AllowAny]
-
 
 
 class SelectionProcedureListCreateView(generics.ListCreateAPIView):
@@ -232,10 +280,12 @@ class ContactUsCreateView(generics.CreateAPIView):
     serializer_class = ContactUsSerializer
     permission_classes = [permissions.AllowAny]
 
+
 class EventAttendanceListCreateView(generics.ListCreateAPIView):
     queryset = EventAttendance.objects.all()
     serializer_class = EventAttendanceSerializer
     permission_classes = [permissions.AllowAny]
+
 
 class EventAttendanceDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = EventAttendance.objects.all()
@@ -248,11 +298,20 @@ class AlumniListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAdminOrReadOnly]
 
     def get_serializer_class(self):
-        return AlumniWriteSerializer if self.request.method == "POST" else AlumniReadSerializer
+        return (
+            AlumniWriteSerializer
+            if self.request.method == "POST"
+            else AlumniReadSerializer
+        )
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["graduation_year", "course", "location", "user"]
-    search_fields = ["user__username", "user__email", "current_position", "success_story"]
+    search_fields = [
+        "user__username",
+        "user__email",
+        "current_position",
+        "success_story",
+    ]
     ordering_fields = ["graduation_year", "user__username"]
     ordering = ["-graduation_year"]
 
@@ -262,47 +321,127 @@ class AlumniDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdminOrReadOnly]
 
     def get_serializer_class(self):
-        return AlumniWriteSerializer if self.request.method in ("PUT", "PATCH") else AlumniReadSerializer
+        return (
+            AlumniWriteSerializer
+            if self.request.method in ("PUT", "PATCH")
+            else AlumniReadSerializer
+        )
+
 
 class EventListCreateView(generics.ListCreateAPIView):
     queryset = Event.objects.all()
-    serializer_class = EventSerializer
-    permission_classes = [permissions.AllowAny]
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return EventReadSerializer
+        return EventWriteSerializer
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [permissions.AllowAny()]
+        return [permissions.IsAdminUser()]
+
+
 
 class EventDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Event.objects.all()
-    serializer_class = EventSerializer
-    permission_classes = [permissions.AllowAny]
 
-class AboutUsListCreateView(generics.ListCreateAPIView):
-    queryset = AboutUs.objects.all()
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return EventReadSerializer
+        return EventWriteSerializer
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [permissions.AllowAny()]  
+        return [permissions.IsAdminUser()]   
+
+
+class AboutUsDetailView(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAdminOrReadOnly]
     serializer_class = AboutUsSerializer
-    permission_classes = [permissions.AllowAny]
 
-class TeamMemberListCreateView(generics.ListCreateAPIView):
-    queryset = TeamMember.objects.all()
-    serializer_class = TeamMemberSerializer
-    permission_classes = [permissions.AllowAny]
+    def get_object(self):
+        obj, _ = AboutUs.objects.get_or_create(
+            defaults={
+                "title": "About EvolvLearn",
+                "description": "We empower learners with practical tech skills.",
+                "mission": "",
+                "vision": "",
+            }
+        )
+        return obj
+
+
 
 class CoreValueListCreateView(generics.ListCreateAPIView):
-    queryset = CoreValue.objects.all()
+    queryset = CoreValue.objects.select_related("about_us").all()
     serializer_class = CoreValueSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["about_us"]
+    search_fields = ["title", "description"]
+    ordering_fields = ["title", "id"]
+    ordering = ["title"]
+
+
+class CoreValueDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CoreValue.objects.select_related("about_us").all()
+    serializer_class = CoreValueSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    
+
+class TeamMemberListCreateView(generics.ListCreateAPIView):
+    permission_classes = [IsAdminOrReadOnly]
+    queryset = TeamMember.objects.select_related("about_us").prefetch_related("core_values")
+
+    def get_serializer_class(self):
+        return TeamMemberWriteSerializer if self.request.method == "POST" else TeamMemberReadSerializer
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["about_us", "core_values", "role"]
+    search_fields = ["name", "role", "bio"]
+    ordering_fields = ["name", "role", "id"]
+    ordering = ["name"]
+
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx["request"] = self.request
+        return ctx
+
+
+class TeamMemberDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAdminOrReadOnly]
+    queryset = TeamMember.objects.select_related("about_us").prefetch_related("core_values")
+
+    def get_serializer_class(self):
+        return TeamMemberWriteSerializer if self.request.method in ("PUT", "PATCH") else TeamMemberReadSerializer
+
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx["request"] = self.request
+        return ctx
+
 
 class ReviewListCreateView(generics.ListCreateAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [permissions.AllowAny]
 
+
 class LearningScheduleListCreateView(generics.ListCreateAPIView):
     queryset = LearningSchedule.objects.all()
     serializer_class = LearningScheduleSerializer
     permission_classes = [permissions.AllowAny]
 
+
 class ModuleListCreateView(generics.ListCreateAPIView):
     queryset = Module.objects.all()
     serializer_class = ModuleSerializer
     permission_classes = [permissions.AllowAny]
+
 
 class LessonListCreateView(generics.ListCreateAPIView):
     queryset = Lesson.objects.all()
