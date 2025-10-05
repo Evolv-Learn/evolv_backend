@@ -248,39 +248,27 @@ class Review(models.Model):
 
 
 class LearningSchedule(models.Model):
-    course = models.ForeignKey(
-        "Course", on_delete=models.CASCADE, related_name="schedules"
-    )
+    course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="schedules")
     start_date = models.DateField()
     end_date = models.DateField()
-    instructor = models.ForeignKey(
-        get_user_model(),
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="schedules",
-    )
-    location = models.ForeignKey(
-        "Location", on_delete=models.CASCADE, related_name="schedules"
-    )
-    duration = models.IntegerField(blank=True, null=True)
+    instructor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="schedules",)
+    location = models.ForeignKey("Location", on_delete=models.CASCADE, related_name="schedules")
+    duration = models.IntegerField(blank=True, null=True) 
 
     def save(self, *args, **kwargs):
         if self.start_date and self.end_date:
             delta = relativedelta(self.end_date, self.start_date)
             self.duration = (delta.years * 12) + delta.months
-        super(LearningSchedule, self).save(*args, **kwargs)
+        else:
+            self.duration = None
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return (
-            f"Schedule for {self.course.name} from {self.start_date} to {self.end_date}"
-        )
+        return f"Schedule for {self.course.name} from {self.start_date} to {self.end_date}"
 
 
 class Module(models.Model):
-    schedule = models.ForeignKey(
-        LearningSchedule, on_delete=models.CASCADE, related_name="modules"
-    )
+    schedule = models.ForeignKey(LearningSchedule, on_delete=models.CASCADE, related_name="modules")
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     order = models.PositiveIntegerField(help_text="Order of the module in the schedule")
@@ -310,20 +298,11 @@ class Lesson(models.Model):
 
 
 class Student(models.Model):
-    GENDER_CHOICES = [
-        ("Male", "Male"),
-        ("Female", "Female"),
-        ("Other", "Other"),
-    ]
-    DIPLOMA_LEVEL_CHOICES = [
-        ("PhD", "PhD"),
-        ("Master", "Master"),
-        ("Bachelor", "Bachelor"),
-        ("Secondary School", "Secondary School"),
-        ("No Option", "No Option"),
-    ]
+    GENDER_CHOICES = [("Male", "Male"), ("Female", "Female"), ("Other", "Other")]
+    DIPLOMA_LEVEL_CHOICES = [("PhD", "PhD"),("Master", "Master"),("Bachelor", "Bachelor"),("Secondary School", "Secondary School"), ("No Option", "No Option")]
     ENGLISH_LEVEL_CHOICES = [(i, str(i)) for i in range(1, 6)]
 
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="student", null=True, blank=True)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20)
     first_name = models.CharField(max_length=50)
@@ -348,6 +327,15 @@ class Student(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} - {self.email}"
+    
+
+class ContactUs(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    message = models.TextField()
+
+    def __str__(self):
+        return f"Message from {self.name} - {self.email}"
 
 
 class SelectionProcedure(models.Model):
@@ -370,20 +358,7 @@ class StudentSelection(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
-class ContactUs(models.Model):
-    name = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
-    message = models.TextField()
-
-    def __str__(self):
-        return f"Message from {self.name} - {self.email}"
-
-
 class EventAttendance(models.Model):
-    event = models.ForeignKey(
-        Event, on_delete=models.CASCADE, related_name="attendances"
-    )
-    student = models.ForeignKey(
-        Student, on_delete=models.CASCADE, related_name="event_attendances"
-    )
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="attendances")
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="event_attendances")
     attended = models.BooleanField(default=False)

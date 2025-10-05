@@ -1,28 +1,11 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.db.models import Q
+from django.utils import timezone
 
 
-
-from .models import (
-    Profile,
-    Location,
-    Partner,
-    Course,
-    Student,
-    LearningSchedule,
-    SelectionProcedure,
-    StudentSelection,
-    ContactUs,
-    EventAttendance,
-    Alumni,
-    Event,
-    AboutUs,
-    TeamMember,
-    CoreValue,
-    Review,
-    Module,
-    Lesson,
-)
+from .models import ( Profile, Location, Partner, Course, Student, LearningSchedule, SelectionProcedure,StudentSelection, 
+                        ContactUs, EventAttendance, Alumni, Event, AboutUs, TeamMember, CoreValue, Review,Module,Lesson)
 
 User = get_user_model()
 
@@ -45,12 +28,8 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class ProfileSelfSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", required=False)
-    first_name = serializers.CharField(
-        source="user.first_name", required=False, allow_blank=True
-    )
-    last_name = serializers.CharField(
-        source="user.last_name", required=False, allow_blank=True
-    )
+    first_name = serializers.CharField(source="user.first_name", required=False, allow_blank=True)
+    last_name = serializers.CharField(source="user.last_name", required=False, allow_blank=True)
     email = serializers.EmailField(source="user.email", required=False)
     role = serializers.CharField(read_only=True)
 
@@ -63,18 +42,12 @@ class ProfileSelfSerializer(serializers.ModelSerializer):
         me = self.context["request"].user
 
         uname = user_data.get("username")
-        if (
-            uname
-            and User.objects.exclude(pk=me.pk).filter(username__iexact=uname).exists()
-        ):
+        if (uname and User.objects.exclude(pk=me.pk).filter(username__iexact=uname).exists()):
             raise serializers.ValidationError({"username": "Username already taken."})
 
         mail = user_data.get("email")
         if mail and User.objects.exclude(pk=me.pk).filter(email__iexact=mail).exists():
-            raise serializers.ValidationError(
-                {"email": "This email is already in use."}
-            )
-
+            raise serializers.ValidationError({"email": "This email is already in use."})
         return attrs
 
     def update(self, instance, validated_data):
@@ -117,8 +90,7 @@ class RegisterUserSerializer(serializers.Serializer):
             username=validated_data["username"],
             email=validated_data["email"],
             first_name=validated_data.get("first_name", ""),
-            last_name=validated_data.get("last_name", ""),
-        )
+            last_name=validated_data.get("last_name", ""))
         user.set_password(validated_data["password"])
         user.save()
 
@@ -134,16 +106,7 @@ class UserProfileCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = [
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "email",
-            "password",
-            "role",
-            "token",
-        ]
+        fields = ["id", "username", "first_name", "last_name", "email", "password","role", "token",]
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
@@ -174,12 +137,8 @@ class LocationSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate(self, attrs):
-        loc_type = attrs.get(
-            "location_type", getattr(self.instance, "location_type", None)
-        )
-        online_region = attrs.get(
-            "online_region", getattr(self.instance, "online_region", None)
-        )
+        loc_type = attrs.get("location_type", getattr(self.instance, "location_type", None))
+        online_region = attrs.get("online_region", getattr(self.instance, "online_region", None))
         country = attrs.get("country", getattr(self.instance, "country", None))
         state = attrs.get("state", getattr(self.instance, "state", None))
 
@@ -187,9 +146,7 @@ class LocationSerializer(serializers.ModelSerializer):
 
         if loc_type == "Online":
             if not online_region:
-                errors["online_region"] = (
-                    "online_region is required for Online locations."
-                )
+                errors["online_region"] = ("online_region is required for Online locations.")
             if country:
                 errors["country"] = "country must be empty for Online locations."
             if state:
@@ -199,9 +156,7 @@ class LocationSerializer(serializers.ModelSerializer):
             if not country:
                 errors["country"] = "country is required for Campus locations."
             if online_region:
-                errors["online_region"] = (
-                    "online_region must be empty for Campus locations."
-                )
+                errors["online_region"] = ("online_region must be empty for Campus locations.")
 
         if errors:
             raise serializers.ValidationError(errors)
@@ -231,19 +186,7 @@ class CourseReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = [
-            "id",
-            "name",
-            "category",
-            "description",
-            "software_tools",
-            "instructor",
-            "locations",
-            "partners",
-            "parent",
-            "parent_id",
-            "created_at",
-        ]
+        fields = ["id","name","category","description","software_tools","instructor","locations","partners","parent","parent_id","created_at",]
 
 
 class CourseWriteSerializer(serializers.ModelSerializer):
@@ -261,32 +204,19 @@ class CourseWriteSerializer(serializers.ModelSerializer):
         parent = attrs.get("parent", getattr(instance, "parent", None))
 
         if instance and parent and parent.pk == instance.pk:
-            raise serializers.ValidationError(
-                {"parent": "A course cannot be its own parent."}
-            )
+            raise serializers.ValidationError({"parent": "A course cannot be its own parent."})
 
         if instance and parent:
             seen = set()
             cur = parent
             while cur:
                 if cur.pk == instance.pk:
-                    raise serializers.ValidationError(
-                        {"parent": "Cycle detected in course hierarchy."}
-                    )
+                    raise serializers.ValidationError({"parent": "Cycle detected in course hierarchy."})
                 if cur.pk in seen:
                     break
                 seen.add(cur.pk)
                 cur = cur.parent
         return attrs
-
-
-class StudentSerializer(serializers.ModelSerializer):
-    courses = serializers.StringRelatedField(many=True) 
-    schedules = serializers.StringRelatedField(many=True)  
-
-    class Meta:
-        model = Student
-        fields = "__all__"
 
 
 class SelectionProcedureSerializer(serializers.ModelSerializer):
@@ -320,15 +250,7 @@ class AlumniReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Alumni
-        fields = [
-            "id",
-            "user",
-            "graduation_year",
-            "current_position",
-            "success_story",
-            "course",
-            "location",
-        ]
+        fields = ["id","user","graduation_year","current_position","success_story","course","location",]
 
 
 class AlumniWriteSerializer(serializers.ModelSerializer):
@@ -443,26 +365,178 @@ class TeamMemberReadSerializer(serializers.ModelSerializer):
         return request.build_absolute_uri(url) if request else url
 
 
-
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = "__all__"
+        read_only_fields = ["created_at"]
+
+    def validate_rating(self, value):
+        if value is None:
+            return 5
+        if not (1 <= value <= 5):
+            raise serializers.ValidationError("Rating must be between 1 and 5.")
+        return value
+
+    def validate(self, attrs):
+        course = attrs.get("course", getattr(self.instance, "course", None))
+        alumni = attrs.get("alumni", getattr(self.instance, "alumni", None))
+        about_us = attrs.get("about_us", getattr(self.instance, "about_us", None))
+
+        if not (course or alumni or about_us):
+            raise serializers.ValidationError(
+                "A review must be associated with a course, an alumni, or AboutUs.")
+        return attrs
 
 
 class LearningScheduleSerializer(serializers.ModelSerializer):
+    duration = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = LearningSchedule
-        fields = "__all__"
+        fields = ["id", "course", "start_date", "end_date", "instructor", "location", "duration"]
+
+    def validate(self, attrs):
+        start = attrs.get("start_date", getattr(self.instance, "start_date", None))
+        end = attrs.get("end_date", getattr(self.instance, "end_date", None))
+        course = attrs.get("course", getattr(self.instance, "course", None))
+        location = attrs.get("location", getattr(self.instance, "location", None))
+
+        if start and end and end < start:
+            raise serializers.ValidationError({"end_date": "end_date must be the same or after start_date."})
+
+        if start and end and course and location:
+            qs = LearningSchedule.objects.filter(course=course, location=location)
+            if self.instance:
+                qs = qs.exclude(pk=self.instance.pk)
+            overlap = qs.filter(Q(start_date__lte=end) & Q(end_date__gte=start)).exists()
+            if overlap:
+                raise serializers.ValidationError("Another schedule for this course/location overlaps the provided date range.")
+
+        return attrs
 
 
-class ModuleSerializer(serializers.ModelSerializer):
+class ModuleReadSerializer(serializers.ModelSerializer):
+    schedule = serializers.StringRelatedField()
+
     class Meta:
         model = Module
-        fields = "__all__"
+        fields = ["id", "schedule", "title", "description", "order"]
 
 
-class LessonSerializer(serializers.ModelSerializer):
+class ModuleWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Module
+        fields = ["id", "schedule", "title", "description", "order"]
+
+    def validate(self, attrs):
+        schedule = attrs.get("schedule", getattr(self.instance, "schedule", None))
+        order = attrs.get("order", getattr(self.instance, "order", None))
+        if schedule is None or order is None:
+            return attrs  
+
+        qs = Module.objects.filter(schedule=schedule, order=order)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError({"order": "A module with this order already exists for the schedule."})
+        return attrs
+
+
+class LessonReadSerializer(serializers.ModelSerializer):   
+    module = serializers.StringRelatedField()  
+
     class Meta:
         model = Lesson
+        fields = ["id", "module", "title", "description", "content", "resources", "order"]
+
+
+class LessonWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = ["id", "module", "title", "description", "content", "resources", "order"]
+
+    def validate(self, attrs):
+        module = attrs.get("module", getattr(self.instance, "module", None))
+        order = attrs.get("order", getattr(self.instance, "order", None))
+
+        if module is None or order is None:
+            return attrs 
+
+        qs = Lesson.objects.filter(module=module, order=order)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError({"order": "A lesson with this order already exists for the module."})
+        return attrs
+    
+
+class StudentReadSerializer(serializers.ModelSerializer):
+    courses = serializers.StringRelatedField(many=True)
+    schedules = serializers.StringRelatedField(many=True)
+    user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Student
         fields = "__all__"
+        read_only_fields = ["id", "user"]
+
+    def get_user(self, obj):
+        if obj.user:
+            return {"id": obj.user.id, "username": obj.user.username, "email": obj.user.email}
+        return None
+
+
+class StudentWriteSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    courses = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all(), many=True, required=False)
+    schedules = serializers.PrimaryKeyRelatedField(queryset=LearningSchedule.objects.all(), many=True, required=False)
+
+    class Meta:
+        model = Student
+        fields = "__all__"
+        read_only_fields = ["id"]  
+
+    def validate_birth_date(self, value):
+        if value >= timezone.localdate():
+            raise serializers.ValidationError("birth_date must be in the past.")
+        return value
+
+    def validate_english_level(self, value):
+        if not (1 <= int(value) <= 5):
+            raise serializers.ValidationError("english_level must be between 1 and 5.")
+        return value
+
+    def validate(self, attrs):
+        user = attrs.get("user")
+        if user and self.instance is None and Student.objects.filter(user=user).exists():
+            raise serializers.ValidationError("A student profile already exists for this user.")
+
+        courses = attrs.get("courses") or []
+        schedules = attrs.get("schedules") or []
+        #if not courses and not schedules:
+        #     raise serializers.ValidationError("Select at least one course or schedule.")
+        return attrs
+
+    def create(self, validated_data):
+        courses = validated_data.pop("courses", [])
+        schedules = validated_data.pop("schedules", [])
+        student = super().create(validated_data)
+        if courses:
+            student.courses.set(courses)
+        if schedules:
+            student.schedules.set(schedules)
+        if student.user and student.user.email and student.email != student.user.email:
+            student.email = student.user.email
+            student.save(update_fields=["email"])
+        return student
+
+    def update(self, instance, validated_data):
+        courses = validated_data.pop("courses", None)
+        schedules = validated_data.pop("schedules", None)
+        student = super().update(instance, validated_data)
+        if courses is not None:
+            student.courses.set(courses)
+        if schedules is not None:
+            student.schedules.set(schedules)
+        return student

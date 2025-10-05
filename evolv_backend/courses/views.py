@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
 
+from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import IsAuthenticated
@@ -11,56 +12,18 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .permissions import IsAdmin, IsAdminOrReadOnly
+from .permissions import IsAdmin, IsAdminOrReadOnly, AllowAnyCreateReadAdminModify, IsAdminOrInstructorOwner, AuthenticatedCreateReadAdminModify
 
 from .models import (
-    Profile,
-    Location,
-    Partner,
-    Course,
-    Student,
-    SelectionProcedure,
-    StudentSelection,
-    ContactUs,
-    EventAttendance,
-    Alumni,
-    Event,
-    AboutUs,
-    TeamMember,
-    CoreValue,
-    Review,
-    LearningSchedule,
-    Module,
-    Lesson,
-)
+    Profile,Location,Partner,Course,Student,SelectionProcedure,StudentSelection,ContactUs,EventAttendance,
+    Alumni,Event,AboutUs,TeamMember,CoreValue,Review,LearningSchedule,Module,Lesson,)
+
 from .serializers import (
-    ProfileSerializer,
-    LocationSerializer,
-    PartnerSerializer,
-    ProfileSelfSerializer,
-    CourseReadSerializer,
-    CourseWriteSerializer,
-    StudentSerializer,
-    SelectionProcedureSerializer,
-    StudentSelectionSerializer,
-    ContactUsSerializer,
-    EventAttendanceSerializer,
-    AlumniReadSerializer,
-    AlumniWriteSerializer,
-    EventWriteSerializer,
-    EventReadSerializer,
-    AboutUsSerializer,
-    TeamMemberReadSerializer,
-    TeamMemberWriteSerializer,
-    CoreValueSerializer,
-    ReviewSerializer,
-    LearningScheduleSerializer,
-    ModuleSerializer,
-    LessonSerializer,
-    UserProfileCreateSerializer,
-    RegisterUserSerializer,
-    AdminProfileUpdateSerializer,
-)
+    ProfileSerializer,LocationSerializer,PartnerSerializer,ProfileSelfSerializer,CourseReadSerializer,CourseWriteSerializer,
+    SelectionProcedureSerializer,StudentSelectionSerializer,ContactUsSerializer,EventAttendanceSerializer,AlumniReadSerializer,AlumniWriteSerializer,
+    EventWriteSerializer,EventReadSerializer,AboutUsSerializer, TeamMemberReadSerializer,TeamMemberWriteSerializer,CoreValueSerializer,ReviewSerializer,
+    LearningScheduleSerializer, LessonReadSerializer, LessonWriteSerializer, UserProfileCreateSerializer, RegisterUserSerializer, AdminProfileUpdateSerializer,
+    ModuleReadSerializer, ModuleWriteSerializer, StudentReadSerializer, StudentWriteSerializer)
 
 
 @api_view(["GET"])
@@ -88,13 +51,7 @@ class AdminProfileListView(generics.ListAPIView):
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["role", "user__is_active", "user__is_staff"]
-    search_fields = [
-        "user__username",
-        "user__email",
-        "user__first_name",
-        "user__last_name",
-        "role",
-    ]
+    search_fields = ["user__username","user__email","user__first_name","user__last_name","role",]
     ordering_fields = ["user__username", "user__email", "user__date_joined", "role"]
     ordering = ["user__username"]
 
@@ -237,18 +194,6 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
             if self.request.method in ("PUT", "PATCH")
             else CourseReadSerializer
         )
-
-
-class StudentListCreateView(generics.ListCreateAPIView):
-    queryset = Student.objects.all()
-    serializer_class = StudentSerializer
-    permission_classes = [permissions.AllowAny]
-
-
-class StudentDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Student.objects.all()
-    serializer_class = StudentSerializer
-    permission_classes = [permissions.AllowAny]
 
 
 class SelectionProcedureListCreateView(generics.ListCreateAPIView):
@@ -426,24 +371,139 @@ class TeamMemberDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ReviewListCreateView(generics.ListCreateAPIView):
-    queryset = Review.objects.all()
+    queryset = Review.objects.select_related("course", "alumni", "about_us").all()
     serializer_class = ReviewSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAnyCreateReadAdminModify]
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["course", "alumni", "rating", "about_us"]
+    search_fields = ["name", "review_text"]
+    ordering_fields = ["rating", "created_at"]
+    ordering = ["-created_at"]
+
+
+class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Review.objects.select_related("course", "alumni", "about_us").all()
+    serializer_class = ReviewSerializer
+    permission_classes = [AllowAnyCreateReadAdminModify]
 
 
 class LearningScheduleListCreateView(generics.ListCreateAPIView):
-    queryset = LearningSchedule.objects.all()
+    queryset = LearningSchedule.objects.select_related("course", "instructor", "location").all()
     serializer_class = LearningScheduleSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAdminOrInstructorOwner]
 
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["course", "instructor", "location"]
+    search_fields = ["course__name", "instructor__username"]
+    ordering_fields = ["start_date", "end_date", "duration"]
+    ordering = ["-start_date"]
+
+    def perform_create(self, serializer):
+        if not serializer.validated_data.get("instructor") and self.request.user.is_authenticated:
+            serializer.save(instructor=self.request.user)
+        else:
+            serializer.save()
+
+
+class LearningScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = LearningSchedule.objects.select_related("course", "instructor", "location")
+    serializer_class = LearningScheduleSerializer
+    permission_classes = [IsAdminOrInstructorOwner]
 
 class ModuleListCreateView(generics.ListCreateAPIView):
-    queryset = Module.objects.all()
-    serializer_class = ModuleSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
+    queryset = Module.objects.select_related("schedule", "schedule__course").all()
+
+    def get_serializer_class(self):
+        return ModuleWriteSerializer if self.request.method == "POST" else ModuleReadSerializer
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["schedule", "schedule__course"]
+    search_fields = ["title", "description"]
+    ordering_fields = ["order", "title"]
+    ordering = ["order"]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        schedule_id = self.kwargs.get("schedule_id")
+        if schedule_id:
+            qs = qs.filter(schedule_id=schedule_id)
+        return qs
+
+
+class ModuleDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAdminOrReadOnly]
+    queryset = Module.objects.select_related("schedule", "schedule__course").all()
+
+    def get_serializer_class(self):
+        return ModuleWriteSerializer if self.request.method in ("PUT", "PATCH") else ModuleReadSerializer
 
 
 class LessonListCreateView(generics.ListCreateAPIView):
-    queryset = Lesson.objects.all()
-    serializer_class = LessonSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
+    queryset = Lesson.objects.select_related("module", "module__schedule").all()
+
+    def get_serializer_class(self):
+        return LessonWriteSerializer if self.request.method == "POST" else LessonReadSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        module_id = self.kwargs.get("module_id")
+        if module_id:
+            qs = qs.filter(module_id=module_id)
+        return qs
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["module", "module__schedule", "order"]
+    search_fields = ["title", "description", "content"]
+    ordering_fields = ["order", "title"]
+    ordering = ["order"]
+
+
+class LessonDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAdminOrReadOnly]
+    queryset = Lesson.objects.select_related("module", "module__schedule").all()
+
+class StudentListCreateView(generics.ListCreateAPIView):
+    queryset = Student.objects.prefetch_related("courses", "schedules").all()
+    permission_classes = [AuthenticatedCreateReadAdminModify]
+
+    def get_serializer_class(self):
+        return StudentWriteSerializer if self.request.method == "POST" else StudentReadSerializer
+
+    def perform_create(self, serializer):
+        # This will set user via HiddenField / CurrentUserDefault,
+        # but this is defensive to ensure the user is set.
+        serializer.save(user=self.request.user)
+
+
+class StudentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Student.objects.prefetch_related("courses", "schedules").all()
+    permission_classes = [AuthenticatedCreateReadAdminModify]
+
+    def get_serializer_class(self):
+        # Admin updates use write serializer; GET uses read one
+        return StudentWriteSerializer if self.request.method in ("PUT", "PATCH") else StudentReadSerializer
+    
+
+class MyStudentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            student = request.user.student
+        except Student.DoesNotExist:
+            return Response({"detail":"Student profile not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = StudentReadSerializer(student, context={"request": request})
+        return Response(serializer.data)
+
+    def patch(self, request):
+        try:
+            student = request.user.student
+        except Student.DoesNotExist:
+            return Response({"detail":"Student profile not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = StudentWriteSerializer(student, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
