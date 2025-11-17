@@ -108,7 +108,7 @@ class AdminUserProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 class RegisterUserView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterUserSerializer
-    throttle_classes = []  # RegisterRateThrottle
+    throttle_classes = [RegisterRateThrottle]  # RegisterRateThrottle
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

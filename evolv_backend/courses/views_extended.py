@@ -306,8 +306,8 @@ class LearningMaterialsView(APIView):
                     "description": "Access course code, projects, and resources"
                 },
                 "discord": {
-                    "url": "https://discord.gg/your-invite",
-                    "description": "Join our community and get support"
+                    "url": "https://discord.gg/ksa9s6P95N",
+                    "description": "Join our Discord community and get support"
                 },
                 "video_materials": {
                     "url": "https://youtube.com/playlist/your-playlist",
