@@ -3,6 +3,10 @@ from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
 
+from .utils import send_welcome_email
+from .throttles import RegisterRateThrottle, ContactUsRateThrottle
+
+from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -24,6 +28,11 @@ from .serializers import (
     EventWriteSerializer,EventReadSerializer,AboutUsSerializer, TeamMemberReadSerializer,TeamMemberWriteSerializer,CoreValueSerializer,ReviewSerializer,
     LearningScheduleSerializer, LessonReadSerializer, LessonWriteSerializer, UserProfileCreateSerializer, RegisterUserSerializer, AdminProfileUpdateSerializer,
     ModuleReadSerializer, ModuleWriteSerializer, StudentReadSerializer, StudentWriteSerializer)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def health_check(request):
+    return Response({"status": "ok"})
 
 
 @api_view(["GET"])
@@ -99,11 +108,13 @@ class AdminUserProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 class RegisterUserView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterUserSerializer
+    throttle_classes = []  # RegisterRateThrottle
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        send_welcome_email(user)
 
         refresh = RefreshToken.for_user(user)
         data = {
@@ -224,6 +235,7 @@ class ContactUsCreateView(generics.CreateAPIView):
     queryset = ContactUs.objects.all()
     serializer_class = ContactUsSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [ContactUsRateThrottle] 
 
 
 class EventAttendanceListCreateView(generics.ListCreateAPIView):

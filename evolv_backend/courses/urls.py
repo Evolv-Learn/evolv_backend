@@ -5,6 +5,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 
+
 from .views import (
     ProfileDetailView,
     LocationListCreateView,
@@ -41,7 +42,17 @@ from .views import (
     LessonDetailView,
     RegisterUserView,
     AdminProfileListView,
-    AdminUserProfileDetailView, MyStudentView
+    AdminUserProfileDetailView, MyStudentView, health_check
+)
+
+from .views_extended import (
+    StudentDashboardView,
+    AdminDashboardView,
+    StudentApplicationStatusView,
+    EnrollScheduleView,
+    LearningMaterialsView,
+    my_courses,
+    my_events,
 )
 
 app_name = "courses"
@@ -102,6 +113,16 @@ urlpatterns = [
     path("students/", StudentListCreateView.as_view(), name="student-list"),
     path("students/<int:pk>/", StudentDetailView.as_view(), name="student-detail"),
     path("students/me/", MyStudentView.as_view(), name="student-me"),
+
+    path("students/me/dashboard/", StudentDashboardView.as_view(), name="student-dashboard"),
+    path("students/me/application-status/", StudentApplicationStatusView.as_view(), name="application-status"),
+    path("students/me/enroll/<int:schedule_id>/", EnrollScheduleView.as_view(), name="enroll-schedule"),
+    path("students/me/learning-materials/", LearningMaterialsView.as_view(), name="learning-materials"),
+    path("students/me/courses/", my_courses, name="my-courses"),
+    path("students/me/events/", my_events, name="my-events"),
+    path("admin/dashboard/", AdminDashboardView.as_view(), name="admin-dashboard"),
+
+    path("health/", health_check, name="health-check"),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
