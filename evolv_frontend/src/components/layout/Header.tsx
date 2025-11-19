@@ -116,6 +116,11 @@ export const Header = () => {
                     Dashboard
                   </Button>
                 </Link>
+                <Link href="/admin/applications">
+                  <Button variant="outline" size="sm">
+                    Applications
+                  </Button>
+                </Link>
                 <Button variant="secondary" size="sm" onClick={logout}>
                   Logout
                 </Button>

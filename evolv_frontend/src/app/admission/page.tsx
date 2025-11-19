@@ -61,7 +61,7 @@ export default function AdmissionPage() {
     last_name: user?.last_name || '',
     gender: '',
     birth_date: '',
-    zip_code: '',
+    zip_code: 'N/A',
     country_of_birth: '',
     nationality: '',
     diploma_level: '',
@@ -95,22 +95,68 @@ export default function AdmissionPage() {
   };
 
   const validateStep = () => {
+    setError(''); // Clear previous errors
+    
     switch (currentStep) {
       case 1:
-        if (!formData.first_name || !formData.last_name || !formData.email || !formData.phone || !formData.gender || !formData.birth_date) {
-          setError('Please fill in all required fields');
+        if (!formData.first_name?.trim()) {
+          setError('First name is required');
+          return false;
+        }
+        if (!formData.last_name?.trim()) {
+          setError('Last name is required');
+          return false;
+        }
+        if (!formData.email?.trim()) {
+          setError('Email is required');
+          return false;
+        }
+        if (!formData.phone?.trim()) {
+          setError('Phone number is required');
+          return false;
+        }
+        if (!formData.gender) {
+          setError('Gender is required');
+          return false;
+        }
+        if (!formData.birth_date) {
+          setError('Date of birth is required');
+          return false;
+        }
+        if (!formData.country_of_birth?.trim()) {
+          setError('Country of birth is required');
+          return false;
+        }
+        if (!formData.nationality?.trim()) {
+          setError('Nationality is required');
           return false;
         }
         break;
       case 2:
-        if (!formData.diploma_level || !formData.job_status) {
-          setError('Please fill in all required fields');
+        if (!formData.diploma_level) {
+          setError('Education level is required');
+          return false;
+        }
+        if (!formData.job_status) {
+          setError('Job status is required');
           return false;
         }
         break;
       case 3:
-        if (!formData.motivation || !formData.future_goals || !formData.proudest_moment || !formData.how_heard) {
-          setError('Please fill in all required fields');
+        if (!formData.motivation?.trim()) {
+          setError('Please tell us why you want to join');
+          return false;
+        }
+        if (!formData.future_goals?.trim()) {
+          setError('Please share your career goals');
+          return false;
+        }
+        if (!formData.proudest_moment?.trim()) {
+          setError('Please share your proudest achievement');
+          return false;
+        }
+        if (!formData.how_heard) {
+          setError('Please tell us how you heard about us');
           return false;
         }
         break;
@@ -125,9 +171,15 @@ export default function AdmissionPage() {
   };
 
   const nextStep = () => {
+    console.log('Next button clicked, current step:', currentStep);
+    console.log('Form data:', formData);
+    
     if (validateStep()) {
+      console.log('Validation passed, moving to next step');
       setCurrentStep(currentStep + 1);
-      window.scrollTo(0, 0);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      console.log('Validation failed');
     }
   };
 
@@ -148,10 +200,34 @@ export default function AdmissionPage() {
     setError('');
 
     try {
-      await apiClient.post('/students/', formData);
+      console.log('Submitting form data:', formData);
+      const response = await apiClient.post('/students/', formData);
+      console.log('Submission successful:', response.data);
       router.push('/dashboard?success=application-submitted');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to submit application. Please try again.');
+      console.error('Submission error:', err);
+      console.error('Error response:', err.response?.data);
+      
+      // Handle specific error messages
+      if (err.response?.data) {
+        const errorData = err.response.data;
+        if (typeof errorData === 'object') {
+          // Format validation errors
+          const errorMessages = Object.entries(errorData)
+            .map(([field, messages]) => {
+              if (Array.isArray(messages)) {
+                return `${field}: ${messages.join(', ')}`;
+              }
+              return `${field}: ${messages}`;
+            })
+            .join('\n');
+          setError(errorMessages || 'Please check your form data and try again.');
+        } else {
+          setError(errorData.detail || errorData.toString() || 'Failed to submit application.');
+        }
+      } else {
+        setError('Failed to submit application. Please check your internet connection and try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -228,20 +304,66 @@ export default function AdmissionPage() {
               />
             </div>
             <div className="grid md:grid-cols-2 gap-6">
-              <Input
-                label="Country of Birth *"
-                value={formData.country_of_birth}
-                onChange={(e) => updateFormData('country_of_birth', e.target.value)}
-                placeholder="e.g., Nigeria, Ghana, Kenya"
-                required
-              />
-              <Input
-                label="Nationality *"
-                value={formData.nationality}
-                onChange={(e) => updateFormData('nationality', e.target.value)}
-                placeholder="e.g., Nigerian, Ghanaian"
-                required
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Country of Birth *
+                </label>
+                <select
+                  value={formData.country_of_birth}
+                  onChange={(e) => updateFormData('country_of_birth', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-gold"
+                  required
+                >
+                  <option value="">Select Country</option>
+                  <option value="NG">Nigeria</option>
+                  <option value="GH">Ghana</option>
+                  <option value="KE">Kenya</option>
+                  <option value="ZA">South Africa</option>
+                  <option value="EG">Egypt</option>
+                  <option value="ET">Ethiopia</option>
+                  <option value="TZ">Tanzania</option>
+                  <option value="UG">Uganda</option>
+                  <option value="GB">United Kingdom</option>
+                  <option value="US">United States</option>
+                  <option value="CA">Canada</option>
+                  <option value="DE">Germany</option>
+                  <option value="FR">France</option>
+                  <option value="IN">India</option>
+                  <option value="CN">China</option>
+                  <option value="BR">Brazil</option>
+                  <option value="AU">Australia</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nationality *
+                </label>
+                <select
+                  value={formData.nationality}
+                  onChange={(e) => updateFormData('nationality', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-gold"
+                  required
+                >
+                  <option value="">Select Nationality</option>
+                  <option value="NG">Nigerian</option>
+                  <option value="GH">Ghanaian</option>
+                  <option value="KE">Kenyan</option>
+                  <option value="ZA">South African</option>
+                  <option value="EG">Egyptian</option>
+                  <option value="ET">Ethiopian</option>
+                  <option value="TZ">Tanzanian</option>
+                  <option value="UG">Ugandan</option>
+                  <option value="GB">British</option>
+                  <option value="US">American</option>
+                  <option value="CA">Canadian</option>
+                  <option value="DE">German</option>
+                  <option value="FR">French</option>
+                  <option value="IN">Indian</option>
+                  <option value="CN">Chinese</option>
+                  <option value="BR">Brazilian</option>
+                  <option value="AU">Australian</option>
+                </select>
+              </div>
             </div>
           </div>
         );
@@ -264,12 +386,11 @@ export default function AdmissionPage() {
                   required
                 >
                   <option value="">Select Education Level</option>
-                  <option value="High School">High School</option>
-                  <option value="Diploma">Diploma</option>
+                  <option value="Secondary School">Secondary School</option>
                   <option value="Bachelor">Bachelor's Degree</option>
                   <option value="Master">Master's Degree</option>
                   <option value="PhD">PhD</option>
-                  <option value="Other">Other</option>
+                  <option value="No Option">Other</option>
                 </select>
               </div>
               <div>
@@ -474,7 +595,7 @@ export default function AdmissionPage() {
                   <div><strong>Phone:</strong> {formData.phone}</div>
                   <div><strong>Gender:</strong> {formData.gender}</div>
                   <div><strong>Date of Birth:</strong> {formData.birth_date}</div>
-                  <div><strong>Nationality:</strong> {formData.nationality}</div>
+                  <div><strong>Country:</strong> {formData.country_of_birth}</div>
                 </div>
               </div>
 
@@ -614,6 +735,7 @@ export default function AdmissionPage() {
         {/* Navigation Buttons */}
         <div className="flex justify-between items-center">
           <Button
+            type="button"
             onClick={prevStep}
             variant="outline"
             disabled={currentStep === 1}
@@ -628,6 +750,7 @@ export default function AdmissionPage() {
 
           {currentStep < STEPS.length ? (
             <Button
+              type="button"
               onClick={nextStep}
               variant="primary"
               className="px-6"
@@ -636,6 +759,7 @@ export default function AdmissionPage() {
             </Button>
           ) : (
             <Button
+              type="button"
               onClick={handleSubmit}
               variant="primary"
               disabled={isLoading}
