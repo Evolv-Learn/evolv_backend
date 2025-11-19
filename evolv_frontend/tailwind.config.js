@@ -4,6 +4,7 @@ module.exports = {
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/styles/**/*.{css,scss}', // so Tailwind sees globals.css
   ],
   theme: {
     extend: {
@@ -24,8 +25,22 @@ module.exports = {
         success: {
           DEFAULT: '#228B22',
         },
+
+        // extra flat colors to match your globals.css usage
+        'warm-white': '#FFF8F0',
+        'earth-gray': '#8B7355',
+        'deep-black': '#1A1A1A',
+
+        // this defines the `border-border` utility
+        border: '#E5E7EB', // change to any color you prefer
+      },
+      fontFamily: {
+        // ensures font-sans works nicely
+        sans: ['system-ui', 'ui-sans-serif', 'sans-serif'],
+        // this makes `font-heading` valid
+        heading: ['system-ui', 'ui-sans-serif', 'sans-serif'],
       },
     },
   },
   plugins: [],
-}
+};
