@@ -108,8 +108,18 @@ class RegisterUserSerializer(serializers.Serializer):
         return value
 
     def validate_email(self, value):
+        # Check if email exists in User table
         if User.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError("This email is already registered.")
+        
+        # Check if email exists in Student table (has unique constraint)
+        if Student.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("This email is already registered.")
+        
+        # Check if email exists in ContactUs table (has unique constraint)
+        if ContactUs.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("This email is already registered.")
+        
         return value
 
     def create(self, validated_data):

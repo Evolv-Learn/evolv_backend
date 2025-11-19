@@ -78,6 +78,11 @@ DATABASES = {
 
 AUTH_USER_MODEL = "courses.CustomUser"
 
+AUTHENTICATION_BACKENDS = [
+    'courses.authentication.EmailOrUsernameBackend',  
+    'django.contrib.auth.backends.ModelBackend',  
+]
+
 _frontends = [
     o.strip() for o in os.getenv("FRONTEND_ORIGINS", "").split(",") if o.strip()
 ]

@@ -28,6 +28,8 @@ from .views import (
     AlumniDetailView,
     EventListCreateView,
     EventDetailView,
+    verify_email,
+    resend_verification,
     AboutUsDetailView,
     TeamMemberListCreateView,
     CoreValueListCreateView,
@@ -59,6 +61,8 @@ app_name = "courses"
 
 urlpatterns = [
     path("register/", RegisterUserView.as_view(), name="register"),
+    path("verify-email/", verify_email, name="verify-email"),
+    path("resend-verification/", resend_verification, name="resend-verification"),
     path("profile/", ProfileDetailView.as_view(), name="profile-detail"),
 
     path("admin/profiles/", AdminProfileListView.as_view(), name="admin-profile-list"),

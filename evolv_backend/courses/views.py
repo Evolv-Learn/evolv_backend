@@ -99,24 +99,55 @@ class AdminUserProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def delete(self, request, *args, **kwargs):
         user_id = int(kwargs[self.lookup_url_kwarg])
-        qs = Profile.objects.filter(user_id=user_id)
-        if qs.exists():
-            qs.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        
+        try:
+            user = User.objects.get(pk=user_id)
+            user_email = user.email
+            
+            # Delete all records with this email (to free up the email for re-registration)
+            # 1. Delete Student records (has unique email constraint)
+            Student.objects.filter(user=user).delete()
+            Student.objects.filter(email__iexact=user_email).delete()
+            
+            # 2. Delete Alumni records
+            Alumni.objects.filter(user=user).delete()
+            
+            # 3. Delete ContactUs records (has unique email constraint)
+            ContactUs.objects.filter(email__iexact=user_email).delete()
+            
+            # 4. Delete Profile
+            Profile.objects.filter(user=user).delete()
+            
+            # 5. Finally delete the user (this will cascade delete remaining relations)
+            user.delete()
+            
+            return Response(
+                {"message": f"User and all related records deleted successfully. Email {user_email} is now available."},
+                status=status.HTTP_200_OK
+            )
+            
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class RegisterUserView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterUserSerializer
-    throttle_classes = [RegisterRateThrottle]  # RegisterRateThrottle
+    throttle_classes = []  # RegisterRateThrottle
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        send_welcome_email(user)
+        
+        # Send verification email instead of welcome email
+        from .utils import send_verification_email
+        send_verification_email(user)
 
-        refresh = RefreshToken.for_user(user)
+        # Don't return tokens yet - user needs to verify email first
         data = {
             "user": {
                 "id": user.id,
@@ -125,10 +156,8 @@ class RegisterUserView(generics.CreateAPIView):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
             },
-            "tokens": {
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-            },
+            "message": "Registration successful! Please check your email to verify your account before logging in.",
+            "email_sent": True
         }
         return Response(data, status=status.HTTP_201_CREATED)
 
@@ -583,3 +612,88 @@ class MyStudentView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_email(request):
+    """Verify user email with token"""
+    token = request.data.get('token')
+    
+    if not token:
+        return Response(
+            {'error': 'Verification token is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        user = User.objects.get(email_verification_token=token)
+        
+        # Check if token is expired (24 hours)
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        if user.email_verification_sent_at:
+            expiry_time = user.email_verification_sent_at + timedelta(hours=24)
+            if timezone.now() > expiry_time:
+                return Response(
+                    {'error': 'Verification link has expired. Please request a new one.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        # Verify the email
+        user.is_email_verified = True
+        user.email_verification_token = None
+        user.save()
+        
+        # Send welcome email now
+        from .utils import send_welcome_email
+        send_welcome_email(user)
+        
+        return Response({
+            'message': 'Email verified successfully! You can now login.',
+            'email': user.email
+        }, status=status.HTTP_200_OK)
+        
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'Invalid verification token'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def resend_verification(request):
+    """Resend verification email"""
+    email = request.data.get('email')
+    
+    if not email:
+        return Response(
+            {'error': 'Email is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        user = User.objects.get(email__iexact=email)
+        
+        if user.is_email_verified:
+            return Response(
+                {'error': 'Email is already verified'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Resend verification email
+        from .utils import send_verification_email
+        send_verification_email(user)
+        
+        return Response({
+            'message': 'Verification email sent! Please check your inbox.',
+            'email': user.email
+        }, status=status.HTTP_200_OK)
+        
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'No account found with this email'},
+            status=status.HTTP_404_NOT_FOUND
+        )

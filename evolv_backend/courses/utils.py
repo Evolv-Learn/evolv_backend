@@ -185,3 +185,123 @@ def generate_student_register_number(student):
     ).count() + 1
     
     return f"EVOLV-{year}-{count:04d}"
+
+
+
+def generate_verification_token():
+    """Generate a unique verification token"""
+    import secrets
+    return secrets.token_urlsafe(32)
+
+
+def send_verification_email(user):
+    """Send email verification link to user"""
+    from django.utils import timezone
+    from django.core.mail import EmailMessage
+    
+    # Generate token
+    token = generate_verification_token()
+    user.email_verification_token = token
+    user.email_verification_sent_at = timezone.now()
+    user.save()
+    
+    # Get frontend URL
+    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+    verification_link = f"{frontend_url}/verify-email?token={token}"
+    
+    subject = "Verify Your Email - EvolvLearn"
+    
+    # HTML email
+    html_message = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #1E3A8A 0%, #0F1F4A 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+            .content {{ background: #FFF8F0; padding: 30px; }}
+            .button {{ display: inline-block; background: #D4AF37; color: #1A1A1A; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; font-size: 16px; }}
+            .footer {{ background: #1A1A1A; color: white; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; }}
+            .kente-strip {{ height: 4px; background: linear-gradient(90deg, #DC143C 0%, #FFD700 25%, #228B22 50%, #D4AF37 75%, #1E3A8A 100%); }}
+            .warning {{ background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 15px; margin: 20px 0; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="kente-strip"></div>
+            <div class="header">
+                <h1>🔐 Verify Your Email</h1>
+            </div>
+            <div class="content">
+                <p>Hi {user.first_name or user.username},</p>
+                
+                <p>Thank you for registering with EvolvLearn! To complete your registration and access your account, please verify your email address.</p>
+                
+                <center>
+                    <a href="{verification_link}" class="button">Verify Email Address</a>
+                </center>
+                
+                <p>Or copy and paste this link into your browser:</p>
+                <p style="background: #f5f5f5; padding: 10px; word-break: break-all; font-size: 12px;">{verification_link}</p>
+                
+                <div class="warning">
+                    <strong>⚠️ Important:</strong> This verification link will expire in 24 hours. If you didn't create an account with EvolvLearn, please ignore this email.
+                </div>
+                
+                <p>After verification, you'll be able to:</p>
+                <ul>
+                    <li>Apply for courses</li>
+                    <li>Access your dashboard</li>
+                    <li>Join our community</li>
+                </ul>
+                
+                <p>If you have any questions, contact us at <a href="mailto:evolvngo@gmail.com">evolvngo@gmail.com</a></p>
+                
+                <p>Best regards,<br>The EvolvLearn Team</p>
+            </div>
+            <div class="footer">
+                <p>© 2024 EvolvLearn. All rights reserved.</p>
+                <p>Marsaskala, Malta</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    # Plain text fallback
+    text_message = f"""
+    Hi {user.first_name or user.username},
+    
+    Thank you for registering with EvolvLearn!
+    
+    Please verify your email address by clicking this link:
+    {verification_link}
+    
+    This link will expire in 24 hours.
+    
+    After verification, you'll be able to access your dashboard and apply for courses.
+    
+    If you didn't create an account, please ignore this email.
+    
+    Best regards,
+    The EvolvLearn Team
+    
+    ---
+    EvolvLearn
+    Marsaskala, Malta
+    evolvngo@gmail.com
+    """
+    
+    email = EmailMessage(
+        subject=subject,
+        body=text_message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[user.email],
+        reply_to=['evolvngo@gmail.com'],
+    )
+    email.content_subtype = "html"
+    email.body = html_message
+    email.send(fail_silently=True)
+    
+    return token

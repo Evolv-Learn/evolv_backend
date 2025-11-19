@@ -1,22 +1,20 @@
-#!/usr/bin/env bash
-set -e
+#!/bin/bash
+# Azure App Service Startup Script for Django
 
+echo "Starting EvolvLearn Backend..."
 
-set -x
+# Install dependencies
+echo "Installing Python dependencies..."
+pip install -r ../requirements.txt
 
-echo "Starting Evolv Django application..."
-
-echo "Applying database migrations"
+# Run database migrations
+echo "Running database migrations..."
 python manage.py migrate --noinput
 
-echo "Collect static files..."
+# Collect static files
+echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
+# Start Gunicorn
 echo "Starting Gunicorn server..."
-exec gunicorn evolv_backend.wsgi:application \
-  --bind 0.0.0.0:${PORT:-8000} \
-  --workers 3 \
-  --timeout 120 \
-  --log-level info
-
-echo "Evolv backend started successfully!"
+gunicorn --bind=0.0.0.0:8000 --workers=4 --timeout=600 --access-logfile '-' --error-logfile '-' evolv_backend.wsgi:application
