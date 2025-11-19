@@ -1,43 +1,67 @@
 # EvolvLearn Backend Requirements
 # Python 3.8+
 
-# Django Core
-Django==5.1.6
-djangorestframework==3.15.2
-django-cors-headers==4.9.0
-django-filter==25.1
-django-countries==7.6.1
+# ============================================
+# Core Django Framework
+# ============================================
+Django>=5.1.0,<5.2.0
+djangorestframework>=3.15.0,<4.0.0
+django-cors-headers>=4.0.0,<5.0.0
+django-filter>=24.0,<26.0
+django-countries>=7.5.0,<8.0.0
 
-# Authentication & JWT
-djangorestframework_simplejwt==5.5.0
-PyJWT==2.9.0
+# ============================================
+# Authentication & Security
+# ============================================
+djangorestframework-simplejwt>=5.3.0,<6.0.0
+PyJWT>=2.8.0,<3.0.0
 
+# ============================================
 # Database
-psycopg2-binary==2.9.10
+# ============================================
+psycopg2-binary>=2.9.0,<3.0.0
 
+# ============================================
 # API Documentation
-drf-spectacular==0.28.0
+# ============================================
+drf-spectacular>=0.27.0,<1.0.0
 
+# ============================================
 # Image Processing
-Pillow==11.1.0
+# ============================================
+Pillow>=10.0.0,<12.0.0
 
+# ============================================
 # Utilities
-python-dateutil==2.9.0.post0
-python-dotenv==1.1.1
-PyYAML==6.0.3
+# ============================================
+python-dateutil>=2.8.0,<3.0.0
+python-dotenv>=1.0.0,<2.0.0
+PyYAML>=6.0.0,<7.0.0
 
-# Dependencies
-asgiref==3.8.1
-attrs==25.3.0
-inflection==0.5.1
-jsonschema==4.25.1
-jsonschema-specifications==2025.9.1
-referencing==0.36.2
-rpds-py==0.27.1
-six==1.17.0
-sqlparse==0.5.3
-typing_extensions==4.12.2
-tzdata==2025.1
-uritemplate==4.2.0
+# ============================================
+# Core Dependencies (Auto-installed)
+# ============================================
+asgiref>=3.7.0
+sqlparse>=0.4.0
+tzdata>=2024.0
 
-# Note: Remove dotenv==0.9.9 (use python-dotenv instead)
+# ============================================
+# Optional: Production Server
+# ============================================
+# gunicorn>=21.0.0,<22.0.0  # Uncomment for production
+# whitenoise>=6.5.0,<7.0.0  # Uncomment for static files serving
+
+# ============================================
+# Optional: Email & Monitoring
+# ============================================
+# sentry-sdk>=1.40.0,<2.0.0  # Uncomment for error tracking
+# celery>=5.3.0,<6.0.0  # Uncomment for background tasks
+# redis>=5.0.0,<6.0.0  # Uncomment for caching/celery
+
+# ============================================
+# Development Only (Install separately)
+# ============================================
+# pytest>=7.4.0
+# pytest-django>=4.5.0
+# black>=23.0.0
+# flake8>=6.0.0
