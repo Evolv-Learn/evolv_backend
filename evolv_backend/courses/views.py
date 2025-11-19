@@ -235,6 +235,70 @@ class ContactUsCreateView(generics.CreateAPIView):
     queryset = ContactUs.objects.all()
     serializer_class = ContactUsSerializer
     permission_classes = [permissions.AllowAny]
+    
+    def perform_create(self, serializer):
+        contact = serializer.save()
+        # Send email notification to admin
+        self.send_contact_notification(contact)
+    
+    def send_contact_notification(self, contact):
+        """Send email notification when contact form is submitted"""
+        from django.core.mail import EmailMessage
+        from django.conf import settings
+        
+        subject = f"New Contact Form Submission from {contact.name}"
+        
+        # Email to admin
+        admin_message = f"""
+        New contact form submission received:
+        
+        Name: {contact.name}
+        Email: {contact.email}
+        Message:
+        {contact.message}
+        
+        ---
+        Reply to: {contact.email}
+        """
+        
+        admin_email = EmailMessage(
+            subject=subject,
+            body=admin_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=['evolvngo@gmail.com'],
+            reply_to=[contact.email],
+        )
+        admin_email.send(fail_silently=True)
+        
+        # Confirmation email to user
+        user_subject = "We received your message - EvolvLearn"
+        user_message = f"""
+        Hi {contact.name},
+        
+        Thank you for contacting EvolvLearn!
+        
+        We have received your message and will get back to you within 24 hours.
+        
+        Your message:
+        {contact.message}
+        
+        Best regards,
+        The EvolvLearn Team
+        
+        ---
+        EvolvLearn
+        Marsaskala, Malta
+        evolvngo@gmail.com
+        """
+        
+        user_email = EmailMessage(
+            subject=user_subject,
+            body=user_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[contact.email],
+            reply_to=['evolvngo@gmail.com'],
+        )
+        user_email.send(fail_silently=True)
     throttle_classes = [ContactUsRateThrottle] 
 
 

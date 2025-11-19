@@ -9,20 +9,78 @@ from django.template.loader import render_to_string
 def send_welcome_email(user):
     """Send welcome email to newly registered user"""
     from django.core.mail import EmailMessage
+    from django.template.loader import render_to_string
     
     subject = "Welcome to EvolvLearn!"
-    message = f"""
+    
+    # Get frontend URL from settings
+    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+    
+    # HTML email content
+    html_message = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #1E3A8A 0%, #0F1F4A 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+            .content {{ background: #FFF8F0; padding: 30px; }}
+            .button {{ display: inline-block; background: #D4AF37; color: #1A1A1A; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }}
+            .footer {{ background: #1A1A1A; color: white; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; }}
+            .kente-strip {{ height: 4px; background: linear-gradient(90deg, #DC143C 0%, #FFD700 25%, #228B22 50%, #D4AF37 75%, #1E3A8A 100%); }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="kente-strip"></div>
+            <div class="header">
+                <h1>Welcome to EvolvLearn! 🎉</h1>
+            </div>
+            <div class="content">
+                <p>Hi {user.first_name or user.username},</p>
+                
+                <p>Welcome to EvolvLearn! We're excited to have you join our global learning community.</p>
+                
+                <p><strong>You can now:</strong></p>
+                <ul>
+                    <li>Browse our world-class courses</li>
+                    <li>Attend events and workshops</li>
+                    <li>Connect with our community</li>
+                    <li>Access learning resources</li>
+                </ul>
+                
+                <center>
+                    <a href="{frontend_url}/dashboard" class="button">Go to Dashboard →</a>
+                </center>
+                
+                <p>If you have any questions, feel free to contact us at <a href="mailto:evolvngo@gmail.com">evolvngo@gmail.com</a></p>
+                
+                <p>Best regards,<br>The EvolvLearn Team</p>
+            </div>
+            <div class="footer">
+                <p>© 2024 EvolvLearn. All rights reserved.</p>
+                <p>Marsaskala, Malta</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    # Plain text fallback
+    text_message = f"""
     Hi {user.first_name or user.username},
     
     Welcome to EvolvLearn! We're excited to have you join our learning community.
     
     You can now:
     - Browse our courses
-    - Apply to become a student
     - Attend our events
     - Connect with our community
     
-    If you have any questions, feel free to contact us at evolvngo@gmail.com
+    Visit your dashboard: {frontend_url}/dashboard
+    
+    If you have any questions, contact us at evolvngo@gmail.com
     
     Best regards,
     The EvolvLearn Team
@@ -30,11 +88,13 @@ def send_welcome_email(user):
     
     email = EmailMessage(
         subject=subject,
-        body=message,
+        body=text_message,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[user.email],
         reply_to=['evolvngo@gmail.com'],
     )
+    email.content_subtype = "html"
+    email.body = html_message
     email.send(fail_silently=True)
 
 
