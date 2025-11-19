@@ -1,27 +1,63 @@
-# Virtual environment
-.venv/
-
-
-# Python compiled files
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Database files
 *.sqlite3
+*.db
 
-# IDE/Editor files
-.vscode/
-.idea/
-*.swp
-
-# Logs
+# Django
 *.log
-
-# Django static and media files (optional)
-staticfiles/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
 media/
+staticfiles/
 
 # Environment variables
 .env
+.env.local
+.env.*.local
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Next.js
+.next/
+out/
+.vercel
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing
+coverage/
+.pytest_cache/
+.coverage
+
+# Misc
+*.bak
+*.tmp
+*.temp
+
+

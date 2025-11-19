@@ -7,6 +7,7 @@ interface User {
   email: string;
   first_name: string;
   last_name: string;
+  role?: string; // Student, Instructor, Alumni, or Admin
 }
 
 interface AuthState {
