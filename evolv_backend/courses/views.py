@@ -611,7 +611,9 @@ class MyStudentView(APIView):
         serializer = StudentWriteSerializer(student, data=request.data, partial=True, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data)
+        # Return the updated data using the read serializer
+        read_serializer = StudentReadSerializer(student, context={"request": request})
+        return Response(read_serializer.data)
 
 
 @api_view(['POST'])

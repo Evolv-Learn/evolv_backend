@@ -28,31 +28,48 @@ Evolv is an interactive learning website where:
 
 ### Public Features
 - ✅ Browse courses by category (Data & AI, Cybersecurity, Microsoft Dynamics 365)
+- ✅ View course details with timeline (Registration Deadline, Selection Date, Start/End Dates)
+- ✅ View topics covered and tools/technologies for each course
 - ✅ View upcoming events and workshops
 - ✅ Read alumni success stories
 - ✅ View team members and company values
 - ✅ Submit contact form
 - ✅ Read reviews and testimonials
 
+### Authentication & Security
+- ✅ User registration with email verification
+- ✅ Email OR username login support
+- ✅ JWT authentication
+- ✅ Email verification system with HTML templates
+- ✅ Resend verification email option
+- ✅ Login protection for unverified users
+
 ### Student Features
-- ✅ User registration and authentication
 - ✅ Submit student application with detailed information
-- ✅ Track application status
-- ✅ View personalized dashboard
+- ✅ Multi-course enrollment (courses accumulate)
+- ✅ Individual course status tracking (Pending, Under Review, Approved, Rejected)
+- ✅ View personalized dashboard with course application status
+- ✅ My Courses page with status badges
+- ✅ My Profile page with application details
 - ✅ Enroll in learning schedules
 - ✅ Access learning materials (GitHub, Discord, videos) after approval
-- ✅ View enrolled courses and schedules
+- ✅ View enrolled courses with timeline
 - ✅ Register for events
 
 ### Admin Features
 - ✅ Manage users and profiles
 - ✅ Review and approve student applications
+- ✅ Manage individual course enrollment status
 - ✅ Create and manage courses (with subcourses)
+- ✅ Add course timeline (Registration Deadline, Selection, Start, End dates)
+- ✅ Add topics covered for each course
+- ✅ Date validation (ensures chronological order)
 - ✅ Create learning schedules with modules and lessons
 - ✅ Manage events with image uploads
 - ✅ Manage partners and locations
 - ✅ View dashboard with statistics
 - ✅ Manage team members and company content
+- ✅ Manage course enrollments with status updates
 
 ### Instructor Features
 - ✅ Create and manage learning schedules
@@ -228,10 +245,11 @@ coverage report
 ## 📊 Database Models
 
 ### Core Models
-- **CustomUser**: Extended Django user model
+- **CustomUser**: Extended Django user model with email verification fields
 - **Profile**: User profile with role (Student/Instructor/Alumni)
 - **Student**: Detailed student application data
-- **Course**: Course information with hierarchy support
+- **CourseEnrollment**: Individual course enrollment with status tracking (Pending, Under Review, Approved, Rejected)
+- **Course**: Course information with hierarchy support, timeline fields, and topics covered
 - **LearningSchedule**: Course schedules with dates and locations
 - **Module**: Course modules within schedules
 - **Lesson**: Individual lessons within modules
@@ -254,21 +272,27 @@ coverage report
 
 ```
 1. Public Visitor
-   ↓ (Browse courses, events, alumni stories)
+   ↓ (Browse courses with timeline, events, alumni stories)
 2. Register Account
    ↓ (Creates User + Profile with "Student" role)
-3. Submit Student Application
-   ↓ (Creates Student record with detailed info)
-4. Admin Reviews Application
-   ↓ (Updates StudentSelection status)
-5. Application Approved
-   ↓ (Student gets access to learning materials)
-6. Enroll in Schedule
+3. Verify Email
+   ↓ (Clicks verification link in email)
+4. Login (Email or Username)
+   ↓ (JWT authentication)
+5. Submit Student Application
+   ↓ (Creates Student record + CourseEnrollment with "Pending" status)
+6. Admin Reviews Application
+   ↓ (Updates CourseEnrollment status per course)
+7. Course Approved
+   ↓ (Student gets access to learning materials for that course)
+8. Apply for Additional Courses
+   ↓ (Courses accumulate, each with individual status)
+9. Enroll in Schedule
    ↓ (Added to LearningSchedule.students)
-7. Access Learning Materials
-   ↓ (GitHub, Discord, Videos)
-8. Complete Course
-   ↓ (Becomes Alumni with success story)
+10. Access Learning Materials
+    ↓ (GitHub, Discord, Videos)
+11. Complete Course
+    ↓ (Becomes Alumni with success story)
 ```
 
 ## 🎨 Frontend Integration
@@ -291,18 +315,20 @@ coverage report
 - Email Verification
 
 **Student Dashboard:**
-- Overview (application status, enrolled courses)
-- My Profile (edit profile)
-- My Courses (enrolled courses and schedules)
-- Learning Materials (GitHub, Discord, videos)
+- Overview (course application status with individual statuses, enrolled courses)
+- My Profile (view and update application details)
+- My Courses (enrolled courses with status badges)
+- Learning Materials (GitHub, Discord, videos - available when approved)
 - My Events (registered events)
-- Application Status (selection progress)
+- Course Application Status (individual status per course)
+- Available Courses (with timeline: Registration Deadline, Start Date)
 
 **Admin Dashboard:**
 - Overview (statistics)
 - Applications (review and approve)
 - Students (manage students)
-- Courses (CRUD operations)
+- Course Enrollments (manage individual course status: Pending, Under Review, Approved, Rejected)
+- Courses (CRUD operations with timeline and topics)
 - Schedules (manage schedules)
 - Events (manage events)
 - Content (about, team, reviews)

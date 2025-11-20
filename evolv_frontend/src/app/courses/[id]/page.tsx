@@ -94,10 +94,94 @@ export default function CourseDetailPage() {
                 {course.description}
               </p>
 
-              {course.software_tools && (
+              {/* Course Timeline - Compact Grid */}
+              {(course.registration_deadline || course.start_date) && (
+                <>
+                  <h3 className="text-xl font-heading font-bold text-secondary-blue mb-3">
+                    Important Dates
+                  </h3>
+                  <div className="bg-warm-white rounded-lg p-4 mb-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      {course.registration_deadline && (
+                        <div className="text-center p-3 bg-white rounded-lg border border-red-200">
+                          <div className="text-2xl mb-1">📅</div>
+                          <div className="text-xs text-gray-600 mb-1">Deadline</div>
+                          <div className="text-sm font-bold text-red-600">
+                            {new Date(course.registration_deadline).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric' 
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      {course.selection_date && (
+                        <div className="text-center p-3 bg-white rounded-lg border border-gray-200">
+                          <div className="text-2xl mb-1">✅</div>
+                          <div className="text-xs text-gray-600 mb-1">Selection</div>
+                          <div className="text-sm font-bold text-gray-700">
+                            {new Date(course.selection_date).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric' 
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      {course.start_date && (
+                        <div className="text-center p-3 bg-white rounded-lg border border-green-200">
+                          <div className="text-2xl mb-1">🚀</div>
+                          <div className="text-xs text-gray-600 mb-1">Start</div>
+                          <div className="text-sm font-bold text-success">
+                            {new Date(course.start_date).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric' 
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      {course.end_date && (
+                        <div className="text-center p-3 bg-white rounded-lg border border-gray-200">
+                          <div className="text-2xl mb-1">🎓</div>
+                          <div className="text-xs text-gray-600 mb-1">End</div>
+                          <div className="text-sm font-bold text-gray-700">
+                            {new Date(course.end_date).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric' 
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Topics Covered - Compact */}
+              {course.topics_covered && (
                 <>
                   <h3 className="text-xl font-heading font-bold text-secondary-blue mb-3">
                     What You'll Learn
+                  </h3>
+                  <div className="bg-warm-white rounded-lg p-4 mb-6">
+                    <ul className="grid md:grid-cols-2 gap-2">
+                      {course.topics_covered.split('\n').filter((topic: string) => topic.trim()).map((topic: string, index: number) => (
+                        <li key={index} className="flex items-start gap-2 text-sm">
+                          <span className="text-primary-gold mt-0.5 flex-shrink-0">✓</span>
+                          <span className="text-gray-700">{topic.trim()}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
+              )}
+
+              {course.software_tools && (
+                <>
+                  <h3 className="text-xl font-heading font-bold text-secondary-blue mb-3">
+                    Tools & Technologies
                   </h3>
                   <div className="flex flex-wrap gap-2 mb-6">
                     {course.software_tools.split(',').map((tool: string, index: number) => (

@@ -98,6 +98,11 @@ class Course(models.Model):
     software_tools = models.TextField(
         help_text="List of software and languages covered"
     )
+    topics_covered = models.TextField(
+        help_text="Topics/content covered in this course",
+        blank=True,
+        null=True
+    )
     instructor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -106,10 +111,41 @@ class Course(models.Model):
     )
     locations = models.ManyToManyField(Location, related_name="courses")
     partners = models.ManyToManyField("Partner", related_name="courses")
+    
+    # Course timeline fields
+    registration_deadline = models.DateField(null=True, blank=True, help_text="Last date to register")
+    selection_date = models.DateField(null=True, blank=True, help_text="Date when selections are announced")
+    start_date = models.DateField(null=True, blank=True, help_text="Training start date")
+    end_date = models.DateField(null=True, blank=True, help_text="Training end date")
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["name"]
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        errors = {}
+        
+        # Validate date order: registration_deadline < selection_date < start_date < end_date
+        if self.registration_deadline and self.selection_date:
+            if self.registration_deadline >= self.selection_date:
+                errors['selection_date'] = 'Selection date must be after registration deadline'
+        
+        if self.selection_date and self.start_date:
+            if self.selection_date >= self.start_date:
+                errors['start_date'] = 'Start date must be after selection date'
+        
+        if self.registration_deadline and self.start_date:
+            if self.registration_deadline >= self.start_date:
+                errors['start_date'] = 'Start date must be after registration deadline'
+        
+        if self.start_date and self.end_date:
+            if self.start_date >= self.end_date:
+                errors['end_date'] = 'End date must be after start date'
+        
+        if errors:
+            raise ValidationError(errors)
 
     def __str__(self):
         if self.parent:
@@ -331,6 +367,28 @@ class Student(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} - {self.email}"
+
+
+class CourseEnrollment(models.Model):
+    STATUS_CHOICES = [
+        ("Pending", "Pending"),
+        ("Under Review", "Under Review"),
+        ("Approved", "Approved"),
+        ("Rejected", "Rejected"),
+    ]
+    
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="enrollments")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="enrollments")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Pending")
+    applied_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ["student", "course"]
+        ordering = ["-applied_at"]
+    
+    def __str__(self):
+        return f"{self.student.first_name} - {self.course.name} ({self.status})"
     
 
 class ContactUs(models.Model):

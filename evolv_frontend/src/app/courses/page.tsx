@@ -11,9 +11,14 @@ interface Course {
   category: string;
   description: string;
   software_tools: string;
+  topics_covered: string;
   instructor: string;
   locations: string[];
   partners: string[];
+  registration_deadline: string;
+  selection_date: string;
+  start_date: string;
+  end_date: string;
 }
 
 export default function CoursesPage() {
@@ -189,15 +194,72 @@ export default function CoursesPage() {
                     {/* Software Tools */}
                     {course.software_tools && (
                       <div className="mb-4">
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1.5">
                           {course.software_tools.split(',').slice(0, 3).map((tool, index) => (
                             <span
                               key={index}
-                              className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
+                              className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-medium"
                             >
                               {tool.trim()}
                             </span>
                           ))}
+                          {course.software_tools.split(',').length > 3 && (
+                            <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-medium">
+                              +{course.software_tools.split(',').length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Timeline - Compact 2-row layout */}
+                    {(course.registration_deadline || course.start_date) && (
+                      <div className="mb-4 bg-warm-white rounded-lg p-3 text-xs">
+                        <div className="grid grid-cols-2 gap-2">
+                          {course.registration_deadline && (
+                            <div>
+                              <div className="text-gray-500 mb-1">📅 Deadline</div>
+                              <div className="font-semibold text-red-600">
+                                {new Date(course.registration_deadline).toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric' 
+                                })}
+                              </div>
+                            </div>
+                          )}
+                          {course.selection_date && (
+                            <div>
+                              <div className="text-gray-500 mb-1">✅ Selection</div>
+                              <div className="font-semibold text-gray-700">
+                                {new Date(course.selection_date).toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric' 
+                                })}
+                              </div>
+                            </div>
+                          )}
+                          {course.start_date && (
+                            <div>
+                              <div className="text-gray-500 mb-1">🚀 Start</div>
+                              <div className="font-semibold text-success">
+                                {new Date(course.start_date).toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric' 
+                                })}
+                              </div>
+                            </div>
+                          )}
+                          {course.end_date && (
+                            <div>
+                              <div className="text-gray-500 mb-1">🎓 End</div>
+                              <div className="font-semibold text-gray-700">
+                                {new Date(course.end_date).toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric' 
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}

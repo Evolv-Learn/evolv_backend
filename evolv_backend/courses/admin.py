@@ -14,6 +14,7 @@ from .models import (
     Module,
     Lesson,
     Student,
+    CourseEnrollment,
     ContactUs,
     Partner,
     SelectionProcedure,
@@ -49,6 +50,15 @@ class PartnerAdmin(admin.ModelAdmin):
 @admin.register(SelectionProcedure)
 class SelectionProcedureAdmin(admin.ModelAdmin):
     list_display = ("step_name", "order")
+
+
+@admin.register(CourseEnrollment)
+class CourseEnrollmentAdmin(admin.ModelAdmin):
+    list_display = ("student", "course", "status", "applied_at", "updated_at")
+    list_filter = ("status", "course", "applied_at")
+    search_fields = ("student__first_name", "student__last_name", "student__email", "course__name")
+    list_editable = ("status",)
+    ordering = ("-applied_at",)
 
 
 admin.site.register(Location)

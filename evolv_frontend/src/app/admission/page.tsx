@@ -78,6 +78,7 @@ export default function AdmissionPage() {
 
   useEffect(() => {
     fetchCourses();
+    checkExistingApplication();
   }, []);
 
   const fetchCourses = async () => {
@@ -86,6 +87,37 @@ export default function AdmissionPage() {
       setCourses(response.data.results || response.data);
     } catch (error) {
       console.error('Failed to fetch courses:', error);
+    }
+  };
+
+  const checkExistingApplication = async () => {
+    try {
+      const [studentResponse, coursesResponse] = await Promise.all([
+        apiClient.get('/students/me/'),
+        apiClient.get('/courses/'),
+      ]);
+      
+      if (studentResponse.data) {
+        // Student profile exists - skip to course selection
+        // Backend returns course names as strings, convert to IDs
+        const existingCourseNames = studentResponse.data.courses || [];
+        const allCourses = coursesResponse.data.results || coursesResponse.data;
+        
+        // Map course names to IDs
+        const courseIds = allCourses
+          .filter((course: any) => existingCourseNames.includes(course.name))
+          .map((course: any) => course.id);
+        
+        setFormData(prev => ({
+          ...prev,
+          ...studentResponse.data,
+          courses: courseIds,
+        }));
+        setCurrentStep(4); // Skip to course selection
+      }
+    } catch (error) {
+      // No existing profile - start from beginning
+      console.log('No existing application found, starting fresh');
     }
   };
 
@@ -200,10 +232,58 @@ export default function AdmissionPage() {
     setError('');
 
     try {
-      console.log('Submitting form data:', formData);
-      const response = await apiClient.post('/students/', formData);
-      console.log('Submission successful:', response.data);
-      router.push('/dashboard?success=application-submitted');
+      // Validate and clean course IDs - remove any null/undefined/invalid values
+      const validCourseIds = formData.courses.filter(id => id !== null && id !== undefined && typeof id === 'number');
+      
+      if (validCourseIds.length === 0) {
+        setError('Please select at least one course');
+        setIsLoading(false);
+        return;
+      }
+
+      const submissionData = {
+        ...formData,
+        courses: validCourseIds,
+      };
+
+      console.log('Submitting form data:', submissionData);
+      
+      // Check if student profile already exists
+      let response;
+      try {
+        const existingProfile = await apiClient.get('/students/me/');
+        
+        // Profile exists - MERGE existing courses with new selections
+        // Backend returns course names as strings, we need to get the actual course IDs
+        const existingCourseNames = existingProfile.data.courses || [];
+        
+        // Fetch all courses to map names to IDs
+        const coursesResponse = await apiClient.get('/courses/');
+        const allCourses = coursesResponse.data.results || coursesResponse.data;
+        
+        // Convert existing course names to IDs
+        const existingCourseIds = allCourses
+          .filter((course: any) => existingCourseNames.includes(course.name))
+          .map((course: any) => course.id);
+        
+        // Combine existing and new courses (remove duplicates)
+        const allCourseIds = [...new Set([...existingCourseIds, ...validCourseIds])];
+        
+        response = await apiClient.patch('/students/me/', {
+          courses: allCourseIds,
+        });
+        router.push('/dashboard?success=courses-updated');
+      } catch (checkError: any) {
+        if (checkError.response?.status === 404) {
+          // No profile exists - CREATE new
+          console.log('Creating new student profile');
+          response = await apiClient.post('/students/', submissionData);
+          console.log('Creation successful:', response.data);
+          router.push('/dashboard?success=application-submitted');
+        } else {
+          throw checkError;
+        }
+      }
     } catch (err: any) {
       console.error('Submission error:', err);
       console.error('Error response:', err.response?.data);
@@ -708,12 +788,29 @@ export default function AdmissionPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-heading font-bold text-secondary-blue mb-2">
-            Admission Application
+            {currentStep === 4 && formData.email ? 'Add More Courses' : 'Admission Application'}
           </h1>
           <p className="text-gray-600">
-            Complete your application to join EvolvLearn
+            {currentStep === 4 && formData.email 
+              ? 'Select additional courses to add to your application' 
+              : 'Complete your application to join EvolvLearn'}
           </p>
         </div>
+
+        {/* Info message for existing students */}
+        {currentStep === 4 && formData.email && (
+          <div className="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+            <div className="flex items-center">
+              <span className="text-2xl mr-3">ℹ️</span>
+              <div>
+                <h3 className="font-bold text-blue-800">Welcome Back!</h3>
+                <p className="text-sm text-blue-700">
+                  We found your existing application. You can add more courses to your selection below.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Progress Indicator */}
         <div className="mb-8">

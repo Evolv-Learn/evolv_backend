@@ -10,6 +10,7 @@ from .models import (
     Partner,
     Course,
     Student,
+    CourseEnrollment,
     LearningSchedule,
     SelectionProcedure,
     StudentSelection,
@@ -247,11 +248,16 @@ class CourseReadSerializer(serializers.ModelSerializer):
             "category",
             "description",
             "software_tools",
+            "topics_covered",
             "instructor",
             "locations",
             "partners",
             "parent",
             "parent_id",
+            "registration_deadline",
+            "selection_date",
+            "start_date",
+            "end_date",
             "created_at",
         ]
 
@@ -278,10 +284,15 @@ class CourseWriteSerializer(serializers.ModelSerializer):
             "category",
             "description",
             "software_tools",
+            "topics_covered",
             "instructor",
             "locations",
             "partners",
             "parent",
+            "registration_deadline",
+            "selection_date",
+            "start_date",
+            "end_date",
         ]
 
     def validate(self, attrs):
@@ -291,6 +302,32 @@ class CourseWriteSerializer(serializers.ModelSerializer):
         if instance and parent and parent.pk == instance.pk:
             raise serializers.ValidationError(
                 {"parent": "A course cannot be its own parent."}
+            )
+        
+        # Validate date order
+        reg_deadline = attrs.get("registration_deadline", getattr(instance, "registration_deadline", None) if instance else None)
+        selection = attrs.get("selection_date", getattr(instance, "selection_date", None) if instance else None)
+        start = attrs.get("start_date", getattr(instance, "start_date", None) if instance else None)
+        end = attrs.get("end_date", getattr(instance, "end_date", None) if instance else None)
+        
+        if reg_deadline and selection and reg_deadline >= selection:
+            raise serializers.ValidationError(
+                {"selection_date": "Selection date must be after registration deadline"}
+            )
+        
+        if selection and start and selection >= start:
+            raise serializers.ValidationError(
+                {"start_date": "Start date must be after selection date"}
+            )
+        
+        if reg_deadline and start and reg_deadline >= start:
+            raise serializers.ValidationError(
+                {"start_date": "Start date must be after registration deadline"}
+            )
+        
+        if start and end and start >= end:
+            raise serializers.ValidationError(
+                {"end_date": "End date must be after start date"}
             )
 
         if instance and parent:
@@ -674,8 +711,20 @@ class LessonWriteSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class CourseEnrollmentSerializer(serializers.ModelSerializer):
+    course_name = serializers.CharField(source='course.name', read_only=True)
+    course_id = serializers.IntegerField(source='course.id', read_only=True)
+    course_category = serializers.CharField(source='course.category', read_only=True)
+    
+    class Meta:
+        model = CourseEnrollment
+        fields = ['id', 'course_id', 'course_name', 'course_category', 'status', 'applied_at', 'updated_at']
+        read_only_fields = ['id', 'applied_at', 'updated_at']
+
+
 class StudentReadSerializer(serializers.ModelSerializer):
     courses = serializers.StringRelatedField(many=True)
+    enrollments = CourseEnrollmentSerializer(many=True, read_only=True)
     schedules = serializers.StringRelatedField(many=True)
     user = serializers.SerializerMethodField()
 
@@ -697,16 +746,28 @@ class StudentReadSerializer(serializers.ModelSerializer):
 class StudentWriteSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     courses = serializers.PrimaryKeyRelatedField(
-        queryset=Course.objects.all(), many=True, required=False
+        queryset=Course.objects.all(), many=True, required=False, allow_null=True
     )
     schedules = serializers.PrimaryKeyRelatedField(
-        queryset=LearningSchedule.objects.all(), many=True, required=False
+        queryset=LearningSchedule.objects.all(), many=True, required=False, allow_null=True
     )
 
     class Meta:
         model = Student
         fields = "__all__"
         read_only_fields = ["id"]
+
+    def validate_courses(self, value):
+        """Filter out None values from courses list"""
+        if value is None:
+            return []
+        return [course for course in value if course is not None]
+
+    def validate_schedules(self, value):
+        """Filter out None values from schedules list"""
+        if value is None:
+            return []
+        return [schedule for schedule in value if schedule is not None]
 
     def validate_birth_date(self, value):
         if value >= timezone.localdate():
@@ -739,8 +800,18 @@ class StudentWriteSerializer(serializers.ModelSerializer):
         courses = validated_data.pop("courses", [])
         schedules = validated_data.pop("schedules", [])
         student = super().create(validated_data)
+        
+        # Set courses using the ManyToMany field
         if courses:
             student.courses.set(courses)
+            # Also create CourseEnrollment entries with default "Pending" status
+            for course in courses:
+                CourseEnrollment.objects.get_or_create(
+                    student=student,
+                    course=course,
+                    defaults={'status': 'Pending'}
+                )
+        
         if schedules:
             student.schedules.set(schedules)
         if student.user and student.user.email and student.email != student.user.email:
@@ -752,8 +823,18 @@ class StudentWriteSerializer(serializers.ModelSerializer):
         courses = validated_data.pop("courses", None)
         schedules = validated_data.pop("schedules", None)
         student = super().update(instance, validated_data)
+        
+        # Update courses using the ManyToMany field
         if courses is not None:
             student.courses.set(courses)
+            # Also create/update CourseEnrollment entries
+            for course in courses:
+                CourseEnrollment.objects.get_or_create(
+                    student=student,
+                    course=course,
+                    defaults={'status': 'Pending'}
+                )
+        
         if schedules is not None:
             student.schedules.set(schedules)
         return student

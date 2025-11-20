@@ -21,8 +21,9 @@ export default function StudentDashboard() {
   useEffect(() => {
     fetchData();
     
-    // Check for success message
-    if (searchParams.get('success') === 'application-submitted') {
+    // Check for success messages
+    const successType = searchParams.get('success');
+    if (successType === 'application-submitted' || successType === 'courses-updated') {
       setShowSuccessMessage(true);
       setTimeout(() => setShowSuccessMessage(false), 5000);
     }
@@ -40,6 +41,8 @@ export default function StudentDashboard() {
       // Fetch student profile
       try {
         const studentRes = await apiClient.get('/students/me/');
+        console.log('Student profile with enrollments:', studentRes.data);
+        console.log('Enrollments:', studentRes.data.enrollments);
         setStudentProfile(studentRes.data);
         setApplicationStatus('Under Review');
       } catch (error) {
@@ -85,8 +88,17 @@ export default function StudentDashboard() {
             <div className="flex items-center">
               <span className="text-2xl mr-3">✅</span>
               <div>
-                <h3 className="font-bold text-success">Application Submitted Successfully!</h3>
-                <p className="text-sm text-gray-700">We'll review your application and get back to you within 3-5 business days.</p>
+                {searchParams.get('success') === 'courses-updated' ? (
+                  <>
+                    <h3 className="font-bold text-success">Courses Updated Successfully!</h3>
+                    <p className="text-sm text-gray-700">Your course selection has been updated.</p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="font-bold text-success">Application Submitted Successfully!</h3>
+                    <p className="text-sm text-gray-700">We'll review your application and get back to you within 3-5 business days.</p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -94,10 +106,10 @@ export default function StudentDashboard() {
 
         {/* Welcome Header with Motivation */}
         <div className="mb-8">
-          <h1 className="text-4xl font-heading font-bold text-secondary-blue mb-3">
+          <h1 className="text-4xl font-heading font-bold text-secondary-blue mb-4">
             Welcome back, {user?.first_name || user?.username}! 👋
           </h1>
-          <p className="text-xl text-gray-600 italic">
+          <p className="text-xl text-gray-600 italic font-medium text-center max-w-3xl mx-auto">
             "Every expert started as a beginner. You're one step closer to your future."
           </p>
         </div>
@@ -167,34 +179,20 @@ export default function StudentDashboard() {
           </div>
         )}
 
-        {/* Application Status Card */}
-        <div className="bg-gradient-to-r from-secondary-blue to-secondary-blue-dark rounded-xl p-6 text-white mb-8 shadow-lg">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h2 className="text-2xl font-heading font-bold mb-2">Application Status</h2>
-              <p className="text-gray-200">
-                {!studentProfile ? 'Ready to begin your journey?' : 'Track your admission progress'}
-              </p>
-            </div>
-            <div className={`px-6 py-3 rounded-full font-bold text-lg ${getStatusColor(applicationStatus)}`}>
-              {applicationStatus === 'Not Applied' ? 'NOT STARTED' : applicationStatus}
-            </div>
-          </div>
-          
-          {/* For students who haven't applied */}
-          {!studentProfile && (
-            <div className="mt-6 pt-6 border-t border-white/20">
-              {/* Progress Bar */}
-              <div className="mb-6">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-semibold">Application Progress</span>
-                  <span className="text-sm font-bold">0%</span>
-                </div>
-                <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
-                  <div className="bg-primary-gold h-full rounded-full" style={{ width: '0%' }}></div>
-                </div>
+        {/* For students who haven't applied - Show Application CTA */}
+        {!studentProfile && (
+          <div className="bg-gradient-to-r from-secondary-blue to-secondary-blue-dark rounded-xl p-6 text-white mb-8 shadow-lg">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h2 className="text-2xl font-heading font-bold mb-2">Application Status</h2>
+                <p className="text-gray-200">Ready to begin your journey?</p>
               </div>
-
+              <div className="px-6 py-3 rounded-full font-bold text-lg bg-gray-300 text-gray-700">
+                NOT STARTED
+              </div>
+            </div>
+            
+            <div className="mt-6 pt-6 border-t border-white/20">
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-4">
                 <p className="text-lg mb-2">📋 You haven't applied to any course yet.</p>
                 <p className="text-sm text-gray-200">
@@ -208,141 +206,153 @@ export default function StudentDashboard() {
                 </Button>
               </Link>
             </div>
-          )}
-          
-          {/* For students who have applied */}
-          {studentProfile && (
-            <div className="mt-6 grid md:grid-cols-3 gap-4 pt-6 border-t border-white/20">
-              <div>
-                <div className="text-3xl font-bold">{studentProfile.courses?.length || 0}</div>
-                <div className="text-sm text-gray-200">Courses Selected</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold">{studentProfile.english_level}/5</div>
-                <div className="text-sm text-gray-200">English Level</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold">{studentProfile.has_laptop ? 'Yes' : 'No'}</div>
-                <div className="text-sm text-gray-200">Has Laptop</div>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Link href="/admission">
-            <div className="bg-gradient-to-br from-primary-gold to-primary-gold-dark rounded-xl p-6 text-gray-900 hover:shadow-xl transition-shadow cursor-pointer">
-              <div className="text-4xl mb-3">📝</div>
-              <h3 className="text-xl font-bold mb-2">Apply for Courses</h3>
-              <p className="text-sm">Submit your application to join new programs</p>
-            </div>
-          </Link>
+        {/* For enrolled students - Primary Actions */}
+        {studentProfile && (
+          <>
+            {/* Primary Action Cards */}
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              {/* Profile Button */}
+              <Link href="/dashboard/profile">
+                <div className="bg-gradient-to-br from-secondary-blue to-secondary-blue-dark rounded-xl p-6 text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
+                  <div className="text-4xl mb-3">👤</div>
+                  <h3 className="text-xl font-bold mb-2">My Profile</h3>
+                  <p className="text-sm text-gray-200">View and update your application details</p>
+                </div>
+              </Link>
 
-          <Link href="/courses">
-            <div className="bg-gradient-to-br from-secondary-blue to-secondary-blue-dark rounded-xl p-6 text-white hover:shadow-xl transition-shadow cursor-pointer">
-              <div className="text-4xl mb-3">📚</div>
-              <h3 className="text-xl font-bold mb-2">Browse Courses</h3>
-              <p className="text-sm">Explore available courses and programs</p>
-            </div>
-          </Link>
+              {/* My Courses */}
+              <Link href="/dashboard/courses">
+                <div className="bg-gradient-to-br from-primary-gold to-primary-gold-dark rounded-xl p-6 text-gray-900 hover:shadow-xl transition-shadow cursor-pointer h-full">
+                  <div className="text-4xl mb-3">🎓</div>
+                  <h3 className="text-xl font-bold mb-2">My Courses</h3>
+                  <p className="text-sm">View your enrolled courses</p>
+                  {studentProfile.courses && (
+                    <div className="mt-2 bg-white/30 rounded-full px-3 py-1 inline-block">
+                      <span className="font-bold">{studentProfile.courses.length}</span> enrolled
+                    </div>
+                  )}
+                </div>
+              </Link>
 
-          <Link href="/events">
-            <div className="bg-gradient-to-br from-success to-green-700 rounded-xl p-6 text-white hover:shadow-xl transition-shadow cursor-pointer">
-              <div className="text-4xl mb-3">🎉</div>
-              <h3 className="text-xl font-bold mb-2">Join Events</h3>
-              <p className="text-sm">Register for upcoming workshops and events</p>
-            </div>
-          </Link>
-        </div>
-
-        {/* My Learning */}
-        <div className="grid md:grid-cols-2 gap-8 mb-8">
-          {/* My Courses */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-heading font-bold text-secondary-blue">
-                My Courses
-              </h2>
-              {studentProfile?.courses && studentProfile.courses.length > 0 && (
-                <span className="bg-primary-gold text-gray-900 px-3 py-1 rounded-full text-sm font-bold">
-                  {studentProfile.courses.length}
-                </span>
+              {/* Learning Materials - Always visible */}
+              {applicationStatus === 'Approved' ? (
+                <Link href="/materials">
+                  <div className="bg-gradient-to-br from-success to-green-700 rounded-xl p-6 text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
+                    <div className="text-4xl mb-3">📚</div>
+                    <h3 className="text-xl font-bold mb-2">Learning Materials</h3>
+                    <p className="text-sm text-gray-200">Access your course resources</p>
+                  </div>
+                </Link>
+              ) : (
+                <div className="bg-gradient-to-br from-gray-300 to-gray-400 rounded-xl p-6 text-gray-600 h-full relative overflow-hidden">
+                  <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                    🔒 Locked
+                  </div>
+                  <div className="text-4xl mb-3 opacity-50">📚</div>
+                  <h3 className="text-xl font-bold mb-2">Learning Materials</h3>
+                  <p className="text-sm">Available upon approval</p>
+                  <div className="mt-3 text-xs bg-white/50 rounded px-2 py-1 inline-block">
+                    ⏳ Pending approval
+                  </div>
+                </div>
               )}
             </div>
-            {studentProfile?.courses && studentProfile.courses.length > 0 ? (
-              <div className="space-y-3">
-                {studentProfile.courses.map((courseName: string, index: number) => (
-                  <div key={index} className="border-l-4 border-primary-gold pl-4 py-3 bg-warm-white rounded">
-                    <h3 className="font-bold text-secondary-blue">{courseName}</h3>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-xs bg-success text-white px-2 py-1 rounded">Enrolled</span>
-                      <span className="text-xs text-gray-600">• In Progress</span>
+
+            {/* Course Application Status */}
+            <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+              <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-4">
+                Course Application Status
+              </h2>
+              {studentProfile.enrollments && studentProfile.enrollments.length > 0 ? (
+                <div className="space-y-3">
+                  {studentProfile.enrollments.map((enrollment: any) => (
+                    <div 
+                      key={enrollment.id} 
+                      className="flex items-center justify-between p-4 bg-warm-white rounded-lg border-l-4 border-secondary-blue"
+                    >
+                      <div className="flex-1">
+                        <h3 className="font-bold text-secondary-blue">{enrollment.course_name}</h3>
+                        <p className="text-xs text-gray-600">{enrollment.course_category}</p>
+                      </div>
+                      <div className={`px-4 py-2 rounded-full font-bold text-sm ${getStatusColor(enrollment.status)}`}>
+                        {enrollment.status}
+                      </div>
                     </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="text-4xl mb-2">📋</div>
+                  <p>No course applications yet</p>
+                </div>
+              )}
+            </div>
+
+
+          </>
+        )}
+
+        {/* Upcoming Events */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-4">
+            Upcoming Events
+          </h2>
+          {events.length > 0 ? (
+            <>
+              <div className="grid md:grid-cols-2 gap-6">
+                {events.slice(0, 4).map((event) => (
+                  <div key={event.id} className="border-l-4 border-primary-gold rounded-lg p-4 bg-warm-white hover:shadow-lg transition-shadow">
+                    <h3 className="font-bold text-lg mb-2 text-secondary-blue">{event.title}</h3>
+                    <p className="text-sm text-gray-600 mb-1">📅 {event.date}</p>
+                    <p className="text-sm text-gray-600 mb-3">
+                      {event.is_virtual ? '💻 Virtual Event' : '📍 In-Person'}
+                    </p>
+                    <Button variant="primary" size="sm" className="w-full">
+                      Register Now
+                    </Button>
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-2">📖</div>
-                <p className="mb-2">You haven't enrolled in any courses yet</p>
-                <p className="text-sm mb-4">Apply for admission to get started</p>
-                <Link href="/admission">
-                  <Button variant="primary" size="sm" className="mt-2">
-                    Apply Now
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Application Details */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-4">
-              Application Details
-            </h2>
-            {studentProfile ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-warm-white rounded">
-                  <span className="text-gray-700">📧 Email</span>
-                  <span className="font-semibold text-sm">{studentProfile.email}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-warm-white rounded">
-                  <span className="text-gray-700">📱 Phone</span>
-                  <span className="font-semibold text-sm">{studentProfile.phone}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-warm-white rounded">
-                  <span className="text-gray-700">🎓 Education</span>
-                  <span className="font-semibold text-sm">{studentProfile.diploma_level}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-warm-white rounded">
-                  <span className="text-gray-700">💼 Job Status</span>
-                  <span className="font-semibold text-sm">{studentProfile.job_status}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-warm-white rounded">
-                  <span className="text-gray-700">💻 Laptop</span>
-                  <span className="font-semibold text-sm">{studentProfile.has_laptop ? '✅ Yes' : '❌ No'}</span>
-                </div>
-                <div className="mt-4 pt-4 border-t">
-                  <Link href="/admission">
-                    <Button variant="outline" size="sm" className="w-full">
-                      Update Application
-                    </Button>
+              {events.length > 4 && (
+                <div className="text-center mt-6">
+                  <Link href="/events">
+                    <Button variant="outline">View All Events</Button>
                   </Link>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-2">📋</div>
-                <p className="mb-2">No application submitted</p>
-                <p className="text-sm mb-4">Submit your application to see details here</p>
-                <Link href="/admission">
-                  <Button variant="primary" size="sm">
-                    Apply Now
-                  </Button>
-                </Link>
-              </div>
-            )}
+              )}
+            </>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <div className="text-4xl mb-2">📅</div>
+              <p>No upcoming events at the moment</p>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Actions - For All Students */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-4">
+            Quick Actions
+          </h2>
+          <div className="grid md:grid-cols-3 gap-4">
+            <Link href="/admission">
+              <Button variant="primary" className="w-full py-6 text-lg">
+                📝 Apply for Courses
+              </Button>
+            </Link>
+            <Link href="/courses">
+              <Button variant="outline" className="w-full py-6 text-lg">
+                📚 Browse Courses
+              </Button>
+            </Link>
+            <Link href="/events">
+              <Button variant="outline" className="w-full py-6 text-lg">
+                🎉 Join Events
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -351,52 +361,62 @@ export default function StudentDashboard() {
           <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-4">
             Available Courses
           </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {courses.slice(0, 6).map((course) => (
-              <div key={course.id} className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
-                <h3 className="font-bold text-lg mb-2">{course.name}</h3>
-                <p className="text-sm text-gray-600 mb-3">{course.category}</p>
-                <Link href={`/courses/${course.id}`}>
-                  <Button variant="outline" size="sm" className="w-full">
-                    View Details
-                  </Button>
-                </Link>
+          {courses.length > 0 ? (
+            <>
+              <div className="grid md:grid-cols-3 gap-6">
+                {courses.slice(0, 6).map((course: any) => (
+                  <div key={course.id} className="border-l-4 border-secondary-blue rounded-lg p-4 bg-warm-white hover:shadow-lg transition-shadow">
+                    <h3 className="font-bold text-lg mb-2 text-secondary-blue">{course.name}</h3>
+                    <p className="text-sm text-gray-600 mb-3">{course.category}</p>
+                    
+                    {/* Timeline - Single Line with Words */}
+                    {(course.registration_deadline || course.start_date) && (
+                      <div className="mb-3 flex items-center gap-4 text-xs">
+                        {course.registration_deadline && (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-gray-600">Registration Deadline:</span>
+                            <span className="font-semibold text-red-600">
+                              {new Date(course.registration_deadline).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric' 
+                              })}
+                            </span>
+                          </div>
+                        )}
+                        {course.start_date && (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-gray-600">Starts:</span>
+                            <span className="font-semibold text-success">
+                              {new Date(course.start_date).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric' 
+                              })}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    <Link href={`/courses/${course.id}`}>
+                      <Button variant="outline" size="sm" className="w-full">
+                        View Details
+                      </Button>
+                    </Link>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          {courses.length > 6 && (
-            <div className="text-center mt-6">
-              <Link href="/courses">
-                <Button variant="primary">View All Courses</Button>
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Upcoming Events */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-4">
-            Upcoming Events
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            {events.slice(0, 4).map((event) => (
-              <div key={event.id} className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
-                <h3 className="font-bold text-lg mb-2">{event.title}</h3>
-                <p className="text-sm text-gray-600 mb-1">📅 {event.date}</p>
-                <p className="text-sm text-gray-600 mb-3">
-                  {event.is_virtual ? '💻 Virtual Event' : '📍 In-Person'}
-                </p>
-                <Button variant="primary" size="sm" className="w-full">
-                  Register Now
-                </Button>
-              </div>
-            ))}
-          </div>
-          {events.length > 4 && (
-            <div className="text-center mt-6">
-              <Link href="/events">
-                <Button variant="primary">View All Events</Button>
-              </Link>
+              {courses.length > 6 && (
+                <div className="text-center mt-6">
+                  <Link href="/courses">
+                    <Button variant="primary">View All Courses</Button>
+                  </Link>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <div className="text-4xl mb-2">📚</div>
+              <p>No courses available at the moment</p>
             </div>
           )}
         </div>
