@@ -1,0 +1,158 @@
+# Azure Pipelines CI/CD for EvolvLearn
+# Deploys Django Backend and Next.js Frontend to Azure App Service
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+
+variables:
+  # Python version
+  pythonVersion: '3.11'
+  # Node.js version
+  nodeVersion: '18.x'
+  # Azure subscription
+  azureSubscription: 'YOUR_AZURE_SUBSCRIPTION_NAME'
+  # Backend App Service name
+  backendAppName: 'evolvlearn-backend'
+  # Frontend App Service name
+  frontendAppName: 'evolvlearn-frontend'
+
+stages:
+  # ============================================
+  # Stage 1: Build and Deploy Backend (Django)
+  # ============================================
+  - stage: BuildBackend
+    displayName: 'Build Django Backend'
+    jobs:
+      - job: BuildBackendJob
+        displayName: 'Build Backend'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '$(pythonVersion)'
+            displayName: 'Use Python $(pythonVersion)'
+
+          - script: |
+              python -m pip install --upgrade pip
+              pip install -r requirements.txt
+            displayName: 'Install Python dependencies'
+
+          - script: |
+              cd evolv_backend
+              python manage.py collectstatic --noinput
+            displayName: 'Collect static files'
+
+          - task: ArchiveFiles@2
+            displayName: 'Archive backend files'
+            inputs:
+              rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+              includeRootFolder: false
+              archiveType: zip
+              archiveFile: $(Build.ArtifactStagingDirectory)/backend-$(Build.BuildId).zip
+              replaceExistingArchive: true
+
+          - upload: $(Build.ArtifactStagingDirectory)/backend-$(Build.BuildId).zip
+            artifact: backend
+
+  - stage: DeployBackend
+    displayName: 'Deploy Django Backend'
+    dependsOn: BuildBackend
+    condition: succeeded()
+    jobs:
+      - deployment: DeployBackendJob
+        displayName: 'Deploy to Azure App Service'
+        environment: 'production'
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebApp@1
+                  displayName: 'Deploy Django Backend'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    appType: 'webAppLinux'
+                    appName: '$(backendAppName)'
+                    package: '$(Pipeline.Workspace)/backend/backend-$(Build.BuildId).zip'
+                    runtimeStack: 'PYTHON|3.11'
+                    startUpCommand: 'gunicorn --bind=0.0.0.0 --timeout 600 evolv_backend.wsgi'
+
+                - task: AzureAppServiceManage@0
+                  displayName: 'Run Database Migrations'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    Action: 'Start Azure App Service'
+                    WebAppName: '$(backendAppName)'
+
+                - task: AzureCLI@2
+                  displayName: 'Run Django Migrations'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      echo "Running database migrations..."
+                      az webapp ssh --name $(backendAppName) --resource-group evolvlearn-rg --command "cd /home/site/wwwroot/evolv_backend && python manage.py migrate --noinput"
+
+  # ============================================
+  # Stage 2: Build and Deploy Frontend (Next.js)
+  # ============================================
+  - stage: BuildFrontend
+    displayName: 'Build Next.js Frontend'
+    jobs:
+      - job: BuildFrontendJob
+        displayName: 'Build Frontend'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '$(nodeVersion)'
+            displayName: 'Install Node.js'
+
+          - script: |
+              cd evolv_frontend
+              npm ci
+              npm run build
+            displayName: 'Install dependencies and build'
+
+          - task: ArchiveFiles@2
+            displayName: 'Archive frontend files'
+            inputs:
+              rootFolderOrFile: '$(System.DefaultWorkingDirectory)/evolv_frontend'
+              includeRootFolder: false
+              archiveType: zip
+              archiveFile: $(Build.ArtifactStagingDirectory)/frontend-$(Build.BuildId).zip
+              replaceExistingArchive: true
+
+          - upload: $(Build.ArtifactStagingDirectory)/frontend-$(Build.BuildId).zip
+            artifact: frontend
+
+  - stage: DeployFrontend
+    displayName: 'Deploy Next.js Frontend'
+    dependsOn: BuildFrontend
+    condition: succeeded()
+    jobs:
+      - deployment: DeployFrontendJob
+        displayName: 'Deploy to Azure App Service'
+        environment: 'production'
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebApp@1
+                  displayName: 'Deploy Next.js Frontend'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    appType: 'webAppLinux'
+                    appName: '$(frontendAppName)'
+                    package: '$(Pipeline.Workspace)/frontend/frontend-$(Build.BuildId).zip'
+                    runtimeStack: 'NODE|18-lts'
+                    startUpCommand: 'npm start'

@@ -1,14 +1,33 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/store/auth';
+import apiClient from '@/lib/api/client';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const { isAuthenticated, user, logout } = useAuthStore();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUserRole();
+    }
+  }, [isAuthenticated]);
+
+  const fetchUserRole = async () => {
+    try {
+      const response = await apiClient.get('/profile/me/');
+      setUserRole(response.data.role);
+    } catch (error) {
+      console.error('Failed to fetch user role:', error);
+    }
+  };
+
+  const isAdmin = userRole === 'Admin' || user?.role === 'Admin';
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -116,11 +135,14 @@ export const Header = () => {
                     Dashboard
                   </Button>
                 </Link>
-                <Link href="/admin/applications">
-                  <Button variant="outline" size="sm">
-                    Applications
-                  </Button>
-                </Link>
+                {/* Only show Applications for Admins */}
+                {isAdmin && (
+                  <Link href="/admin/applications">
+                    <Button variant="outline" size="sm">
+                      Applications
+                    </Button>
+                  </Link>
+                )}
                 <Button variant="secondary" size="sm" onClick={logout}>
                   Logout
                 </Button>
@@ -227,6 +249,14 @@ export const Header = () => {
                         Dashboard
                       </Button>
                     </Link>
+                    {/* Only show Applications for Admins */}
+                    {isAdmin && (
+                      <Link href="/admin/applications">
+                        <Button variant="outline" size="sm" className="w-full">
+                          Applications
+                        </Button>
+                      </Link>
+                    )}
                     <Button variant="secondary" size="sm" onClick={logout} className="w-full">
                       Logout
                     </Button>

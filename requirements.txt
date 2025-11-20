@@ -46,10 +46,10 @@ sqlparse>=0.4.0
 tzdata>=2024.0
 
 # ============================================
-# Optional: Production Server
+# Production Server (Required for Azure)
 # ============================================
-# gunicorn>=21.0.0,<22.0.0  # Uncomment for production
-# whitenoise>=6.5.0,<7.0.0  # Uncomment for static files serving
+gunicorn>=21.0.0,<22.0.0
+whitenoise>=6.5.0,<7.0.0
 
 # ============================================
 # Optional: Email & Monitoring

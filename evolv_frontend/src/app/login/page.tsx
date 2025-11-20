@@ -58,7 +58,21 @@ export default function LoginPage() {
       router.push('/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err.response?.data?.detail || 'Login failed. Please check your credentials.');
+      
+      // Handle specific error messages
+      if (err.response?.status === 401) {
+        setError('Invalid username/email or password. Please check your credentials and try again.');
+      } else if (err.response?.status === 403) {
+        setError('Your account is not active. Please contact support.');
+      } else if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else if (err.response?.data?.non_field_errors) {
+        setError(err.response.data.non_field_errors[0]);
+      } else if (err.message) {
+        setError(`Login failed: ${err.message}`);
+      } else {
+        setError('Unable to connect to server. Please check your internet connection and try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -80,8 +94,14 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-              {error}
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6">
+              <div className="flex items-start">
+                <span className="text-2xl mr-3">⚠️</span>
+                <div>
+                  <h3 className="font-bold text-red-800 mb-1">Login Failed</h3>
+                  <p className="text-red-700 text-sm">{error}</p>
+                </div>
+              </div>
             </div>
           )}
 

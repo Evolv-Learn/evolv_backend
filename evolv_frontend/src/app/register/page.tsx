@@ -49,15 +49,20 @@ export default function RegisterPage() {
         last_name: formData.last_name,
       });
 
-      // Store tokens
-      localStorage.setItem('access_token', response.tokens.access);
-      localStorage.setItem('refresh_token', response.tokens.refresh);
+      // Check if email verification is required
+      if (response.email_sent) {
+        // Email verification required - redirect to check email page
+        router.push(`/check-email?email=${encodeURIComponent(formData.email)}`);
+        return;
+      }
 
-      // Set user
-      setUser(response.user);
-
-      // Show success message
-      alert('Registration successful! Welcome to EvolvLearn!');
+      // Old flow (if tokens are returned)
+      if (response.tokens) {
+        localStorage.setItem('access_token', response.tokens.access);
+        localStorage.setItem('refresh_token', response.tokens.refresh);
+        setUser(response.user);
+        alert('Registration successful! Welcome to EvolvLearn!');
+      }
 
       // Redirect to dashboard
       router.push('/dashboard');
