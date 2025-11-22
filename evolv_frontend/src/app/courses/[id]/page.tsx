@@ -12,7 +12,6 @@ export default function CourseDetailPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const [course, setCourse] = useState<any>(null);
-  const [instructorProfile, setInstructorProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -25,17 +24,6 @@ export default function CourseDetailPage() {
     try {
       const response = await apiClient.get(`/courses/${params.id}/`);
       setCourse(response.data);
-      
-      // Fetch instructor profile if instructor_id exists
-      if (response.data.instructor_id) {
-        try {
-          // Fetch instructor profile using public endpoint
-          const profileRes = await apiClient.get(`/instructors/${response.data.instructor_id}/profile/`);
-          setInstructorProfile(profileRes.data);
-        } catch (error) {
-          console.error('Failed to fetch instructor profile:', error);
-        }
-      }
     } catch (error) {
       console.error('Failed to fetch course:', error);
     } finally {
@@ -208,92 +196,18 @@ export default function CourseDetailPage() {
                 </>
               )}
 
-              {instructorProfile && (
+              {course.instructor && (
                 <>
                   <h3 className="text-xl font-heading font-bold text-secondary-blue mb-3">
-                    Your Instructor
+                    Instructor
                   </h3>
-                  <div className="bg-gradient-to-br from-warm-white to-gray-50 rounded-xl p-6 mb-6 border-l-4 border-primary-gold">
-                    <div className="flex items-start gap-4">
-                      {/* Profile Picture */}
-                      <div className="flex-shrink-0">
-                        <div className="w-20 h-20 rounded-full border-4 border-secondary-blue overflow-hidden bg-gray-200">
-                          {instructorProfile.profile_picture ? (
-                            <img 
-                              src={instructorProfile.profile_picture.startsWith('http') 
-                                ? instructorProfile.profile_picture 
-                                : `http://localhost:8000${instructorProfile.profile_picture}`
-                              } 
-                              alt={instructorProfile.user?.first_name || 'Instructor'}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-secondary-blue text-white text-3xl font-bold">
-                              {(instructorProfile.user?.first_name?.[0] || instructorProfile.user?.username?.[0] || 'I').toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Profile Info */}
-                      <div className="flex-1">
-                        <h4 className="text-lg font-bold text-secondary-blue mb-1">
-                          {instructorProfile.user?.first_name && instructorProfile.user?.last_name
-                            ? `${instructorProfile.user.first_name} ${instructorProfile.user.last_name}`
-                            : instructorProfile.user?.username || course.instructor}
-                        </h4>
-                        {instructorProfile.title && (
-                          <p className="text-sm text-gray-600 mb-2">
-                            {instructorProfile.title}
-                          </p>
-                        )}
-                        {instructorProfile.bio && (
-                          <p className="text-sm text-gray-700 mb-3 line-clamp-3">
-                            {instructorProfile.bio}
-                          </p>
-                        )}
-
-                        {/* Social Links */}
-                        <div className="flex items-center gap-3">
-                          {instructorProfile.email && (
-                            <a
-                              href={`mailto:${instructorProfile.email}`}
-                              className="text-secondary-blue hover:underline text-sm flex items-center gap-1"
-                              title="Email"
-                            >
-                              📧
-                            </a>
-                          )}
-                          {instructorProfile.twitter_url && (
-                            <a
-                              href={instructorProfile.twitter_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-secondary-blue hover:underline text-sm"
-                              title="Twitter/X"
-                            >
-                              🐦
-                            </a>
-                          )}
-                          {instructorProfile.linkedin_url && (
-                            <a
-                              href={instructorProfile.linkedin_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-secondary-blue hover:underline text-sm"
-                              title="LinkedIn"
-                            >
-                              💼
-                            </a>
-                          )}
-                          <Link
-                            href={`/instructor/${instructorProfile.user?.id}/profile`}
-                            className="text-secondary-blue hover:underline text-sm font-semibold ml-auto"
-                          >
-                            View Full Profile →
-                          </Link>
-                        </div>
-                      </div>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 bg-primary-gold rounded-full flex items-center justify-center">
+                      <span className="text-2xl">👨‍🏫</span>
+                    </div>
+                    <div>
+                      <p className="font-bold">{course.instructor}</p>
+                      <p className="text-sm text-gray-600">Course Instructor</p>
                     </div>
                   </div>
                 </>
