@@ -72,3 +72,13 @@ htmlcov/
 *.bak
 *.tmp
 .cache/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Media files
+media/
+*.mp4
+*.pdf
