@@ -7,14 +7,28 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-
+# Security Settings
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("DJANGO_SECRET_KEY must be set in environment variables")
 
-DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
+DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = [
-    h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",") if h.strip()
+    h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()
 ]
+
+# Security settings for production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 
 INSTALLED_APPS = [
@@ -36,6 +50,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Serve static files in production
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -65,6 +80,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "evolv_backend.wsgi.application"
 
+# Database Configuration - PostgreSQL for production
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -73,8 +89,16 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD"),
         "HOST": os.getenv("DB_HOST", "localhost"),
         "PORT": os.getenv("DB_PORT", "5432"),
+        "CONN_MAX_AGE": 600,  # Connection pooling
+        "OPTIONS": {
+            "connect_timeout": 10,
+        },
     }
 }
+
+# Validate database configuration
+if not all([os.getenv("DB_NAME"), os.getenv("DB_USER"), os.getenv("DB_PASSWORD")]):
+    raise ValueError("Database credentials (DB_NAME, DB_USER, DB_PASSWORD) must be set")
 
 AUTH_USER_MODEL = "courses.CustomUser"
 
@@ -83,16 +107,18 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  
 ]
 
+# CORS Configuration
 _frontends = [
-    o.strip() for o in os.getenv("FRONTEND_ORIGINS", "").split(",") if o.strip()
+    o.strip() for o in os.getenv("FRONTEND_ORIGINS", "http://localhost:3000").split(",") if o.strip()
 ]
 CORS_ALLOWED_ORIGINS = _frontends
-CORS_ALLOW_CREDENTIALS = False
-CSRF_TRUSTED_ORIGINS = [
-    o.replace("http://", "http://").replace("https://", "https://")
-    for o in _frontends
-    if o.startswith("https://")
-]
+CORS_ALLOW_CREDENTIALS = True  # Allow cookies for JWT refresh tokens
+
+# CSRF Configuration
+CSRF_TRUSTED_ORIGINS = _frontends
+if not DEBUG:
+    # In production, only allow HTTPS origins
+    CSRF_TRUSTED_ORIGINS = [o for o in _frontends if o.startswith("https://")]
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -115,9 +141,46 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+# Static files configuration
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Logging Configuration
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "logs" / "django.log",
+            "formatter": "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO" if not DEBUG else "DEBUG",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "file"] if not DEBUG else ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
