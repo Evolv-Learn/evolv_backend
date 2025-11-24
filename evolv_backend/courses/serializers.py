@@ -9,6 +9,7 @@ from .models import (
     Location,
     Partner,
     Course,
+    CourseMaterial,
     Student,
     CourseEnrollment,
     LearningSchedule,
@@ -42,7 +43,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ["id", "user", "role"]
+        fields = ["id", "user", "role", "profile_picture", "title", "bio", "email", "twitter_url", "linkedin_url"]
 
 
 class ProfileSelfSerializer(serializers.ModelSerializer):
@@ -53,12 +54,12 @@ class ProfileSelfSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(
         source="user.last_name", required=False, allow_blank=True
     )
-    email = serializers.EmailField(source="user.email", required=False)
+    user_email = serializers.EmailField(source="user.email", required=False)
     role = serializers.CharField(read_only=True)
 
     class Meta:
         model = Profile
-        fields = ["id", "role", "username", "first_name", "last_name", "email"]
+        fields = ["id", "role", "username", "first_name", "last_name", "user_email", "email", "profile_picture", "title", "bio", "twitter_url", "linkedin_url"]
 
     def validate(self, attrs):
         user_data = attrs.get("user", {})
@@ -235,6 +236,7 @@ class PartnerSerializer(serializers.ModelSerializer):
 
 class CourseReadSerializer(serializers.ModelSerializer):
     instructor = serializers.StringRelatedField()
+    instructor_id = serializers.PrimaryKeyRelatedField(source="instructor", read_only=True)
     locations = serializers.StringRelatedField(many=True)
     partners = serializers.StringRelatedField(many=True)
     parent = serializers.StringRelatedField()
@@ -250,6 +252,7 @@ class CourseReadSerializer(serializers.ModelSerializer):
             "software_tools",
             "topics_covered",
             "instructor",
+            "instructor_id",
             "locations",
             "partners",
             "parent",
@@ -258,6 +261,10 @@ class CourseReadSerializer(serializers.ModelSerializer):
             "selection_date",
             "start_date",
             "end_date",
+            "github_repository",
+            "discord_community",
+            "video_content",
+            "additional_materials",
             "created_at",
         ]
 
@@ -293,6 +300,10 @@ class CourseWriteSerializer(serializers.ModelSerializer):
             "selection_date",
             "start_date",
             "end_date",
+            "github_repository",
+            "discord_community",
+            "video_content",
+            "additional_materials",
         ]
 
     def validate(self, attrs):
@@ -343,6 +354,34 @@ class CourseWriteSerializer(serializers.ModelSerializer):
                 seen.add(cur.pk)
                 cur = cur.parent
         return attrs
+
+
+class CourseMaterialSerializer(serializers.ModelSerializer):
+    uploaded_by_name = serializers.SerializerMethodField()
+    file_size_mb = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = CourseMaterial
+        fields = [
+            'id',
+            'course',
+            'title',
+            'description',
+            'material_type',
+            'file',
+            'file_size',
+            'file_size_mb',
+            'uploaded_by',
+            'uploaded_by_name',
+            'uploaded_at',
+            'updated_at',
+        ]
+        read_only_fields = ['uploaded_by', 'file_size', 'uploaded_at', 'updated_at']
+    
+    def get_uploaded_by_name(self, obj):
+        if obj.uploaded_by:
+            return obj.uploaded_by.get_full_name() or obj.uploaded_by.username
+        return None
 
 
 class SelectionProcedureSerializer(serializers.ModelSerializer):
@@ -597,18 +636,31 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class LearningScheduleSerializer(serializers.ModelSerializer):
     duration = serializers.IntegerField(read_only=True)
+    course_name = serializers.CharField(source='course.name', read_only=True)
+    location_name = serializers.CharField(source='location.name', read_only=True)
+    instructor_name = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = LearningSchedule
         fields = [
             "id",
             "course",
+            "course_name",
             "start_date",
             "end_date",
             "instructor",
+            "instructor_name",
             "location",
+            "location_name",
             "duration",
         ]
+
+    def get_instructor_name(self, obj):
+        if obj.instructor:
+            if obj.instructor.first_name and obj.instructor.last_name:
+                return f"{obj.instructor.first_name} {obj.instructor.last_name}"
+            return obj.instructor.username
+        return None
 
     def validate(self, attrs):
         start = attrs.get("start_date", getattr(self.instance, "start_date", None))
@@ -638,10 +690,19 @@ class LearningScheduleSerializer(serializers.ModelSerializer):
 
 class ModuleReadSerializer(serializers.ModelSerializer):
     schedule = serializers.StringRelatedField()
+    lessons = serializers.SerializerMethodField()
+    lessons_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Module
-        fields = ["id", "schedule", "title", "description", "order"]
+        fields = ["id", "schedule", "title", "description", "order", "lessons", "lessons_count"]
+    
+    def get_lessons(self, obj):
+        lessons = obj.lessons.all()
+        return LessonReadSerializer(lessons, many=True).data
+    
+    def get_lessons_count(self, obj):
+        return obj.lessons.count()
 
 
 class ModuleWriteSerializer(serializers.ModelSerializer):
@@ -838,3 +899,5 @@ class StudentWriteSerializer(serializers.ModelSerializer):
         if schedules is not None:
             student.schedules.set(schedules)
         return student
+
+

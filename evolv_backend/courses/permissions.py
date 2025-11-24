@@ -40,3 +40,25 @@ class AuthenticatedCreateReadAdminModify(BasePermission):
         if request.method == "POST":
             return bool(request.user and request.user.is_authenticated)
         return bool(request.user and request.user.is_staff)
+
+
+class IsAdminOrInstructor(BasePermission):
+    """
+    Allows read access to anyone, but write access only to admins and instructors.
+    """
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        
+        if not request.user or not request.user.is_authenticated:
+            return False
+        
+        # Allow admins
+        if request.user.is_staff:
+            return True
+        
+        # Allow instructors
+        try:
+            return request.user.profile.role == 'Instructor'
+        except:
+            return False

@@ -16,14 +16,14 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .permissions import IsAdmin, IsAdminOrReadOnly, AllowAnyCreateReadAdminModify, IsAdminOrInstructorOwner, AuthenticatedCreateReadAdminModify
+from .permissions import IsAdmin, IsAdminOrReadOnly, AllowAnyCreateReadAdminModify, IsAdminOrInstructorOwner, AuthenticatedCreateReadAdminModify, IsAdminOrInstructor
 
 from .models import (
-    Profile,Location,Partner,Course,Student,SelectionProcedure,StudentSelection,ContactUs,EventAttendance,
+    Profile,Location,Partner,Course,CourseMaterial,Student,SelectionProcedure,StudentSelection,ContactUs,EventAttendance,
     Alumni,Event,AboutUs,TeamMember,CoreValue,Review,LearningSchedule,Module,Lesson,)
 
 from .serializers import (
-    ProfileSerializer,LocationSerializer,PartnerSerializer,ProfileSelfSerializer,CourseReadSerializer,CourseWriteSerializer,
+    ProfileSerializer,LocationSerializer,PartnerSerializer,ProfileSelfSerializer,CourseReadSerializer,CourseWriteSerializer,CourseMaterialSerializer,
     SelectionProcedureSerializer,StudentSelectionSerializer,ContactUsSerializer,EventAttendanceSerializer,AlumniReadSerializer,AlumniWriteSerializer,
     EventWriteSerializer,EventReadSerializer,AboutUsSerializer, TeamMemberReadSerializer,TeamMemberWriteSerializer,CoreValueSerializer,ReviewSerializer,
     LearningScheduleSerializer, LessonReadSerializer, LessonWriteSerializer, UserProfileCreateSerializer, RegisterUserSerializer, AdminProfileUpdateSerializer,
@@ -199,7 +199,7 @@ class PartnerDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class CourseListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminOrInstructor]
     queryset = (
         Course.objects.select_related("instructor", "parent")
         .prefetch_related("locations", "partners")
@@ -221,7 +221,7 @@ class CourseListCreateView(generics.ListCreateAPIView):
 
 
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminOrInstructor]
     queryset = (
         Course.objects.select_related("instructor", "parent")
         .prefetch_related("locations", "partners")
@@ -234,6 +234,28 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
             if self.request.method in ("PUT", "PATCH")
             else CourseReadSerializer
         )
+
+
+class CourseMaterialListCreateView(generics.ListCreateAPIView):
+    serializer_class = CourseMaterialSerializer
+    permission_classes = [IsAdminOrInstructor]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['course', 'material_type']
+    search_fields = ['title', 'description']
+    ordering_fields = ['uploaded_at', 'title']
+    ordering = ['-uploaded_at']
+    
+    def get_queryset(self):
+        return CourseMaterial.objects.select_related('course', 'uploaded_by').all()
+    
+    def perform_create(self, serializer):
+        serializer.save(uploaded_by=self.request.user)
+
+
+class CourseMaterialDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CourseMaterial.objects.select_related('course', 'uploaded_by').all()
+    serializer_class = CourseMaterialSerializer
+    permission_classes = [IsAdminOrInstructor]
 
 
 class SelectionProcedureListCreateView(generics.ListCreateAPIView):
@@ -699,3 +721,36 @@ def resend_verification(request):
             {'error': 'No account found with this email'},
             status=status.HTTP_404_NOT_FOUND
         )
+
+
+
+class CourseMaterialListCreateView(generics.ListCreateAPIView):
+    serializer_class = CourseMaterialSerializer
+    permission_classes = [IsAdminOrInstructor]
+    
+    def get_queryset(self):
+        course_id = self.kwargs.get('course_id')
+        if course_id:
+            return CourseMaterial.objects.filter(course_id=course_id)
+        return CourseMaterial.objects.all()
+    
+    def perform_create(self, serializer):
+        serializer.save(uploaded_by=self.request.user)
+
+
+class CourseMaterialDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CourseMaterial.objects.all()
+    serializer_class = CourseMaterialSerializer
+    permission_classes = [IsAdminOrInstructor]
+
+
+
+class PublicInstructorProfileView(generics.RetrieveAPIView):
+    """Public view for instructor profiles - no authentication required"""
+    serializer_class = ProfileSerializer
+    permission_classes = [permissions.AllowAny]
+    lookup_field = 'user_id'
+    
+    def get_queryset(self):
+        # Only return profiles with Instructor role
+        return Profile.objects.filter(role='Instructor').select_related('user')

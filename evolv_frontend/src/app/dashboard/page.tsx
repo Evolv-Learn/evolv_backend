@@ -25,7 +25,9 @@ export default function DashboardPage() {
 
   const fetchUserProfile = async () => {
     try {
-      const response = await apiClient.get('/profile/me/');
+      const response = await apiClient.get('/profile/');
+      console.log('User profile data:', response.data);
+      console.log('User role:', response.data.role);
       setUserRole(response.data.role);
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
@@ -52,14 +54,20 @@ export default function DashboardPage() {
   const isInstructor = userRole === 'Instructor';
   const isStudent = userRole === 'Student' || userRole === 'Alumni';
 
+  console.log('Dashboard routing - userRole:', userRole);
+  console.log('isAdmin:', isAdmin, 'isInstructor:', isInstructor, 'isStudent:', isStudent);
+
   // Render appropriate dashboard based on role
   if (isAdmin) {
+    console.log('Rendering AdminDashboard');
     return <AdminDashboard />;
   }
 
   if (isInstructor) {
+    console.log('Rendering InstructorDashboard');
     return <InstructorDashboard />;
   }
 
+  console.log('Rendering StudentDashboard');
   return <StudentDashboard />;
 }

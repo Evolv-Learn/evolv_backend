@@ -8,12 +8,15 @@ from django.conf.urls.static import static
 
 from .views import (
     ProfileDetailView,
+    PublicInstructorProfileView,
     LocationListCreateView,
     LocationDetailView,
     PartnerListCreateView,
     PartnerDetailView,
     CourseListCreateView,
     CourseDetailView,
+    CourseMaterialListCreateView,
+    CourseMaterialDetailView,
     StudentListCreateView,
     TeamMemberDetailView,
     StudentDetailView,
@@ -64,6 +67,7 @@ urlpatterns = [
     path("verify-email/", verify_email, name="verify-email"),
     path("resend-verification/", resend_verification, name="resend-verification"),
     path("profile/", ProfileDetailView.as_view(), name="profile-detail"),
+    path("instructors/<int:user_id>/profile/", PublicInstructorProfileView.as_view(), name="public-instructor-profile"),
 
     path("admin/profiles/", AdminProfileListView.as_view(), name="admin-profile-list"),
     path("admin/users/<int:user_id>/profile/", AdminUserProfileDetailView.as_view(), name="admin-user-profile-detail"),
@@ -76,6 +80,8 @@ urlpatterns = [
 
     path("courses/", CourseListCreateView.as_view(), name="course-list"),
     path("courses/<int:pk>/", CourseDetailView.as_view(), name="course-detail"),
+    path("courses/<int:course_id>/materials/", CourseMaterialListCreateView.as_view(), name="course-materials-list"),
+    path("course-materials/<int:pk>/", CourseMaterialDetailView.as_view(), name="course-material-detail"),
 
     path("selection-procedures/", SelectionProcedureListCreateView.as_view(), name="selectionprocedure-list"),
     path("selection-procedures/<int:pk>/", SelectionProcedureDetailView.as_view(), name="selectionprocedure-detail"),

@@ -20,9 +20,47 @@ Evolv is an interactive learning website where:
 - **API Documentation**: drf-spectacular (Swagger UI)
 - **File Storage**: Local media files (configurable for S3)
 
-### Frontend (Figma Design)
+### Frontend (Next.js)
+- **Framework**: Next.js 14+ with TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: Zustand
 - **Design**: [View Figma File](https://www.figma.com/design/h8lxYcflZk8USQ4JRZVqm1/EVOLV?node-id=0-1&t=fbs6VqAHkN1oyph2-1)
-- **Recommended Stack**: React/Next.js or Vue/Nuxt
+
+## 🆕 Latest Updates (November 2024)
+
+### Instructor Dashboard Enhancements
+- **Enhanced Stats Cards**: Centered, bold text with larger fonts for better visibility
+- **Module Counting**: Automatic module count from course topics with per-schedule breakdown
+- **Book Icons**: Visual indicators showing module distribution across schedules
+
+### Learning Materials Management
+- **Multiple File Uploads**: Upload unlimited videos, documents, spreadsheets, and archives per course
+- **Course Organization**: Files automatically organized by course in collapsible folders
+- **File Management**: 
+  - Upload with title, description, and type categorization
+  - View all files across all courses in one place
+  - Delete files from any view
+  - File size display and download links
+- **External Links**: GitHub repository and Discord community integration
+- **Date-based Storage**: Files organized in `YYYY/MM/` subfolders on server
+
+### Schedule & Course Management
+- **Smart Auto-fill**: Dates and locations auto-populate from course information
+- **Location Tooltips**: Hover info showing recommended course locations
+- **Edit Capabilities**: Full CRUD for schedules, modules, and lessons
+- **Topics as Modules**: Course topics displayed as modules with edit functionality
+
+### Instructor Profiles
+- **Public Profiles**: Instructor profiles visible on course pages
+- **Profile Cards**: Display photo, title, bio, and social links
+- **Course Listings**: Show all courses taught by instructor
+- **Contact Options**: Email, Twitter, and LinkedIn integration
+
+### User Experience
+- **Logout Redirect**: Users redirected to homepage after logout
+- **Register Now**: Updated CTA from "Apply Now" to "Register Now"
+- **Collapsible Folders**: Click to expand/collapse course material folders
+- **Responsive Design**: Mobile-friendly interface throughout
 
 ## 📋 Features
 
@@ -72,9 +110,24 @@ Evolv is an interactive learning website where:
 - ✅ Manage course enrollments with status updates
 
 ### Instructor Features
+- ✅ Create and manage courses with full permissions
 - ✅ Create and manage learning schedules
+- ✅ Auto-populate schedule dates and locations from courses
+- ✅ Manage course topics/modules
 - ✅ View assigned students
-- ✅ Manage course modules and lessons
+- ✅ Manage course modules and lessons with full CRUD operations
+- ✅ Upload and manage learning materials:
+  - 📁 GitHub repository links
+  - 💬 Discord community links
+  - 🎥 Video files (multiple uploads)
+  - 📄 Documents (PDF, CSV, Excel, Word, ZIP, etc.)
+- ✅ Organize materials by course with collapsible folders
+- ✅ View all uploaded files across all courses
+- ✅ Delete materials from any view
+- ✅ Enhanced dashboard with centered stats cards
+- ✅ Module count based on course topics
+- ✅ Public instructor profile pages with bio, social links, and courses taught
+- ✅ Profile information displayed on course pages for student confidence
 
 ## 🚀 Getting Started
 
@@ -87,9 +140,11 @@ Evolv is an interactive learning website where:
 
 1. **Clone the repository**
 ```bash
-git clone <repository-url>
-cd evolv_backend
+git clone https://github.com/YOUR-USERNAME/evolv-learning-platform.git
+cd evolv-learning-platform
 ```
+
+> **Note**: Replace `YOUR-USERNAME` with your actual GitHub username or organization name.
 
 2. **Create virtual environment**
 ```bash

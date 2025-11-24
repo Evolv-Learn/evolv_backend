@@ -8,9 +8,9 @@ import { useAuthStore } from '@/store/auth';
 
 export default function InstructorDashboard() {
   const { user } = useAuthStore();
-  const [myCourses, setMyCourses] = useState<any[]>([]);
-  const [mySchedules, setMySchedules] = useState<any[]>([]);
-  const [stats, setStats] = useState({ courses: 0, students: 0, schedules: 0 });
+  const [profile, setProfile] = useState<any>(null);
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -19,25 +19,52 @@ export default function InstructorDashboard() {
 
   const fetchData = async () => {
     try {
-      const [coursesRes, schedulesRes] = await Promise.all([
-        apiClient.get('/courses/'),
+      const [profileRes, schedulesRes, coursesRes] = await Promise.all([
+        apiClient.get('/profile/'),
         apiClient.get('/schedules/'),
+        apiClient.get('/courses/'),
       ]);
       
-      const courses = coursesRes.data.results || coursesRes.data;
-      const schedules = schedulesRes.data.results || schedulesRes.data;
+      setProfile(profileRes.data);
       
-      // Filter courses taught by this instructor
-      const instructorCourses = courses.filter((c: any) => c.instructor?.id === user?.id);
-      const instructorSchedules = schedules.filter((s: any) => s.instructor?.id === user?.id);
+      // Filter schedules for current instructor
+      const allSchedules = schedulesRes.data.results || schedulesRes.data || [];
+      const allCourses = coursesRes.data.results || coursesRes.data || [];
       
-      setMyCourses(instructorCourses);
-      setMySchedules(instructorSchedules);
-      setStats({
-        courses: instructorCourses.length,
-        students: 0, // Would need to fetch from backend
-        schedules: instructorSchedules.length,
-      });
+      const mySchedules = allSchedules.filter(
+        (schedule: any) => {
+          return schedule.instructor === user?.id || schedule.instructor?.id === user?.id;
+        }
+      );
+      
+      // Fetch course details for each schedule to get topics_covered
+      const schedulesWithModules = await Promise.all(
+        mySchedules.map(async (schedule: any) => {
+          try {
+            const courseRes = await apiClient.get(`/courses/${schedule.course}/`);
+            const course = courseRes.data;
+            
+            // Count modules from topics_covered (non-empty lines)
+            const modulesCount = course.topics_covered 
+              ? course.topics_covered.split('\n').filter((line: string) => line.trim()).length 
+              : 0;
+            
+            return {
+              ...schedule,
+              modules_count: modulesCount,
+            };
+          } catch (error) {
+            console.error(`Failed to fetch course ${schedule.course}:`, error);
+            return {
+              ...schedule,
+              modules_count: 0,
+            };
+          }
+        })
+      );
+      
+      setSchedules(schedulesWithModules);
+      setCourses(allCourses);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -45,106 +72,160 @@ export default function InstructorDashboard() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-warm-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-gold mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-warm-white py-8">
       <div className="container mx-auto px-4">
-        {/* Welcome Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-heading font-bold text-secondary-blue mb-2">
-            Instructor Dashboard 👨‍🏫
-          </h1>
-          <p className="text-gray-600">Welcome back, {user?.first_name || user?.username}</p>
+        {/* Instructor Profile Card */}
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+          <div className="flex items-start gap-8">
+            {/* Profile Picture */}
+            <div className="relative flex-shrink-0">
+              <div className="w-40 h-40 rounded-full border-4 border-secondary-blue overflow-hidden bg-gray-200">
+                {profile?.profile_picture ? (
+                  <img 
+                    src={profile.profile_picture.startsWith('http') 
+                      ? profile.profile_picture 
+                      : `http://localhost:8000${profile.profile_picture}`
+                    } 
+                    alt={user?.first_name || user?.username}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.log('Image failed to load:', profile.profile_picture);
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-secondary-blue text-white text-5xl font-bold">
+                    {(user?.first_name?.[0] || user?.username?.[0] || 'I').toUpperCase()}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Profile Info */}
+            <div className="flex-1 pt-2">
+              <h1 className="text-3xl font-heading font-bold text-gray-900 mb-2">
+                {user?.last_name && user?.first_name 
+                  ? `${user.last_name}, ${user.first_name}`
+                  : user?.first_name || user?.username}
+              </h1>
+              <p className="text-lg text-gray-600 mb-3">
+                {profile?.title || 'Instructor'}
+              </p>
+              {profile?.bio && (
+                <p className="text-sm text-gray-600 mb-4 line-clamp-2 max-w-2xl">
+                  {profile.bio}
+                </p>
+              )}
+              <Link href="/instructor/profile">
+                <Button variant="primary" size="lg">
+                  View profile
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
 
-        {/* Stats */}
+        {/* Stats Overview */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="text-3xl font-bold text-primary-gold mb-2">{stats.courses}</div>
-            <div className="text-gray-600">My Courses</div>
+          <div className="bg-gradient-to-br from-secondary-blue to-secondary-blue-dark rounded-xl p-8 text-white text-center flex flex-col items-center justify-center min-h-[140px]">
+            <div className="text-5xl font-bold mb-3">{schedules.length}</div>
+            <div className="text-lg font-bold">Active Schedules</div>
           </div>
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="text-3xl font-bold text-secondary-blue mb-2">{stats.schedules}</div>
-            <div className="text-gray-600">Active Schedules</div>
+          
+          <div className="bg-gradient-to-br from-primary-gold to-primary-gold-dark rounded-xl p-8 text-gray-900 text-center flex flex-col items-center justify-center min-h-[140px]">
+            <div className="text-5xl font-bold mb-3">
+              {schedules.reduce((total, schedule) => total + (schedule.students?.length || 0), 0)}
+            </div>
+            <div className="text-lg font-bold">Total Students</div>
           </div>
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="text-3xl font-bold text-success mb-2">{stats.students}</div>
-            <div className="text-gray-600">Total Students</div>
+          
+          <div className="bg-gradient-to-br from-success to-green-700 rounded-xl p-8 text-white text-center flex flex-col items-center justify-center min-h-[140px]">
+            <div className="text-5xl font-bold mb-3">
+              {schedules.reduce((total, schedule) => total + (schedule.modules_count || 0), 0)}
+            </div>
+            <div className="text-lg font-bold">Total Modules</div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <Link href="/instructor/courses/create">
-            <div className="bg-gradient-to-br from-primary-gold to-primary-gold-dark rounded-xl p-6 text-gray-900 hover:shadow-xl transition-shadow cursor-pointer">
-              <div className="text-4xl mb-3">➕</div>
-              <h3 className="text-lg font-bold mb-1">Create Course</h3>
-              <p className="text-sm">Add new course</p>
-            </div>
-          </Link>
-
-          <Link href="/instructor/materials">
-            <div className="bg-gradient-to-br from-secondary-blue to-secondary-blue-dark rounded-xl p-6 text-white hover:shadow-xl transition-shadow cursor-pointer">
-              <div className="text-4xl mb-3">📚</div>
-              <h3 className="text-lg font-bold mb-1">Course Materials</h3>
-              <p className="text-sm">Update content</p>
-            </div>
-          </Link>
-
-          <Link href="/instructor/events/create">
-            <div className="bg-gradient-to-br from-success to-green-700 rounded-xl p-6 text-white hover:shadow-xl transition-shadow cursor-pointer">
-              <div className="text-4xl mb-3">🎉</div>
-              <h3 className="text-lg font-bold mb-1">Create Event</h3>
-              <p className="text-sm">Schedule workshop</p>
-            </div>
-          </Link>
-
-          <Link href="/instructor/schedules">
-            <div className="bg-gradient-to-br from-hausa-indigo to-purple-900 rounded-xl p-6 text-white hover:shadow-xl transition-shadow cursor-pointer">
-              <div className="text-4xl mb-3">📅</div>
-              <h3 className="text-lg font-bold mb-1">Schedules</h3>
-              <p className="text-sm">Manage classes</p>
-            </div>
-          </Link>
-        </div>
-
-        {/* My Courses */}
+        {/* My Schedules */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-heading font-bold text-secondary-blue">
-              My Courses
+              My Teaching Schedules
             </h2>
-            <Link href="/instructor/courses/create">
-              <Button variant="primary" size="sm">
-                + New Course
+            <Link href="/instructor/schedules/create">
+              <Button variant="primary">
+                + Create Schedule
               </Button>
             </Link>
           </div>
-          
-          {myCourses.length > 0 ? (
-            <div className="grid md:grid-cols-2 gap-6">
-              {myCourses.map((course) => (
-                <div key={course.id} className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="font-bold text-lg">{course.name}</h3>
-                      <p className="text-sm text-gray-600">{course.category}</p>
+
+          {schedules.length > 0 ? (
+            <div className="space-y-4">
+              {schedules.map((schedule) => (
+                <div 
+                  key={schedule.id} 
+                  className="border-l-4 border-secondary-blue rounded-lg p-4 bg-warm-white hover:shadow-lg transition-shadow"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-lg text-secondary-blue mb-2">
+                        {schedule.course_name || schedule.course}
+                      </h3>
+                      
+                      <div className="grid md:grid-cols-3 gap-4 text-sm mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-600">📅 Start:</span>
+                          <span className="font-semibold">
+                            {new Date(schedule.start_date).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-600">🎓 End:</span>
+                          <span className="font-semibold">
+                            {new Date(schedule.end_date).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-600">📍 Location:</span>
+                          <span className="font-semibold">{schedule.location_name || schedule.location}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-sm">
+                        <span className="bg-primary-gold text-gray-900 px-3 py-1 rounded-full font-semibold">
+                          {schedule.students?.length || 0} Students
+                        </span>
+                        <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full font-semibold">
+                          {schedule.modules_count || 0} Modules
+                        </span>
+                        {schedule.duration && (
+                          <span className="text-gray-600">
+                            Duration: {schedule.duration} months
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <span className="bg-primary-gold text-gray-900 px-3 py-1 rounded-full text-xs font-semibold">
-                      Active
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-700 mb-4 line-clamp-2">{course.description}</p>
-                  <div className="flex gap-2">
-                    <Link href={`/instructor/courses/${course.id}/edit`} className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full">
-                        Edit Course
-                      </Button>
-                    </Link>
-                    <Link href={`/instructor/courses/${course.id}/materials`} className="flex-1">
-                      <Button variant="primary" size="sm" className="w-full">
-                        Materials
-                      </Button>
-                    </Link>
+
+                    <div className="flex flex-col gap-2">
+                      <Link href={`/instructor/schedules/${schedule.id}`}>
+                        <Button variant="outline" size="sm">
+                          View Details
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -152,61 +233,51 @@ export default function InstructorDashboard() {
           ) : (
             <div className="text-center py-12 text-gray-500">
               <div className="text-6xl mb-4">📚</div>
-              <h3 className="text-xl font-bold mb-2">No Courses Yet</h3>
-              <p className="mb-4">Create your first course to get started</p>
-              <Link href="/instructor/courses/create">
-                <Button variant="primary">Create Course</Button>
+              <h3 className="text-xl font-bold mb-2">No Schedules Yet</h3>
+              <p className="mb-4">You haven't been assigned any teaching schedules</p>
+              <Link href="/instructor/schedules/create">
+                <Button variant="primary">
+                  Create Your First Schedule
+                </Button>
               </Link>
             </div>
           )}
         </div>
 
-        {/* My Schedules */}
+        {/* Quick Actions */}
         <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-heading font-bold text-secondary-blue">
-              Active Schedules
-            </h2>
-            <Link href="/instructor/schedules/create">
-              <Button variant="primary" size="sm">
-                + New Schedule
+          <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-4">
+            Quick Actions
+          </h2>
+          <div className="grid md:grid-cols-3 gap-4 mb-4">
+            <Link href="/instructor/courses/create">
+              <Button variant="primary" className="w-full py-6 text-lg">
+                ➕ Create Course
+              </Button>
+            </Link>
+            <Link href="/instructor/materials">
+              <Button variant="primary" className="w-full py-6 text-lg bg-success hover:bg-green-700">
+                📚 Learning Materials
+              </Button>
+            </Link>
+            <Link href="/instructor/schedules">
+              <Button variant="outline" className="w-full py-6 text-lg">
+                📅 Manage Schedules
               </Button>
             </Link>
           </div>
-          
-          {mySchedules.length > 0 ? (
-            <div className="space-y-4">
-              {mySchedules.map((schedule) => (
-                <div key={schedule.id} className="border-l-4 border-primary-gold pl-4 py-3 bg-warm-white rounded">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-bold text-lg">{schedule.course?.name || 'Course'}</h3>
-                      <p className="text-sm text-gray-600">
-                        📅 {schedule.start_date} - {schedule.end_date}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        📍 {schedule.location?.name || 'Location TBD'}
-                      </p>
-                    </div>
-                    <Link href={`/instructor/schedules/${schedule.id}`}>
-                      <Button variant="outline" size="sm">
-                        Manage
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-gray-500">
-              <div className="text-6xl mb-4">📅</div>
-              <h3 className="text-xl font-bold mb-2">No Schedules Yet</h3>
-              <p className="mb-4">Create a schedule to start teaching</p>
-              <Link href="/instructor/schedules/create">
-                <Button variant="primary">Create Schedule</Button>
-              </Link>
-            </div>
-          )}
+          <div className="grid md:grid-cols-2 gap-4">
+            <Link href="/instructor/students">
+              <Button variant="outline" className="w-full py-6 text-lg">
+                👥 View Students
+              </Button>
+            </Link>
+            <Link href="/courses">
+              <Button variant="outline" className="w-full py-6 text-lg">
+                📖 Browse Courses
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

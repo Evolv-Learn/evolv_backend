@@ -39,9 +39,9 @@ export default function Home() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/admission">
+              <Link href="/register">
                 <Button variant="primary" size="lg" className="shadow-2xl w-full sm:w-auto px-8 py-4 text-base font-semibold">
-                  Apply Now →
+                  Register Now →
                 </Button>
               </Link>
               <Link href="/courses">
@@ -216,9 +216,9 @@ export default function Home() {
               Join thousands of learners worldwide transforming their careers through tech
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Link href="/admission">
+              <Link href="/register">
                 <Button variant="secondary" size="lg">
-                  Apply Now - It's Free
+                  Register Now - It's Free
                 </Button>
               </Link>
               <Link href="/contact">

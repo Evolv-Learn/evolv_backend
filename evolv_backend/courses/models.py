@@ -36,6 +36,17 @@ class Profile(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
     )
     role = models.CharField(max_length=20, choices=USER_ROLES)
+    profile_picture = models.ImageField(
+        upload_to="profiles/",
+        blank=True,
+        null=True,
+        help_text="Profile picture"
+    )
+    title = models.CharField(max_length=200, blank=True, null=True, help_text="Professional title (e.g., Data Science Instructor)")
+    bio = models.TextField(blank=True, null=True, help_text="Professional biography")
+    email = models.EmailField(blank=True, null=True, help_text="Contact email")
+    twitter_url = models.URLField(blank=True, null=True, help_text="Twitter/X profile URL")
+    linkedin_url = models.URLField(blank=True, null=True, help_text="LinkedIn profile URL")
 
     def __str__(self):
         return f"{self.user.username} ({self.role})"
@@ -118,6 +129,12 @@ class Course(models.Model):
     start_date = models.DateField(null=True, blank=True, help_text="Training start date")
     end_date = models.DateField(null=True, blank=True, help_text="Training end date")
     
+    # Learning materials
+    github_repository = models.URLField(blank=True, null=True, help_text="GitHub repository URL")
+    discord_community = models.URLField(blank=True, null=True, help_text="Discord community invite link")
+    video_content = models.FileField(upload_to="course_videos/", blank=True, null=True, help_text="Course video file")
+    additional_materials = models.FileField(upload_to="course_materials/", blank=True, null=True, help_text="Additional materials (PDF, CSV, etc.)")
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -151,6 +168,58 @@ class Course(models.Model):
         if self.parent:
             return f"{self.parent.name} -> {self.name}"
         return self.name
+
+
+class CourseMaterial(models.Model):
+    """Model for storing multiple learning materials per course"""
+    MATERIAL_TYPE_CHOICES = [
+        ('video', 'Video'),
+        ('document', 'Document'),
+        ('spreadsheet', 'Spreadsheet'),
+        ('archive', 'Archive'),
+        ('other', 'Other'),
+    ]
+    
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='materials')
+    title = models.CharField(max_length=255, help_text="Material title/name")
+    description = models.TextField(blank=True, null=True, help_text="Brief description of the material")
+    material_type = models.CharField(max_length=20, choices=MATERIAL_TYPE_CHOICES, default='other')
+    file = models.FileField(upload_to='course_materials/%Y/%m/', help_text="Upload file (video, PDF, CSV, etc.)")
+    file_size = models.BigIntegerField(blank=True, null=True, help_text="File size in bytes")
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='uploaded_materials')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-uploaded_at']
+    
+    def save(self, *args, **kwargs):
+        if self.file:
+            self.file_size = self.file.size
+        super().save(*args, **kwargs)
+    
+    @property
+    def file_size_mb(self):
+        """Return file size in MB"""
+        if self.file_size:
+            return round(self.file_size / (1024 * 1024), 2)
+        return 0
+    
+    def __str__(self):
+        return f"{self.course.name} - {self.title}"
+    
+    def get_file_extension(self):
+        import os
+        return os.path.splitext(self.file.name)[1].lower()
+    
+    def get_file_size_display(self):
+        """Return human-readable file size"""
+        size = self.file_size or 0
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size < 1024.0:
+                return f"{size:.2f} {unit}"
+            size /= 1024.0
+        return f"{size:.2f} TB"
 
 
 class Alumni(models.Model):
@@ -424,3 +493,5 @@ class EventAttendance(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="attendances")
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="event_attendances")
     attended = models.BooleanField(default=False)
+
+
