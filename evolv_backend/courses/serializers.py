@@ -901,3 +901,13 @@ class StudentWriteSerializer(serializers.ModelSerializer):
         return student
 
 
+
+
+class CourseEnrollmentSerializer(serializers.ModelSerializer):
+    student = StudentReadSerializer(read_only=True)
+    course = CourseReadSerializer(read_only=True)
+    
+    class Meta:
+        model = CourseEnrollment
+        fields = ['id', 'student', 'course', 'status', 'applied_at', 'updated_at']
+        read_only_fields = ['applied_at', 'updated_at']

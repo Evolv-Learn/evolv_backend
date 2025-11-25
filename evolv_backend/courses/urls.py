@@ -20,6 +20,8 @@ from .views import (
     StudentListCreateView,
     TeamMemberDetailView,
     StudentDetailView,
+    CourseEnrollmentListView,
+    CourseEnrollmentDetailView,
     SelectionProcedureDetailView,
     SelectionProcedureListCreateView,
     StudentSelectionListCreateView,
@@ -47,7 +49,7 @@ from .views import (
     LessonDetailView,
     RegisterUserView,
     AdminProfileListView,
-    AdminUserProfileDetailView, MyStudentView, health_check
+    AdminUserProfileDetailView, MyStudentView, health_check, current_user
 )
 
 from .views_extended import (
@@ -67,6 +69,7 @@ urlpatterns = [
     path("verify-email/", verify_email, name="verify-email"),
     path("resend-verification/", resend_verification, name="resend-verification"),
     path("profile/", ProfileDetailView.as_view(), name="profile-detail"),
+    path("users/me/", current_user, name="current-user"),
     path("instructors/<int:user_id>/profile/", PublicInstructorProfileView.as_view(), name="public-instructor-profile"),
 
     path("admin/profiles/", AdminProfileListView.as_view(), name="admin-profile-list"),
@@ -123,6 +126,9 @@ urlpatterns = [
     path("students/", StudentListCreateView.as_view(), name="student-list"),
     path("students/<int:pk>/", StudentDetailView.as_view(), name="student-detail"),
     path("students/me/", MyStudentView.as_view(), name="student-me"),
+
+    path("enrollments/", CourseEnrollmentListView.as_view(), name="enrollment-list"),
+    path("enrollments/<int:pk>/", CourseEnrollmentDetailView.as_view(), name="enrollment-detail"),
 
     path("students/me/dashboard/", StudentDashboardView.as_view(), name="student-dashboard"),
     path("students/me/application-status/", StudentApplicationStatusView.as_view(), name="application-status"),

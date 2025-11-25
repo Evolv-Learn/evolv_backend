@@ -19,7 +19,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .permissions import IsAdmin, IsAdminOrReadOnly, AllowAnyCreateReadAdminModify, IsAdminOrInstructorOwner, AuthenticatedCreateReadAdminModify, IsAdminOrInstructor
 
 from .models import (
-    Profile,Location,Partner,Course,CourseMaterial,Student,SelectionProcedure,StudentSelection,ContactUs,EventAttendance,
+    Profile,Location,Partner,Course,CourseMaterial,Student,CourseEnrollment,SelectionProcedure,StudentSelection,ContactUs,EventAttendance,
     Alumni,Event,AboutUs,TeamMember,CoreValue,Review,LearningSchedule,Module,Lesson,)
 
 from .serializers import (
@@ -27,7 +27,7 @@ from .serializers import (
     SelectionProcedureSerializer,StudentSelectionSerializer,ContactUsSerializer,EventAttendanceSerializer,AlumniReadSerializer,AlumniWriteSerializer,
     EventWriteSerializer,EventReadSerializer,AboutUsSerializer, TeamMemberReadSerializer,TeamMemberWriteSerializer,CoreValueSerializer,ReviewSerializer,
     LearningScheduleSerializer, LessonReadSerializer, LessonWriteSerializer, UserProfileCreateSerializer, RegisterUserSerializer, AdminProfileUpdateSerializer,
-    ModuleReadSerializer, ModuleWriteSerializer, StudentReadSerializer, StudentWriteSerializer)
+    ModuleReadSerializer, ModuleWriteSerializer, StudentReadSerializer, StudentWriteSerializer, CourseEnrollmentSerializer)
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -41,6 +41,22 @@ def secure_data(request):
     return Response({"message": "This is a protected API!"})
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def current_user(request):
+    """Return current user's data including superuser and staff status"""
+    user = request.user
+    return Response({
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "is_superuser": user.is_superuser,
+        "is_staff": user.is_staff,
+    })
+
+
 User = get_user_model()
 
 
@@ -51,6 +67,15 @@ class ProfileDetailView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         profile, _ = Profile.objects.get_or_create(user=self.request.user)
         return profile
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+        # Add superuser and staff status to the response
+        data['is_superuser'] = request.user.is_superuser
+        data['is_staff'] = request.user.is_staff
+        return Response(data)
 
 
 class AdminProfileListView(generics.ListAPIView):
@@ -754,3 +779,22 @@ class PublicInstructorProfileView(generics.RetrieveAPIView):
     def get_queryset(self):
         # Only return profiles with Instructor role
         return Profile.objects.filter(role='Instructor').select_related('user')
+
+
+
+class CourseEnrollmentListView(generics.ListAPIView):
+    """List all course enrollments (for admin)"""
+    serializer_class = CourseEnrollmentSerializer
+    permission_classes = [IsAdminOrReadOnly]
+    queryset = CourseEnrollment.objects.all().select_related('student', 'course').order_by('-applied_at')
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['status', 'course']
+    search_fields = ['student__first_name', 'student__last_name', 'student__email', 'course__name']
+    ordering_fields = ['applied_at', 'updated_at', 'status']
+
+
+class CourseEnrollmentDetailView(generics.RetrieveUpdateAPIView):
+    """Retrieve or update a course enrollment"""
+    serializer_class = CourseEnrollmentSerializer
+    permission_classes = [IsAdminOrReadOnly]
+    queryset = CourseEnrollment.objects.all()
