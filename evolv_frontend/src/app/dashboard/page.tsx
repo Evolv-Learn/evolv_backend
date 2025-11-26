@@ -25,14 +25,42 @@ export default function DashboardPage() {
 
   const fetchUserProfile = async () => {
     try {
+      console.log('=== Dashboard: Fetching user profile ===');
+      console.log('Current user from store:', user);
+      console.log('is_superuser:', user?.is_superuser);
+      console.log('is_staff:', user?.is_staff);
+      
+      // Check if user is superuser or staff first
+      if (user?.is_superuser || user?.is_staff) {
+        console.log('✅ User is superuser/staff, setting role to Admin');
+        setUserRole('Admin');
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('Fetching profile from API...');
       const response = await apiClient.get('/profile/');
-      console.log('User profile data:', response.data);
-      console.log('User role:', response.data.role);
-      setUserRole(response.data.role);
+      console.log('Profile API response:', response.data);
+      
+      // Check if the profile response includes is_superuser/is_staff
+      if (response.data.is_superuser || response.data.is_staff) {
+        console.log('✅ Profile indicates superuser/staff, setting role to Admin');
+        setUserRole('Admin');
+      } else {
+        console.log('User role from profile:', response.data.role);
+        setUserRole(response.data.role);
+      }
     } catch (error) {
-      console.error('Failed to fetch user profile:', error);
-      // Default to Student if profile fetch fails
-      setUserRole('Student');
+      console.error('❌ Failed to fetch user profile:', error);
+      // Check again if user is admin even if profile fetch fails
+      if (user?.is_superuser || user?.is_staff) {
+        console.log('✅ Setting role to Admin (fallback)');
+        setUserRole('Admin');
+      } else {
+        console.log('⚠️ Defaulting to Student role');
+        // Default to Student if profile fetch fails
+        setUserRole('Student');
+      }
     } finally {
       setIsLoading(false);
     }

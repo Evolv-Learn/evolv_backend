@@ -32,18 +32,26 @@ export default function LoginPage() {
 
       // Get user profile
       try {
+        console.log('=== Login: Fetching user profile ===');
+        
         const profile = await authApi.getProfile();
-        // Profile response structure: { id, role, username, first_name, last_name, email }
+        console.log('Profile data:', profile);
+        
+        // Profile now includes is_superuser and is_staff
         const userData = {
-          id: profile.id || profile.user?.id,
-          username: profile.username || profile.user?.username,
-          email: profile.email || profile.user?.email,
-          first_name: profile.first_name || profile.user?.first_name || '',
-          last_name: profile.last_name || profile.user?.last_name || '',
+          id: profile?.user?.id || profile?.id,
+          username: profile?.username || profile?.user?.username,
+          email: profile?.email || profile?.user?.email,
+          first_name: profile?.first_name || profile?.user?.first_name || '',
+          last_name: profile?.last_name || profile?.user?.last_name || '',
+          is_superuser: profile?.is_superuser || false,
+          is_staff: profile?.is_staff || false,
         };
+        
+        console.log('✅ Final user data to store:', userData);
         setUser(userData);
       } catch (profileError) {
-        console.error('Profile fetch error:', profileError);
+        console.error('❌ Profile fetch error:', profileError);
         // If profile fetch fails, create basic user from login
         setUser({
           id: 0,
@@ -51,6 +59,8 @@ export default function LoginPage() {
           email: formData.username,
           first_name: '',
           last_name: '',
+          is_superuser: false,
+          is_staff: false,
         });
       }
 
