@@ -451,7 +451,76 @@ class EventDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_permissions(self):
         if self.request.method == "GET":
             return [permissions.AllowAny()]  
-        return [permissions.IsAdminUser()]   
+        return [permissions.IsAdminUser()]
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def event_calendar(request):
+    """
+    Get events for a specific month/year for calendar display
+    Query params: year, month
+    """
+    year = request.GET.get('year')
+    month = request.GET.get('month')
+    
+    if not year or not month:
+        return Response(
+            {'error': 'Year and month parameters are required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        year = int(year)
+        month = int(month)
+        
+        # Get events for the specified month
+        from datetime import datetime
+        start_date = datetime(year, month, 1)
+        
+        # Get last day of month
+        if month == 12:
+            end_date = datetime(year + 1, 1, 1)
+        else:
+            end_date = datetime(year, month + 1, 1)
+        
+        events = Event.objects.filter(
+            date__gte=start_date,
+            date__lt=end_date
+        ).select_related('location', 'course').prefetch_related('partners')
+        
+        # Format events for calendar
+        events_data = []
+        for event in events:
+            events_data.append({
+                'id': event.id,
+                'title': event.title,
+                'description': event.description,
+                'date': event.date.isoformat(),
+                'end_date': None,  # Add if you have this field
+                'event_type': event.course.category if event.course else 'General',
+                'is_virtual': event.is_virtual,
+                'location': event.location.name if event.location else 'TBA',
+                'course': event.course.name if event.course else '',
+                'speaker_name': None,  # Add if you have this field
+                'meeting_link': None,  # Add if you have this field
+                'capacity': None,  # Add if you have this field
+                'attendee_count': event.attendances.count() if hasattr(event, 'attendances') else 0,
+                'is_full': False,  # Calculate based on capacity if available
+            })
+        
+        return Response({
+            'events': events_data,
+            'year': year,
+            'month': month,
+            'count': len(events_data)
+        }, status=status.HTTP_200_OK)
+        
+    except ValueError:
+        return Response(
+            {'error': 'Invalid year or month value'},
+            status=status.HTTP_400_BAD_REQUEST
+        )   
 
 
 class AboutUsDetailView(generics.RetrieveUpdateAPIView):
