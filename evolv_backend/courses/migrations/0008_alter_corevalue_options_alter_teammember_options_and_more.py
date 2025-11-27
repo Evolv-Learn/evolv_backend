@@ -6,5 +6,5 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("courses", "0009_create_corevalue"),
+        ("courses", "0007_alter_aboutus_options_aboutus_image"),
     ]
