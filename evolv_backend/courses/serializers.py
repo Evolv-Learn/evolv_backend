@@ -8,6 +8,7 @@ from .models import (
     Profile,
     Location,
     Partner,
+    CourseCategory,
     Course,
     CourseMaterial,
     Student,
@@ -220,6 +221,17 @@ class LocationSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class CourseCategorySerializer(serializers.ModelSerializer):
+    course_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = CourseCategory
+        fields = ['id', 'name', 'description', 'icon', 'image', 'color', 'is_active', 'order', 'course_count', 'created_at']
+    
+    def get_course_count(self, obj):
+        return obj.courses.count()
+
+
 class PartnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Partner
@@ -235,6 +247,8 @@ class PartnerSerializer(serializers.ModelSerializer):
 
 
 class CourseReadSerializer(serializers.ModelSerializer):
+    category_details = CourseCategorySerializer(source='category', read_only=True)
+    category = serializers.CharField(source='category.name', read_only=True)  # For backward compatibility
     instructor = serializers.StringRelatedField()
     instructor_id = serializers.PrimaryKeyRelatedField(source="instructor", read_only=True)
     locations = serializers.StringRelatedField(many=True)
@@ -248,6 +262,7 @@ class CourseReadSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "category",
+            "category_details",
             "description",
             "software_tools",
             "topics_covered",
@@ -270,6 +285,9 @@ class CourseReadSerializer(serializers.ModelSerializer):
 
 
 class CourseWriteSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=CourseCategory.objects.filter(is_active=True)
+    )
     instructor = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(is_active=True), allow_null=True, required=False
     )

@@ -13,6 +13,8 @@ from .views import (
     LocationDetailView,
     PartnerListCreateView,
     PartnerDetailView,
+    CourseCategoryListCreateView,
+    CourseCategoryDetailView,
     CourseListCreateView,
     CourseDetailView,
     CourseMaterialListCreateView,
@@ -81,6 +83,9 @@ urlpatterns = [
 
     path("partners/", PartnerListCreateView.as_view(), name="partner-list"),
     path("partners/<int:pk>/", PartnerDetailView.as_view(), name="partner-detail"),
+
+    path("categories/", CourseCategoryListCreateView.as_view(), name="category-list"),
+    path("categories/<int:pk>/", CourseCategoryDetailView.as_view(), name="category-detail"),
 
     path("courses/", CourseListCreateView.as_view(), name="course-list"),
     path("courses/<int:pk>/", CourseDetailView.as_view(), name="course-detail"),

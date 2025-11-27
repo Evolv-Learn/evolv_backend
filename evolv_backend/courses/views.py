@@ -19,11 +19,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .permissions import IsAdmin, IsAdminOrReadOnly, AllowAnyCreateReadAdminModify, IsAdminOrInstructorOwner, AuthenticatedCreateReadAdminModify, IsAdminOrInstructor
 
 from .models import (
-    Profile,Location,Partner,Course,CourseMaterial,Student,CourseEnrollment,SelectionProcedure,StudentSelection,ContactUs,EventAttendance,
+    Profile,Location,Partner,CourseCategory,Course,CourseMaterial,Student,CourseEnrollment,SelectionProcedure,StudentSelection,ContactUs,EventAttendance,
     Alumni,Event,AboutUs,TeamMember,CoreValue,Review,LearningSchedule,Module,Lesson,)
 
 from .serializers import (
-    ProfileSerializer,LocationSerializer,PartnerSerializer,ProfileSelfSerializer,CourseReadSerializer,CourseWriteSerializer,CourseMaterialSerializer,
+    ProfileSerializer,LocationSerializer,PartnerSerializer,CourseCategorySerializer,ProfileSelfSerializer,CourseReadSerializer,CourseWriteSerializer,CourseMaterialSerializer,
     SelectionProcedureSerializer,StudentSelectionSerializer,ContactUsSerializer,EventAttendanceSerializer,AlumniReadSerializer,AlumniWriteSerializer,
     EventWriteSerializer,EventReadSerializer,AboutUsSerializer, TeamMemberReadSerializer,TeamMemberWriteSerializer,CoreValueSerializer,ReviewSerializer,
     LearningScheduleSerializer, LessonReadSerializer, LessonWriteSerializer, UserProfileCreateSerializer, RegisterUserSerializer, AdminProfileUpdateSerializer,
@@ -220,6 +220,24 @@ class PartnerListCreateView(generics.ListCreateAPIView):
 class PartnerDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Partner.objects.all()
     serializer_class = PartnerSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+
+class CourseCategoryListCreateView(generics.ListCreateAPIView):
+    queryset = CourseCategory.objects.all()
+    serializer_class = CourseCategorySerializer
+    permission_classes = [IsAdminOrReadOnly]
+    
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["is_active"]
+    search_fields = ["name", "description"]
+    ordering_fields = ["name", "order", "created_at"]
+    ordering = ["order", "name"]
+
+
+class CourseCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CourseCategory.objects.all()
+    serializer_class = CourseCategorySerializer
     permission_classes = [IsAdminOrReadOnly]
 
 

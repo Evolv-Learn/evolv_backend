@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import (
+    CourseCategory,
     Course,
     Location,
     Alumni,
@@ -59,6 +60,19 @@ class CourseEnrollmentAdmin(admin.ModelAdmin):
     search_fields = ("student__first_name", "student__last_name", "student__email", "course__name")
     list_editable = ("status",)
     ordering = ("-applied_at",)
+
+
+@admin.register(CourseCategory)
+class CourseCategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "icon", "color", "is_active", "order", "course_count")
+    list_filter = ("is_active",)
+    search_fields = ("name", "description")
+    list_editable = ("is_active", "order")
+    ordering = ("order", "name")
+    
+    def course_count(self, obj):
+        return obj.courses.count()
+    course_count.short_description = "Courses"
 
 
 admin.site.register(Location)

@@ -89,15 +89,38 @@ class Partner(models.Model):
         return self.name
 
 
-class Course(models.Model):
-    CATEGORY_CHOICES = [
-        ("Data & AI", "Data & AI"),
-        ("Cybersecurity", "Cybersecurity"),
-        ("Microsoft Dynamics 365", "Microsoft Dynamics 365"),
-    ]
+class CourseCategory(models.Model):
+    """Course categories that can be managed by admins"""
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
+    icon = models.CharField(max_length=10, blank=True, null=True, help_text="Emoji icon for the category")
+    image = models.ImageField(
+        upload_to="categories/",
+        blank=True,
+        null=True,
+        help_text="Category image/banner"
+    )
+    color = models.CharField(max_length=50, blank=True, null=True, help_text="CSS color class (e.g., bg-primary-gold)")
+    is_active = models.BooleanField(default=True)
+    order = models.IntegerField(default=0, help_text="Display order")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['order', 'name']
+        verbose_name_plural = "Course Categories"
+    
+    def __str__(self):
+        return self.name
 
+
+class Course(models.Model):
     name = models.CharField(max_length=255)
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    category = models.ForeignKey(
+        CourseCategory,
+        on_delete=models.PROTECT,
+        related_name="courses",
+        help_text="Course category"
+    )
     parent = models.ForeignKey(
         "self",
         null=True,
