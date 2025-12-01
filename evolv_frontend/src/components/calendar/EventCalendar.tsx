@@ -71,8 +71,8 @@ export default function EventCalendar({ userRole = 'admin', compact = false }: E
         setAllEvents(eventsList);
         
         // Extract unique locations and courses for filters
-        const uniqueLocations = [...new Set(eventsList.map((e: Event) => e.location).filter(Boolean))];
-        const uniqueCourses = [...new Set(eventsList.map((e: Event) => e.course).filter(Boolean))];
+        const uniqueLocations = [...new Set(eventsList.map((e: Event) => e.location).filter(Boolean))] as string[];
+        const uniqueCourses = [...new Set(eventsList.map((e: Event) => e.course).filter(Boolean))] as string[];
         setLocations(uniqueLocations);
         setCourses(uniqueCourses);
       } else {
