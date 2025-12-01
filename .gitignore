@@ -12,8 +12,10 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
+evolv_backend/lib/
+evolv_backend/lib64/
 parts/
 sdist/
 var/

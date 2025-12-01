@@ -25,6 +25,7 @@ export interface AuthResponse {
     access: string;
     refresh: string;
   };
+  email_sent?: boolean;
 }
 
 export interface LoginResponse {
