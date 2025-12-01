@@ -157,8 +157,8 @@ export default function EditLessonPage() {
               value={formData.order}
               onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
               required
-              helperText="The order in which this lesson appears in the module"
             />
+            <p className="text-sm text-gray-500 -mt-2">The order in which this lesson appears in the module</p>
 
             <div className="flex gap-4">
               <Button
