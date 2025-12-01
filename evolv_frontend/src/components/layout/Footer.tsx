@@ -98,7 +98,7 @@ export const Footer = () => {
         </div>
 
         <div className="border-t border-gray-600 mt-8 pt-8 text-center text-gray-300">
-          <p>&copy; {currentYear} EvolvLearn. All rights reserved. Made with ❤️ in Nigeria 🇳🇬</p>
+          <p>&copy; {currentYear} EvolvLearn. All rights reserved. Made with ❤️ in Europe 🇪🇺</p>
         </div>
       </div>
     </footer>

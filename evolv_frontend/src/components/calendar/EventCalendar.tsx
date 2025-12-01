@@ -22,25 +22,39 @@ interface Event {
 
 interface EventCalendarProps {
   userRole?: 'admin' | 'instructor' | 'student';
+  compact?: boolean;
 }
 
-export default function EventCalendar({ userRole = 'admin' }: EventCalendarProps) {
+export default function EventCalendar({ userRole = 'admin', compact = false }: EventCalendarProps) {
   const router = useRouter();
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showAllEvents, setShowAllEvents] = useState(false);
+  
+  // Filters
+  const [selectedLocation, setSelectedLocation] = useState<string>('all');
+  const [selectedCourse, setSelectedCourse] = useState<string>('all');
+  const [selectedMonth, setSelectedMonth] = useState<string>('current');
+  
+  // Unique values for filters
+  const [locations, setLocations] = useState<string[]>([]);
+  const [courses, setCourses] = useState<string[]>([]);
 
   useEffect(() => {
     fetchEvents();
   }, [currentDate]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [allEvents, selectedLocation, selectedCourse, selectedMonth]);
 
   const fetchEvents = async () => {
     try {
       const token = localStorage.getItem('access_token');
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
-      
-      console.log('Fetching events for:', { year, month });
       
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/events/calendar/?year=${year}&month=${month}`,
@@ -53,8 +67,14 @@ export default function EventCalendar({ userRole = 'admin' }: EventCalendarProps
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Events received:', data);
-        setEvents(data.events || []);
+        const eventsList = data.events || [];
+        setAllEvents(eventsList);
+        
+        // Extract unique locations and courses for filters
+        const uniqueLocations = [...new Set(eventsList.map((e: Event) => e.location).filter(Boolean))];
+        const uniqueCourses = [...new Set(eventsList.map((e: Event) => e.course).filter(Boolean))];
+        setLocations(uniqueLocations);
+        setCourses(uniqueCourses);
       } else {
         console.error('Failed to fetch events:', response.status, response.statusText);
       }
@@ -63,6 +83,28 @@ export default function EventCalendar({ userRole = 'admin' }: EventCalendarProps
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...allEvents];
+    
+    // Filter by location
+    if (selectedLocation !== 'all') {
+      filtered = filtered.filter(event => event.location === selectedLocation);
+    }
+    
+    // Filter by course
+    if (selectedCourse !== 'all') {
+      filtered = filtered.filter(event => event.course === selectedCourse);
+    }
+    
+    setEvents(filtered);
+  };
+
+  const clearFilters = () => {
+    setSelectedLocation('all');
+    setSelectedCourse('all');
+    setSelectedMonth('current');
   };
 
   const getDaysInMonth = (date: Date) => {
@@ -143,28 +185,179 @@ export default function EventCalendar({ userRole = 'admin' }: EventCalendarProps
     );
   }
 
+  // Compact mode for dashboards
+  if (compact) {
+    return (
+      <div>
+        {/* Compact Header */}
+        <div className="mb-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigateMonth('prev')}
+              className="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors text-sm"
+            >
+              ←
+            </button>
+            <h3 className="text-lg font-semibold">{monthName}</h3>
+            <button
+              onClick={() => navigateMonth('next')}
+              className="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors text-sm"
+            >
+              →
+            </button>
+          </div>
+          <span className="text-sm font-medium text-gray-600">
+            {events.length} {events.length === 1 ? 'event' : 'events'}
+          </span>
+        </div>
+
+        {/* Compact Event List - Show only next 3 events */}
+        <div className="space-y-2">
+          {events.length === 0 ? (
+            <div className="text-center py-6 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-500">No events this month</p>
+            </div>
+          ) : (
+            events
+              .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+              .slice(0, 3)
+              .map(event => (
+                <div
+                  key={event.id}
+                  className="bg-white border-l-4 border-blue-500 rounded p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => handleEventClick(event.id)}
+                >
+                  <h4 className="font-semibold text-sm text-gray-900 mb-1">{event.title}</h4>
+                  <div className="flex items-center gap-3 text-xs text-gray-600">
+                    <span>📅 {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                    <span>🕐 {new Date(event.date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
+                    <span>{event.is_virtual ? '💻 Virtual' : `📍 ${event.location}`}</span>
+                  </div>
+                </div>
+              ))
+          )}
+        </div>
+
+        {/* View All Link */}
+        {events.length > 3 && (
+          <div className="mt-3 text-center">
+            <button
+              onClick={() => router.push('/admin/events/calendar')}
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+            >
+              View all {events.length} events →
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Full mode for dedicated calendar page
   return (
     <div>
+      {/* Event Count Summary */}
+      <div className="mb-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-3xl font-bold mb-1">{allEvents.length}</h3>
+            <p className="text-blue-100">Total Events in {monthName}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-blue-100 mb-1">After Filters:</p>
+            <p className="text-2xl font-bold">{events.length}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="mb-6 bg-white p-4 rounded-lg shadow">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+          <button
+            onClick={clearFilters}
+            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+          >
+            Clear All
+          </button>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-4">
+          {/* Location Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              📍 Location
+            </label>
+            <select
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Locations ({allEvents.length})</option>
+              {locations.map(location => (
+                <option key={location} value={location}>
+                  {location} ({allEvents.filter(e => e.location === location).length})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Course Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              📚 Course
+            </label>
+            <select
+              value={selectedCourse}
+              onChange={(e) => setSelectedCourse(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Courses ({allEvents.length})</option>
+              {courses.map(course => (
+                <option key={course} value={course}>
+                  {course} ({allEvents.filter(e => e.course === course).length})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Month Navigation */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              📅 Month
+            </label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigateMonth('prev')}
+                className="flex-1 px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              >
+                ← Prev
+              </button>
+              <button
+                onClick={() => navigateMonth('next')}
+                className="flex-1 px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Calendar Controls */}
       <div className="mb-6 flex justify-between items-center bg-white p-4 rounded-lg shadow">
-        <button
-          onClick={() => navigateMonth('prev')}
-          className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
-        >
-          ← Previous
-        </button>
-        
         <h2 className="text-2xl font-semibold">{monthName}</h2>
         
         <button
-          onClick={() => navigateMonth('next')}
-          className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+          onClick={() => setShowAllEvents(!showAllEvents)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
         >
-          Next →
+          {showAllEvents ? '📅 Show Calendar' : '📋 Show All Events'}
         </button>
       </div>
 
-      {/* Calendar Grid */}
+      {/* Calendar Grid or List View */}
+      {!showAllEvents ? (
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {/* Day Headers */}
         <div className="grid grid-cols-7 bg-gray-100 border-b">
@@ -223,29 +416,13 @@ export default function EventCalendar({ userRole = 'admin' }: EventCalendarProps
           })}
         </div>
       </div>
+      ) : null}
 
-      {/* Debug Info */}
-      {events.length > 0 && (
-        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm font-semibold text-yellow-800 mb-2">Debug Info:</p>
-          <div className="text-xs text-yellow-700 space-y-1">
-            {events.map(event => {
-              const eventDate = new Date(event.date);
-              return (
-                <div key={event.id}>
-                  <strong>{event.title}:</strong> {event.date} 
-                  (Day: {eventDate.getUTCDate()}, Month: {eventDate.getUTCMonth()}, Year: {eventDate.getUTCFullYear()})
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Upcoming Events List */}
-      <div className="mt-8">
+      {/* All Events List View */}
+      {showAllEvents && (
+      <div className={showAllEvents ? '' : 'mt-8'}>
         <h3 className="text-xl font-bold mb-4">
-          Upcoming Events This Month ({events.length} events found)
+          {showAllEvents ? 'All Events' : 'Upcoming Events'} ({events.length} {events.length === 1 ? 'event' : 'events'})
         </h3>
         <div className="space-y-3">
           {events.length === 0 ? (
@@ -261,37 +438,81 @@ export default function EventCalendar({ userRole = 'admin' }: EventCalendarProps
               .map(event => (
                 <div
                   key={event.id}
-                  className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                  className="bg-white border-l-4 border-blue-500 rounded-lg p-5 shadow-sm hover:shadow-lg transition-all cursor-pointer"
                   onClick={() => handleEventClick(event.id)}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <h4 className="text-lg font-semibold mb-1">{event.title}</h4>
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <p>
-                          <span className="font-medium">📅 Date:</span>{' '}
-                          {new Date(event.date).toLocaleString()}
-                        </p>
-                        <p>
-                          <span className="font-medium">📍 Type:</span> {event.event_type}
-                        </p>
-                        {event.speaker_name && (
-                          <p>
-                            <span className="font-medium">👤 Speaker:</span> {event.speaker_name}
-                          </p>
-                        )}
-                        <p>
-                          <span className="font-medium">🌐 Location:</span>{' '}
-                          {event.is_virtual ? 'Virtual' : event.location}
-                        </p>
-                        {event.capacity && (
-                          <p>
-                            <span className="font-medium">👥 Capacity:</span>{' '}
-                            {event.attendee_count}/{event.capacity}
-                            {event.is_full && <span className="text-red-600 ml-2">(Full)</span>}
-                          </p>
-                        )}
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="text-3xl">
+                          {event.is_virtual ? '💻' : '📍'}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-xl font-bold text-gray-900 mb-1">{event.title}</h4>
+                          <p className="text-sm text-gray-600 line-clamp-2">{event.description}</p>
+                        </div>
                       </div>
+                      
+                      <div className="grid md:grid-cols-2 gap-3 text-sm">
+                        <div className="space-y-2">
+                          <p className="flex items-center gap-2">
+                            <span className="font-medium text-gray-700">📅 Date:</span>
+                            <span className="text-gray-900 font-semibold">
+                              {new Date(event.date).toLocaleDateString('en-US', {
+                                weekday: 'short',
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </p>
+                          <p className="flex items-center gap-2">
+                            <span className="font-medium text-gray-700">🕐 Time:</span>
+                            <span className="text-gray-900 font-semibold">
+                              {new Date(event.date).toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </p>
+                          {event.course && (
+                            <p className="flex items-center gap-2">
+                              <span className="font-medium text-gray-700">📚 Course:</span>
+                              <span className="text-blue-600 font-semibold">{event.course}</span>
+                            </p>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <p className="flex items-center gap-2">
+                            <span className="font-medium text-gray-700">🌐 Location:</span>
+                            <span className="text-gray-900 font-semibold">
+                              {event.is_virtual ? 'Virtual Event' : event.location}
+                            </span>
+                          </p>
+                          {event.speaker_name && (
+                            <p className="flex items-center gap-2">
+                              <span className="font-medium text-gray-700">👤 Speaker:</span>
+                              <span className="text-gray-900 font-semibold">{event.speaker_name}</span>
+                            </p>
+                          )}
+                          {event.capacity && (
+                            <p className="flex items-center gap-2">
+                              <span className="font-medium text-gray-700">👥 Capacity:</span>
+                              <span className={`font-semibold ${event.is_full ? 'text-red-600' : 'text-green-600'}`}>
+                                {event.attendee_count}/{event.capacity}
+                                {event.is_full && ' (Full)'}
+                              </span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="ml-4">
+                      <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                        View Details →
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -299,6 +520,7 @@ export default function EventCalendar({ userRole = 'admin' }: EventCalendarProps
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

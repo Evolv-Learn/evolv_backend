@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import apiClient from '@/lib/api/client';
 import { useAuthStore } from '@/store/auth';
+import EventCalendar from '@/components/calendar/EventCalendar';
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -295,41 +296,12 @@ export default function StudentDashboard() {
           </>
         )}
 
-        {/* Upcoming Events */}
+        {/* Event Calendar */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-4">
-            Upcoming Events
+            Event Calendar
           </h2>
-          {events.length > 0 ? (
-            <>
-              <div className="grid md:grid-cols-2 gap-6">
-                {events.slice(0, 4).map((event) => (
-                  <div key={event.id} className="border-l-4 border-primary-gold rounded-lg p-4 bg-warm-white hover:shadow-lg transition-shadow">
-                    <h3 className="font-bold text-lg mb-2 text-secondary-blue">{event.title}</h3>
-                    <p className="text-sm text-gray-600 mb-1">📅 {event.date}</p>
-                    <p className="text-sm text-gray-600 mb-3">
-                      {event.is_virtual ? '💻 Virtual Event' : '📍 In-Person'}
-                    </p>
-                    <Button variant="primary" size="sm" className="w-full">
-                      Register Now
-                    </Button>
-                  </div>
-                ))}
-              </div>
-              {events.length > 4 && (
-                <div className="text-center mt-6">
-                  <Link href="/events">
-                    <Button variant="outline">View All Events</Button>
-                  </Link>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <div className="text-4xl mb-2">📅</div>
-              <p>No upcoming events at the moment</p>
-            </div>
-          )}
+          <EventCalendar userRole="student" compact={true} />
         </div>
 
         {/* Quick Actions - For All Students */}

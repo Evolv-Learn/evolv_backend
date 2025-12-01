@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import Image from 'next/image';
+import FeaturedCourses from '@/components/home/FeaturedCourses';
 
 export default function Home() {
   return (
@@ -90,35 +91,32 @@ export default function Home() {
             <h2 className="text-4xl md:text-5xl font-heading font-bold text-secondary-blue mb-4">
               How It Works
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Your journey from beginner to tech professional in 4 simple steps
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              We won't promise you'll become a professional overnight, but you'll gain the confidence and foundation to continue building your skills independently
             </p>
           </div>
           <div className="grid md:grid-cols-4 gap-8">
             {[
-              { step: '1', title: 'Apply', desc: 'Fill out our simple application form', icon: '📝', color: 'from-primary-gold to-yellow-600' },
-              { step: '2', title: 'Get Selected', desc: 'Our team reviews your application', icon: '✅', color: 'from-igbo-red to-red-700' },
-              { step: '3', title: 'Start Learning', desc: 'Access courses and resources', icon: '📚', color: 'from-success to-green-700' },
-              { step: '4', title: 'Launch Career', desc: 'Get hired by top companies', icon: '🚀', color: 'from-hausa-indigo to-purple-900' },
+              { step: '1', title: 'Apply', desc: 'Fill out our simple application form', icon: '📝', color: 'from-primary-gold to-yellow-600', hoverColor: 'hover:from-primary-gold-dark hover:to-yellow-700' },
+              { step: '2', title: 'Get Selected', desc: 'Our team reviews your application', icon: '✅', color: 'from-igbo-red to-red-700', hoverColor: 'hover:from-red-600 hover:to-red-800' },
+              { step: '3', title: 'Start Learning', desc: 'Access courses and resources', icon: '📚', color: 'from-success to-green-700', hoverColor: 'hover:from-green-600 hover:to-green-800' },
+              { step: '4', title: 'Launch Career', desc: 'Get hired by top companies', icon: '🚀', color: 'from-hausa-indigo to-purple-900', hoverColor: 'hover:from-purple-700 hover:to-purple-950' },
             ].map((item, index) => (
-              <div key={index} className="relative">
-                <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-shadow h-full">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${item.color} rounded-full flex items-center justify-center text-3xl mb-4 mx-auto`}>
+              <div key={index} className="group">
+                <div className={`bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 h-full transform hover:-translate-y-2 hover:scale-105 cursor-pointer border-2 border-transparent hover:border-${item.color.split('-')[1]}-500`}>
+                  <div className={`w-20 h-20 bg-gradient-to-br ${item.color} ${item.hoverColor} rounded-full flex items-center justify-center text-4xl mb-6 mx-auto transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 shadow-lg`}>
                     {item.icon}
                   </div>
                   <div className="text-center">
-                    <div className="text-sm text-primary-gold font-bold mb-2">STEP {item.step}</div>
-                    <h3 className="text-2xl font-heading font-bold text-secondary-blue mb-3">
+                    <div className="inline-block px-3 py-1 bg-gradient-to-r from-primary-gold to-yellow-500 text-white text-xs font-bold rounded-full mb-3 group-hover:scale-110 transition-transform">
+                      STEP {item.step}
+                    </div>
+                    <h3 className="text-2xl font-heading font-bold text-secondary-blue mb-3 group-hover:text-primary-gold transition-colors">
                       {item.title}
                     </h3>
-                    <p className="text-gray-600">{item.desc}</p>
+                    <p className="text-gray-600 group-hover:text-gray-900 transition-colors">{item.desc}</p>
                   </div>
                 </div>
-                {index < 3 && (
-                  <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 text-primary-gold text-3xl">
-                    →
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -126,45 +124,7 @@ export default function Home() {
       </section>
 
       {/* Featured Courses */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-heading font-bold text-secondary-blue mb-4">
-              Our Courses
-            </h2>
-            <p className="text-xl text-gray-600">
-              Choose from our industry-leading programs
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
-            {[
-              { title: 'Data & AI', icon: '📊', color: 'bg-primary-gold', desc: 'Master data science and artificial intelligence' },
-              { title: 'Cybersecurity', icon: '🔒', color: 'bg-igbo-red', desc: 'Protect systems and networks from threats' },
-              { title: 'Microsoft Dynamics 365', icon: '💼', color: 'bg-hausa-indigo', desc: 'Business applications and ERP systems' },
-            ].map((course, index) => (
-              <div key={index} className="bg-warm-white rounded-xl p-8 hover:shadow-xl transition-shadow group">
-                <div className={`${course.color} w-20 h-20 rounded-2xl flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform`}>
-                  {course.icon}
-                </div>
-                <h3 className="text-2xl font-heading font-bold text-secondary-blue mb-3">
-                  {course.title}
-                </h3>
-                <p className="text-gray-600 mb-6">{course.desc}</p>
-                <Link href="/courses" className="text-primary-gold font-semibold hover:underline">
-                  Learn more →
-                </Link>
-              </div>
-            ))}
-          </div>
-          <div className="text-center">
-            <Link href="/courses">
-              <Button variant="outline" size="lg">
-                View All Courses
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+      <FeaturedCourses />
 
       {/* Testimonials */}
       <section className="py-20 bg-gradient-to-br from-secondary-blue to-secondary-blue-dark text-white pattern-adire">

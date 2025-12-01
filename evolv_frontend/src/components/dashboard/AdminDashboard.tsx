@@ -256,6 +256,18 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </Link>
+              
+              <Link href="/admin/categories">
+                <div className="border rounded-xl p-5 hover:bg-warm-white transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl">📁</div>
+                    <div>
+                      <h3 className="font-bold text-lg">Categories</h3>
+                      <p className="text-sm text-gray-600">Manage course categories</p>
+                    </div>
+                  </div>
+                </div>
+              </Link>
             </div>
           </div>
 

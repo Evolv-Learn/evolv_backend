@@ -1,4 +1,6 @@
+# ============================================
 # Python
+# ============================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -16,80 +18,269 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
+# ============================================
 # Virtual Environment
+# ============================================
 venv/
 .venv/
 env/
 ENV/
 env.bak/
 venv.bak/
+pythonenv*/
 
+# ============================================
 # Django
+# ============================================
 *.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-/media
-/staticfiles
-/static
+/media/
+/staticfiles/
+/static/
+*.pot
 
-# Environment variables
+# Django migrations (optional - uncomment if you want to ignore)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# ============================================
+# Environment Variables
+# ============================================
 .env
 .env.local
 .env.*.local
+.env.development
+.env.production
+.env.test
 
-# IDEs
+# ============================================
+# IDEs and Editors
+# ============================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
 
-# Node.js
+# ============================================
+# Node.js / Frontend
+# ============================================
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+package-lock.json
+yarn.lock
+.npm/
+.yarn/
 
+# ============================================
 # Next.js
+# ============================================
 .next/
 out/
 next-env.d.ts
+.vercel
+*.tsbuildinfo
 
+# ============================================
 # Testing
+# ============================================
 .coverage
+.coverage.*
 htmlcov/
 .pytest_cache/
 .tox/
+.nox/
+coverage/
+*.cover
+.hypothesis/
+.cache
+nosetests.xml
+coverage.xml
+*.coveragerc
 
-# Misc
-*.bak
-*.tmp
-.cache/
+# ============================================
+# Jupyter Notebook
+# ============================================
+.ipynb_checkpoints
+*.ipynb
 
-# Media files
+# ============================================
+# Database
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.sql
+*.backup
+
+# PostgreSQL
+*.pgdump
+*.pgsql
+
+# ============================================
+# Media Files (User Uploads)
+# ============================================
 media/
+uploads/
 course_materials/
 course_videos/
 profiles/
+categories/
+events/
+team_images/
+
+# Large media files
 *.mp4
 *.avi
 *.mov
-*.pdf
-*.zip
-*.csv
-*.xlsx
+*.mkv
+*.flv
+*.wmv
+*.webm
 
-# Database dumps
-*.dump
-*.sql
+# Documents
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+
+# Archives
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+
+# ============================================
+# OS Files
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ============================================
+# Backup Files
+# ============================================
+*.bak
+*.backup
+*.old
+*.orig
+*.tmp
+*.temp
+*~
+*.swp
+*.swo
+
+# ============================================
+# Logs
+# ============================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ============================================
+# Misc
+# ============================================
+.cache/
+.sass-cache/
+.eslintcache
+.stylelintcache
 
 # Duplicate files (from file recovery)
 *\(1\)*
 *(1)*
+*_copy*
+*_backup*
+
+# ============================================
+# Security & Secrets
+# ============================================
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
+.secrets/
+
+# ============================================
+# Documentation Build
+# ============================================
+docs/_build/
+site/
+
+# ============================================
+# Kiro IDE
+# ============================================
+.kiro/
+
+# ============================================
+# Migration Backups
+# ============================================
+courses_backup.json
+backup_*.sql
+backup_*.dump
+*_backup.json
+backup_*.json
+
+# ============================================
+# JSON Files (Selective)
+# ============================================
+# Backup and dump files
+*.backup.json
+*_dump.json
+dump_*.json
+
+# Database exports
+db_*.json
+database_*.json
+
+# User data exports
+users_*.json
+students_*.json
+enrollments_*.json
+
+# Keep important config files (don't ignore these):
+# !package.json
+# !package-lock.json
+# !tsconfig.json
+# !next.config.js
+# !tailwind.config.js
+
+# ============================================
+# Temporary Files
+# ============================================
+tmp/
+temp/
+*.tmp
+*.temp

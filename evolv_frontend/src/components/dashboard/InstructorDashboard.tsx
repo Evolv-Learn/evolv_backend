@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import apiClient from '@/lib/api/client';
 import { useAuthStore } from '@/store/auth';
+import EventCalendar from '@/components/calendar/EventCalendar';
 
 export default function InstructorDashboard() {
   const { user } = useAuthStore();
@@ -245,7 +246,7 @@ export default function InstructorDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-4">
             Quick Actions
           </h2>
@@ -278,6 +279,14 @@ export default function InstructorDashboard() {
               </Button>
             </Link>
           </div>
+        </div>
+
+        {/* Event Calendar */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-4">
+            Event Calendar
+          </h2>
+          <EventCalendar userRole="instructor" compact={true} />
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { coursesApi } from '@/lib/api/courses';
@@ -22,14 +23,20 @@ interface Course {
 }
 
 export default function CoursesPage() {
+  const searchParams = useSearchParams();
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
+    // Get category from URL query parameter
+    const categoryFromUrl = searchParams.get('category');
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl);
+    }
     fetchCourses();
-  }, []);
+  }, [searchParams]);
 
   const fetchCourses = async () => {
     try {
