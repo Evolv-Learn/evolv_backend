@@ -54,7 +54,7 @@ export default function LearningMaterialsPage() {
         const materials = Array.isArray(res.data) ? res.data : (res.data?.results || []);
         return materials.map((mat: any) => ({
           ...mat,
-          course_name: myCourses.find(c => c.id === courseIds[idx])?.name || 'Unknown'
+          course_name: myCourses.find((c: any) => c.id === courseIds[idx])?.name || 'Unknown'
         }));
       });
       setAllMaterials(allMats);
