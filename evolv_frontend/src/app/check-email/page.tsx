@@ -1,10 +1,11 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 
-export default function CheckEmailPage() {
+function CheckEmailContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || 'your email';
 
@@ -62,5 +63,14 @@ export default function CheckEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+
+export default function CheckEmailPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CheckEmailContent />
+    </Suspense>
   );
 }

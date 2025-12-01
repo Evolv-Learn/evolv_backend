@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import apiClient from '@/lib/api/client';
@@ -19,7 +19,7 @@ interface User {
   };
 }
 
-export default function UsersManagementPage() {
+function UsersManagementContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const filter = searchParams?.get('filter') || 'all';
@@ -398,5 +398,14 @@ export default function UsersManagementPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+
+export default function UsersManagementPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading...</div>}>
+      <UsersManagementContent />
+    </Suspense>
   );
 }
