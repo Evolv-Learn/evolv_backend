@@ -111,8 +111,8 @@ export default function CreateLessonPage() {
               value={formData.resources}
               onChange={(e) => setFormData({ ...formData, resources: e.target.value })}
               placeholder="https://example.com/resources"
-              helperText="Link to additional learning resources (videos, articles, etc.)"
             />
+            <p className="text-sm text-gray-500 -mt-2">Link to additional learning resources (videos, articles, etc.)</p>
 
             <Input
               label="Lesson Order *"
@@ -121,8 +121,8 @@ export default function CreateLessonPage() {
               value={formData.order}
               onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
               required
-              helperText="The order in which this lesson appears in the module"
             />
+            <p className="text-sm text-gray-500 -mt-2">The order in which this lesson appears in the module</p>
 
             <div className="flex gap-4">
               <Button

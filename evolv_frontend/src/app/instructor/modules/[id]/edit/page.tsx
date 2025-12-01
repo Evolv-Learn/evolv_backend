@@ -145,8 +145,8 @@ export default function EditModulePage() {
               value={formData.order}
               onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
               required
-              helperText="The order in which this module appears in the schedule"
             />
+            <p className="text-sm text-gray-500 -mt-2">The order in which this module appears in the schedule</p>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800">
