@@ -17,6 +17,9 @@ interface Course {
   created_at: string;
   start_date?: string;
   end_date?: string;
+  software_tools?: string;
+  prerequisites?: string;
+  learning_outcomes?: string;
 }
 
 export default function CourseApprovalsPage() {
