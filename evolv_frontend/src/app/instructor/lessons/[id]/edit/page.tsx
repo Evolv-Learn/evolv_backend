@@ -147,8 +147,8 @@ export default function EditLessonPage() {
               value={formData.resources}
               onChange={(e) => setFormData({ ...formData, resources: e.target.value })}
               placeholder="https://example.com/resources"
-              helperText="Link to additional learning resources (videos, articles, etc.)"
             />
+            <p className="text-sm text-gray-500 -mt-2">Link to additional learning resources (videos, articles, etc.)</p>
 
             <Input
               label="Lesson Order *"
