@@ -94,7 +94,7 @@ export default function EditLessonPage() {
 
         <div className="bg-white rounded-xl shadow-lg p-8">
           <h1 className="text-3xl font-heading font-bold text-secondary-blue mb-6">
-            Edit Lesson
+            Edit Lesson 
           </h1>
 
           {error && (
