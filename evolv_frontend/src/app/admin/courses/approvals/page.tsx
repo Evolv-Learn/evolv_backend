@@ -15,6 +15,8 @@ interface Course {
   reviewed_by_name?: string;
   reviewed_at?: string;
   created_at: string;
+  start_date?: string;
+  end_date?: string;
 }
 
 export default function CourseApprovalsPage() {
