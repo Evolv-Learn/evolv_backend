@@ -16,7 +16,7 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
-  title: 'EvolvLearn - Empower Yourself Through Learning',
+  title: 'Evolv - Empower Yourself Through Learning',
   description: 'Transform your future with world-class tech education in Nigeria',
 }
 

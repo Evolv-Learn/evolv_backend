@@ -74,11 +74,16 @@ export default function LoginPage() {
       if (err.response?.status === 401) {
         setError('Incorrect username or password. Please check your credentials and try again.');
       } else if (err.response?.status === 403) {
-        const errorMsg = err.response?.data?.detail || '';
-        if (errorMsg.includes('email') || errorMsg.includes('verify')) {
-          setError('Please verify your email address before logging in. Check your inbox for the verification link.');
+        const errorData = err.response?.data;
+        if (errorData?.email_not_verified) {
+          setError(`Please verify your email (${errorData.email}) before logging in. Check your inbox for the verification link. If you didn't receive it, you can request a new one.`);
         } else {
-          setError('Your account is not active. Please contact support.');
+          const errorMsg = errorData?.detail || '';
+          if (errorMsg.includes('email') || errorMsg.includes('verify')) {
+            setError('Please verify your email address before logging in. Check your inbox for the verification link.');
+          } else {
+            setError('Your account is not active. Please contact support.');
+          }
         }
       } else if (err.response?.data?.detail) {
         setError(err.response.data.detail);

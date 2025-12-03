@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 
@@ -19,10 +19,46 @@ interface Category {
 export default function FeaturedCourses() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
 
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    if (categories.length > 0) {
+      // Small delay to ensure DOM is ready
+      setTimeout(checkArrows, 100);
+      const container = scrollContainerRef.current;
+      if (container) {
+        container.addEventListener('scroll', checkArrows);
+        return () => container.removeEventListener('scroll', checkArrows);
+      }
+    }
+  }, [categories]);
+
+  const checkArrows = () => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      setShowLeftArrow(container.scrollLeft > 0);
+      setShowRightArrow(
+        container.scrollLeft < container.scrollWidth - container.clientWidth - 10
+      );
+    }
+  };
+
+  const scroll = (direction: 'left' | 'right') => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      const scrollAmount = 400;
+      container.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -60,10 +96,42 @@ export default function FeaturedCourses() {
             Choose from our industry-leading programs
           </p>
         </div>
-        <div className="grid md:grid-cols-3 gap-8 mb-8">
-          {categories.map((category) => (
+        <div className="relative">
+          {/* Left Arrow */}
+          {showLeftArrow && (
+            <button
+              onClick={() => scroll('left')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-xl rounded-full p-3 hover:bg-gray-100 transition-all hover:scale-110"
+              aria-label="Scroll left"
+            >
+              <svg className="w-6 h-6 text-secondary-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+
+          {/* Right Arrow */}
+          {showRightArrow && (
+            <button
+              onClick={() => scroll('right')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-xl rounded-full p-3 hover:bg-gray-100 transition-all hover:scale-110"
+              aria-label="Scroll right"
+            >
+              <svg className="w-6 h-6 text-secondary-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
+
+          {/* Horizontal Scroll Container */}
+          <div 
+            ref={scrollContainerRef}
+            className="flex gap-8 overflow-x-auto scrollbar-hide scroll-smooth pb-4 px-2"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {categories.map((category) => (
             <Link key={category.id} href={`/courses?category=${encodeURIComponent(category.name)}`}>
-              <div className="bg-white rounded-xl overflow-hidden hover:shadow-2xl transition-all group cursor-pointer transform hover:-translate-y-2">
+              <div className="bg-white rounded-xl overflow-hidden hover:shadow-2xl transition-all group cursor-pointer transform hover:-translate-y-2 flex-shrink-0 w-80">
                 {/* Category Image/Icon - Large Banner */}
                 {category.image ? (
                   <div className="h-48 overflow-hidden relative">
@@ -111,6 +179,7 @@ export default function FeaturedCourses() {
               </div>
             </Link>
           ))}
+          </div>
         </div>
         <div className="text-center">
           <Link href="/courses">

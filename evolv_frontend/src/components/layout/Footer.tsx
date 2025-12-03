@@ -10,7 +10,7 @@ export const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8">
           {/* About */}
           <div>
-            <h3 className="text-xl font-heading font-bold mb-4">EvolvLearn</h3>
+            <h3 className="text-xl font-heading font-bold mb-4">Evolv</h3>
             <p className="text-gray-300">
               Empowering Nigerians with world-class tech education for a brighter future.
             </p>
@@ -98,7 +98,7 @@ export const Footer = () => {
         </div>
 
         <div className="border-t border-gray-600 mt-8 pt-8 text-center text-gray-300">
-          <p>&copy; {currentYear} EvolvLearn. All rights reserved. Made with ❤️ in Europe 🇪🇺</p>
+          <p>&copy; {currentYear} Evolv. All rights reserved. Made with ❤️ in Europe 🇪🇺</p>
         </div>
       </div>
     </footer>

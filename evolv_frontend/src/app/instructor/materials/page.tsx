@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/Input';
 import apiClient from '@/lib/api/client';
 import { useAuthStore } from '@/store/auth';
 
-export default function LearningMaterialsPage() {
+export default function LearningMaterialsPage() { 
   const { user } = useAuthStore();
   const [courses, setCourses] = useState<any[]>([]);
   const [allMaterials, setAllMaterials] = useState<any[]>([]);

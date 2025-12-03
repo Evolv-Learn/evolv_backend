@@ -74,7 +74,7 @@ export const Header = () => {
               <span className="text-2xl font-bold text-white">E</span>
             </div>
             <span className="text-2xl font-heading font-bold text-secondary-blue">
-              EvolvLearn
+              Evolv
             </span>
           </Link>
 

@@ -91,7 +91,7 @@ export default function RegisterPage() {
           
           <div className="text-center mb-8">
             <h1 className="text-3xl font-heading font-bold text-secondary-blue mb-2">
-              Join EvolvLearn
+              Join Evolv
             </h1>
             <p className="text-gray-600">
               Start your journey to tech excellence
