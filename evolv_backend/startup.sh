@@ -3,17 +3,8 @@
 
 echo "Starting EvolvLearn Backend..."
 
-# Install dependencies
-echo "Installing Python dependencies..."
-pip install -r ../requirements.txt
-
-# Run database migrations
-echo "Running database migrations..."
-python manage.py migrate --noinput
-
-# Collect static files
-echo "Collecting static files..."
-python manage.py collectstatic --noinput
+# Change to the evolv_backend directory
+cd "$(dirname "$0")"
 
 # Start Gunicorn
 echo "Starting Gunicorn server..."
