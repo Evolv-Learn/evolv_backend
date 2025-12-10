@@ -25,6 +25,7 @@ interface Course {
 function CoursesContent() {
   const searchParams = useSearchParams();
   const [courses, setCourses] = useState<Course[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,11 +37,12 @@ function CoursesContent() {
       setSelectedCategory(categoryFromUrl);
     }
     fetchCourses();
+    fetchCategories();
   }, [searchParams]);
 
   const fetchCourses = async () => {
     try {
-      const data = await coursesApi.getAll();
+      const data = await coursesApi.getAll({ public: 'true' });
       setCourses(data.results || data);
     } catch (error) {
       console.error('Failed to fetch courses:', error);
@@ -49,7 +51,15 @@ function CoursesContent() {
     }
   };
 
-  const categories = ['all', 'Data & AI', 'Cybersecurity', 'Microsoft Dynamics 365'];
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/?is_active=true`);
+      const data = await response.json();
+      setCategories(data.results || data);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  };
 
   const filteredCourses = courses.filter(course => {
     const matchesCategory = selectedCategory === 'all' || course.category === selectedCategory;
@@ -59,12 +69,9 @@ function CoursesContent() {
   });
 
   const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'Data & AI': return 'bg-primary-gold';
-      case 'Cybersecurity': return 'bg-igbo-red';
-      case 'Microsoft Dynamics 365': return 'bg-hausa-indigo';
-      default: return 'bg-success';
-    }
+    const categoryIndex = categories.findIndex(cat => cat.name === category);
+    const colors = ['bg-primary-gold', 'bg-igbo-red', 'bg-hausa-indigo', 'bg-success', 'bg-secondary-blue'];
+    return categoryIndex >= 0 ? colors[categoryIndex % colors.length] : 'bg-success';
   };
 
   return (
@@ -103,17 +110,28 @@ function CoursesContent() {
 
           {/* Category Filter */}
           <div className="flex flex-wrap justify-center gap-3">
+            <button
+              key="all"
+              onClick={() => setSelectedCategory('all')}
+              className={`px-6 py-2 rounded-full font-semibold transition-all ${
+                selectedCategory === 'all'
+                  ? 'bg-primary-gold text-gray-900'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              All Courses
+            </button>
             {categories.map((category) => (
               <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
+                key={category.id}
+                onClick={() => setSelectedCategory(category.name)}
                 className={`px-6 py-2 rounded-full font-semibold transition-all ${
-                  selectedCategory === category
+                  selectedCategory === category.name
                     ? 'bg-primary-gold text-gray-900'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                {category === 'all' ? 'All Courses' : category}
+                {category.name}
               </button>
             ))}
           </div>

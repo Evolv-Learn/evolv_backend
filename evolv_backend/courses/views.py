@@ -6,7 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .utils import send_welcome_email
 from .throttles import RegisterRateThrottle, ContactUsRateThrottle
 
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -251,11 +251,17 @@ class CourseCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class CourseListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAdminOrInstructor]
-    queryset = (
-        Course.objects.select_related("instructor", "parent")
-        .prefetch_related("locations", "partners")
-        .all()
-    )
+
+    def get_queryset(self):
+        # Check if this is a public view request
+        public_view = self.request.query_params.get('public', '').lower() == 'true'
+        
+        # For public view or non-admin users, only show courses with active categories
+        if public_view or not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Course.objects.select_related("instructor", "parent", "category").prefetch_related("locations", "partners").filter(category__is_active=True)
+        
+        # For admin/instructor users in admin view, show all courses
+        return Course.objects.select_related("instructor", "parent", "category").prefetch_related("locations", "partners").all()
 
     def get_serializer_class(self):
         return (
@@ -848,6 +854,7 @@ def resend_verification(request):
 @permission_classes([IsAdminUser])
 def create_admin(request):
     """Create a new admin user"""
+    print(f"Create admin request from user: {request.user.username}, is_superuser: {request.user.is_superuser}")
     try:
         username = request.data.get('username')
         email = request.data.get('email')
@@ -891,7 +898,7 @@ def create_admin(request):
         from .models import Profile
         Profile.objects.create(
             user=user,
-            role='Instructor'  # Admins can also be instructors
+            role='Admin'  # Set role as Admin for admin users
         )
         
         return Response({

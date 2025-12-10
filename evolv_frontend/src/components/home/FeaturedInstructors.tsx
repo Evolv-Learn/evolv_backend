@@ -76,7 +76,11 @@ export default function FeaturedInstructors() {
     return null; // Don't show section if no instructors
   }
 
-  const displayedInstructors = showAll ? instructors : instructors.slice(0, 4);
+  // Logic for displaying instructors:
+  // 1-4 instructors: Show all, centered
+  // 5+ instructors: Show 4 initially, then show all with scroll when expanded
+  const shouldShowAll = instructors.length <= 4 || showAll;
+  const displayedInstructors = shouldShowAll ? instructors : instructors.slice(0, 4);
   const hasMore = instructors.length > 4;
 
   return (
@@ -92,8 +96,8 @@ export default function FeaturedInstructors() {
         </div>
 
         <div className="relative">
-          {/* Left Arrow - only show when scrollable */}
-          {showAll && showLeftArrow && (
+          {/* Left Arrow - only show when scrollable and showing all */}
+          {showAll && instructors.length > 4 && showLeftArrow && (
             <button
               onClick={() => scroll('left')}
               className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-xl rounded-full p-3 hover:bg-gray-100 transition-all hover:scale-110"
@@ -105,8 +109,8 @@ export default function FeaturedInstructors() {
             </button>
           )}
 
-          {/* Right Arrow - only show when scrollable */}
-          {showAll && showRightArrow && (
+          {/* Right Arrow - only show when scrollable and showing all */}
+          {showAll && instructors.length > 4 && showRightArrow && (
             <button
               onClick={() => scroll('right')}
               className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-xl rounded-full p-3 hover:bg-gray-100 transition-all hover:scale-110"
@@ -118,20 +122,24 @@ export default function FeaturedInstructors() {
             </button>
           )}
 
-          {/* Horizontal Scroll Container */}
+          {/* Instructors Container */}
           <div 
             ref={scrollContainerRef}
-            className={`flex gap-6 ${showAll ? 'overflow-x-auto scrollbar-hide scroll-smooth' : 'flex-wrap justify-center'} pb-4 px-2`}
-            style={showAll ? { scrollbarWidth: 'none', msOverflowStyle: 'none' } : {}}
+            className={`flex gap-6 pb-4 px-2 ${
+              instructors.length <= 4 || !showAll 
+                ? 'justify-center flex-wrap' 
+                : 'overflow-x-auto scrollbar-hide scroll-smooth'
+            }`}
+            style={showAll && instructors.length > 4 ? { scrollbarWidth: 'none', msOverflowStyle: 'none' } : {}}
           >
             {displayedInstructors.map((instructor) => (
               <Link 
                 key={instructor.id} 
                 href={`/instructor/${instructor.user.id}/profile`}
               >
-                <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all group cursor-pointer transform hover:-translate-y-2 flex-shrink-0 w-64">
+                <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all group cursor-pointer transform hover:-translate-y-2 flex-shrink-0 w-64 h-80 flex flex-col">
                   {/* Profile Picture */}
-                  <div className="relative h-64 bg-gradient-to-br from-primary-gold to-secondary-blue overflow-hidden">
+                  <div className="relative h-48 bg-gradient-to-br from-primary-gold to-secondary-blue overflow-hidden flex-shrink-0">
                     {instructor.profile_picture ? (
                       <img
                         src={instructor.profile_picture}
@@ -139,19 +147,19 @@ export default function FeaturedInstructors() {
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white text-8xl">
+                      <div className="w-full h-full flex items-center justify-center text-white text-6xl">
                         👤
                       </div>
                     )}
                   </div>
                   
                   {/* Instructor Info - Name and Title */}
-                  <div className="p-5 text-center">
+                  <div className="p-5 text-center flex-1 flex flex-col justify-center">
                     <h3 className="text-lg font-heading font-bold text-secondary-blue mb-2 group-hover:text-primary-gold transition-colors">
                       {instructor.user.first_name} {instructor.user.last_name}
                     </h3>
                     {instructor.title && (
-                      <p className="text-sm text-gray-600 font-medium">
+                      <p className="text-sm text-gray-600 font-medium line-clamp-2">
                         {instructor.title}
                       </p>
                     )}
@@ -162,7 +170,7 @@ export default function FeaturedInstructors() {
           </div>
         </div>
 
-        {/* Show More / Show Less Button */}
+        {/* Show More / Show Less Button - only show if more than 4 instructors */}
         {hasMore && (
           <div className="text-center mt-8">
             <button
@@ -178,9 +186,9 @@ export default function FeaturedInstructors() {
                 </>
               ) : (
                 <>
-                  Show More ({instructors.length - 4} more)
+                  <span>Show More ({instructors.length - 4} more)</span>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </>
               )}

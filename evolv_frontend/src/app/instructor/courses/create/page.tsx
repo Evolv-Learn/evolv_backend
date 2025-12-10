@@ -11,6 +11,7 @@ export default function CreateCoursePage() {
   const router = useRouter();
   const [locations, setLocations] = useState<any[]>([]);
   const [partners, setPartners] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
@@ -34,12 +35,14 @@ export default function CreateCoursePage() {
 
   const fetchData = async () => {
     try {
-      const [locationsRes, partnersRes] = await Promise.all([
+      const [locationsRes, partnersRes, categoriesRes] = await Promise.all([
         apiClient.get('/locations/'),
         apiClient.get('/partners/'),
+        apiClient.get('/categories/?is_active=true'),
       ]);
       setLocations(locationsRes.data.results || locationsRes.data);
       setPartners(partnersRes.data.results || partnersRes.data);
+      setCategories(categoriesRes.data.results || categoriesRes.data);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -125,9 +128,11 @@ export default function CreateCoursePage() {
                     required
                   >
                     <option value="">Select category</option>
-                    <option value="Data & AI">Data & AI</option>
-                    <option value="Cybersecurity">Cybersecurity</option>
-                    <option value="Microsoft Dynamics 365">Microsoft Dynamics 365</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.name}>
+                        {category.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

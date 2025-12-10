@@ -30,6 +30,7 @@ class Profile(models.Model):
         ("Student", "Student"),
         ("Instructor", "Instructor"),
         ("Alumni", "Alumni"),
+        ("Admin", "Admin"),
     ]
 
     user = models.OneToOneField(
@@ -117,7 +118,7 @@ class Course(models.Model):
     name = models.CharField(max_length=255)
     category = models.ForeignKey(
         CourseCategory,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name="courses",
         help_text="Course category"
     )

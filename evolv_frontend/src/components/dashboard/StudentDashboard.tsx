@@ -33,7 +33,7 @@ export default function StudentDashboard() {
   const fetchData = async () => {
     try {
       const [coursesRes, eventsRes] = await Promise.all([
-        apiClient.get('/courses/'),
+        apiClient.get('/courses/?public=true'),
         apiClient.get('/events/'),
       ]);
       setCourses(coursesRes.data.results || coursesRes.data);

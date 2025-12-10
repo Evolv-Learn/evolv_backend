@@ -23,6 +23,7 @@ export default function AdminCoursesPage() {
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [instructors, setInstructors] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -32,6 +33,7 @@ export default function AdminCoursesPage() {
   useEffect(() => {
     fetchCourses();
     fetchInstructors();
+    fetchCategories();
   }, []);
 
   const fetchCourses = async () => {
@@ -52,6 +54,15 @@ export default function AdminCoursesPage() {
       setInstructors(response.data.results || response.data);
     } catch (error) {
       console.error('Failed to fetch instructors:', error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await apiClient.get('/categories/?is_active=true');
+      setCategories(response.data.results || response.data);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
     }
   };
 
@@ -159,24 +170,17 @@ export default function AdminCoursesPage() {
             <div className="text-3xl font-bold text-primary-gold mb-2">{courses.length}</div>
             <div className="text-gray-600">Total Courses</div>
           </div>
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="text-3xl font-bold text-secondary-blue mb-2">
-              {courses.filter(c => c.category === 'Data & AI').length}
-            </div>
-            <div className="text-gray-600">Data & AI</div>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="text-3xl font-bold text-success mb-2">
-              {courses.filter(c => c.category === 'Cybersecurity').length}
-            </div>
-            <div className="text-gray-600">Cybersecurity</div>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="text-3xl font-bold text-hausa-indigo mb-2">
-              {courses.filter(c => c.category === 'Microsoft Dynamics 365').length}
-            </div>
-            <div className="text-gray-600">Dynamics 365</div>
-          </div>
+          {categories.slice(0, 3).map((category, index) => {
+            const colors = ['text-secondary-blue', 'text-success', 'text-hausa-indigo'];
+            return (
+              <div key={category.id} className="bg-white rounded-xl p-6 shadow-lg">
+                <div className={`text-3xl font-bold mb-2 ${colors[index] || 'text-gray-700'}`}>
+                  {courses.filter(c => c.category === category.name).length}
+                </div>
+                <div className="text-gray-600">{category.name}</div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Search and Filter */}
@@ -204,9 +208,11 @@ export default function AdminCoursesPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-gold focus:border-transparent"
               >
                 <option value="all">All Categories</option>
-                <option value="Data & AI">Data & AI</option>
-                <option value="Cybersecurity">Cybersecurity</option>
-                <option value="Microsoft Dynamics 365">Microsoft Dynamics 365</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.name}>
+                    {category.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

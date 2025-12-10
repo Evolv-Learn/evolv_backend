@@ -77,7 +77,11 @@ export default function FeaturedCourses() {
     return null; // Don't show section if no categories
   }
 
-  const displayedCategories = showAll ? categories : categories.slice(0, 4);
+  // Logic for displaying categories:
+  // 1-4 categories: Show all, centered
+  // 5+ categories: Show 4 initially, then show all with scroll when expanded
+  const shouldShowAll = categories.length <= 4 || showAll;
+  const displayedCategories = shouldShowAll ? categories : categories.slice(0, 4);
   const hasMore = categories.length > 4;
 
   return (
@@ -93,8 +97,8 @@ export default function FeaturedCourses() {
         </div>
 
         <div className="relative">
-          {/* Left Arrow - only show when scrollable */}
-          {showAll && showLeftArrow && (
+          {/* Left Arrow - only show when scrollable and showing all */}
+          {showAll && categories.length > 4 && showLeftArrow && (
             <button
               onClick={() => scroll('left')}
               className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-xl rounded-full p-3 hover:bg-gray-100 transition-all hover:scale-110"
@@ -106,8 +110,8 @@ export default function FeaturedCourses() {
             </button>
           )}
 
-          {/* Right Arrow - only show when scrollable */}
-          {showAll && showRightArrow && (
+          {/* Right Arrow - only show when scrollable and showing all */}
+          {showAll && categories.length > 4 && showRightArrow && (
             <button
               onClick={() => scroll('right')}
               className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-xl rounded-full p-3 hover:bg-gray-100 transition-all hover:scale-110"
@@ -122,14 +126,18 @@ export default function FeaturedCourses() {
           {/* Categories Container */}
           <div 
             ref={scrollContainerRef}
-            className={`flex gap-6 ${showAll ? 'overflow-x-auto scrollbar-hide scroll-smooth' : 'flex-wrap justify-center'} pb-4 px-2`}
-            style={showAll ? { scrollbarWidth: 'none', msOverflowStyle: 'none' } : {}}
+            className={`flex gap-6 pb-4 px-2 ${
+              categories.length <= 4 || !showAll 
+                ? 'justify-center flex-wrap' 
+                : 'overflow-x-auto scrollbar-hide scroll-smooth'
+            }`}
+            style={showAll && categories.length > 4 ? { scrollbarWidth: 'none', msOverflowStyle: 'none' } : {}}
           >
             {displayedCategories.map((category) => (
               <Link key={category.id} href={`/courses?category=${encodeURIComponent(category.name)}`}>
-                <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all group cursor-pointer transform hover:-translate-y-2 flex-shrink-0 w-80">
+                <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all group cursor-pointer transform hover:-translate-y-2 flex-shrink-0 w-80 h-96 flex flex-col">
                   {/* Category Image/Icon */}
-                  <div className="relative h-48 overflow-hidden">
+                  <div className="relative h-48 overflow-hidden flex-shrink-0">
                     {category.image ? (
                       <img
                         src={category.image}
@@ -147,16 +155,18 @@ export default function FeaturedCourses() {
                   </div>
                   
                   {/* Category Content */}
-                  <div className="p-6">
-                    <h3 className="text-xl font-heading font-bold text-secondary-blue mb-2 group-hover:text-primary-gold transition-colors">
-                      {category.name}
-                    </h3>
-                    {category.description && (
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                        {category.description}
-                      </p>
-                    )}
-                    <div className="flex items-center justify-between">
+                  <div className="p-6 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-xl font-heading font-bold text-secondary-blue mb-2 group-hover:text-primary-gold transition-colors">
+                        {category.name}
+                      </h3>
+                      {category.description && (
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          {category.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between mt-auto">
                       <span className="text-primary-gold font-semibold group-hover:underline text-sm">
                         Explore →
                       </span>
@@ -173,7 +183,7 @@ export default function FeaturedCourses() {
           </div>
         </div>
 
-        {/* Show More / Show Less Button */}
+        {/* Show More / Show Less Button - only show if more than 4 categories */}
         {hasMore && (
           <div className="text-center mt-8">
             <button
@@ -189,9 +199,9 @@ export default function FeaturedCourses() {
                 </>
               ) : (
                 <>
-                  Show More ({categories.length - 4} more)
+                  <span>Show More ({categories.length - 4} more)</span>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </>
               )}

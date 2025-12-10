@@ -23,40 +23,14 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle token refresh
+// Handle token refresh - temporarily disabled to prevent loops
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-    
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      if (typeof window !== 'undefined') {
-        try {
-          const refreshToken = localStorage.getItem('refresh_token');
-          if (!refreshToken) {
-            throw new Error('No refresh token');
-          }
-
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh/`, {
-            refresh: refreshToken,
-          });
-          
-          const { access } = response.data;
-          localStorage.setItem('access_token', access);
-          
-          originalRequest.headers.Authorization = `Bearer ${access}`;
-          return apiClient(originalRequest);
-        } catch (refreshError) {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          if (typeof window !== 'undefined') {
-            window.location.href = '/login';
-          }
-          return Promise.reject(refreshError);
-        }
-      }
+    // Temporarily disable auto-refresh to prevent infinite loops
+    if (error.response?.status === 401) {
+      console.log('Unauthorized - please login again');
+      // Don't auto-redirect, just log the error
     }
     
     return Promise.reject(error);

@@ -20,7 +20,7 @@ export default function MyCoursesPage() {
     try {
       const [studentRes, coursesRes] = await Promise.all([
         apiClient.get('/students/me/'),
-        apiClient.get('/courses/'),
+        apiClient.get('/courses/?public=true'),
       ]);
       
       setStudentProfile(studentRes.data);
