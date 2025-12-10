@@ -45,7 +45,17 @@ export default function StudentDashboard() {
         console.log('Student profile with enrollments:', studentRes.data);
         console.log('Enrollments:', studentRes.data.enrollments);
         setStudentProfile(studentRes.data);
-        setApplicationStatus('Under Review');
+        
+        // Check if any enrollment is approved
+        const hasApprovedEnrollment = studentRes.data.enrollments?.some(
+          (enrollment: any) => enrollment.status === 'Approved'
+        );
+        
+        if (hasApprovedEnrollment) {
+          setApplicationStatus('Approved');
+        } else {
+          setApplicationStatus('Under Review');
+        }
       } catch (error) {
         // Student profile doesn't exist yet
         setApplicationStatus('Not Applied');
@@ -108,7 +118,7 @@ export default function StudentDashboard() {
         {/* Welcome Header with Motivation */}
         <div className="mb-8">
           <h1 className="text-4xl font-heading font-bold text-secondary-blue mb-4">
-            Welcome back, {user?.first_name || user?.username}! 👋
+            Welcome back, {user?.first_name || user?.username}!
           </h1>
           <p className="text-xl text-gray-600 italic font-medium text-center max-w-3xl mx-auto">
             "Every expert started as a beginner. You're one step closer to your future."
@@ -118,16 +128,13 @@ export default function StudentDashboard() {
         {/* Onboarding Progress Card - For New Students */}
         {!studentProfile && (
           <div className="bg-gradient-to-br from-primary-gold to-primary-gold-dark rounded-xl p-8 mb-8 shadow-xl">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="text-5xl">🚀</div>
-              <div className="flex-1">
-                <h2 className="text-3xl font-heading font-bold text-gray-900 mb-2">
-                  Start Strong With EvolvLearn in 3 Steps
-                </h2>
-                <p className="text-gray-800 text-lg">
-                  Welcome to your learning journey! Complete these steps to unlock your potential.
-                </p>
-              </div>
+            <div className="mb-6">
+              <h2 className="text-3xl font-heading font-bold text-gray-900 mb-2">
+                Start Strong With EvolvLearn in 3 Steps
+              </h2>
+              <p className="text-gray-800 text-lg">
+                Welcome to your learning journey! Complete these steps to unlock your potential.
+              </p>
             </div>
 
             {/* Progress Bar */}
@@ -195,7 +202,7 @@ export default function StudentDashboard() {
             
             <div className="mt-6 pt-6 border-t border-white/20">
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-4">
-                <p className="text-lg mb-2">📋 You haven't applied to any course yet.</p>
+                <p className="text-lg mb-2 font-semibold">You haven't applied to any course yet.</p>
                 <p className="text-sm text-gray-200">
                   Take the first step towards your tech career. Our application process is simple and free!
                 </p>
@@ -218,7 +225,6 @@ export default function StudentDashboard() {
               {/* Profile Button */}
               <Link href="/dashboard/profile">
                 <div className="bg-gradient-to-br from-secondary-blue to-secondary-blue-dark rounded-xl p-6 text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
-                  <div className="text-4xl mb-3">👤</div>
                   <h3 className="text-xl font-bold mb-2">My Profile</h3>
                   <p className="text-sm text-gray-200">View and update your application details</p>
                 </div>
@@ -227,7 +233,6 @@ export default function StudentDashboard() {
               {/* My Courses */}
               <Link href="/dashboard/courses">
                 <div className="bg-gradient-to-br from-primary-gold to-primary-gold-dark rounded-xl p-6 text-gray-900 hover:shadow-xl transition-shadow cursor-pointer h-full">
-                  <div className="text-4xl mb-3">🎓</div>
                   <h3 className="text-xl font-bold mb-2">My Courses</h3>
                   <p className="text-sm">View your enrolled courses</p>
                   {studentProfile.courses && (
@@ -242,7 +247,6 @@ export default function StudentDashboard() {
               {applicationStatus === 'Approved' ? (
                 <Link href="/materials">
                   <div className="bg-gradient-to-br from-success to-green-700 rounded-xl p-6 text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
-                    <div className="text-4xl mb-3">📚</div>
                     <h3 className="text-xl font-bold mb-2">Learning Materials</h3>
                     <p className="text-sm text-gray-200">Access your course resources</p>
                   </div>
@@ -250,13 +254,12 @@ export default function StudentDashboard() {
               ) : (
                 <div className="bg-gradient-to-br from-gray-300 to-gray-400 rounded-xl p-6 text-gray-600 h-full relative overflow-hidden">
                   <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-                    🔒 Locked
+                    Locked
                   </div>
-                  <div className="text-4xl mb-3 opacity-50">📚</div>
                   <h3 className="text-xl font-bold mb-2">Learning Materials</h3>
                   <p className="text-sm">Available upon approval</p>
                   <div className="mt-3 text-xs bg-white/50 rounded px-2 py-1 inline-block">
-                    ⏳ Pending approval
+                    Pending approval
                   </div>
                 </div>
               )}
@@ -286,8 +289,7 @@ export default function StudentDashboard() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
-                  <div className="text-4xl mb-2">📋</div>
-                  <p>No course applications yet</p>
+                  <p className="text-lg font-medium">No course applications yet</p>
                 </div>
               )}
             </div>
@@ -312,17 +314,17 @@ export default function StudentDashboard() {
           <div className="grid md:grid-cols-3 gap-4">
             <Link href="/admission">
               <Button variant="primary" className="w-full py-6 text-lg">
-                📝 Apply for Courses
+                Apply for Courses
               </Button>
             </Link>
             <Link href="/courses">
               <Button variant="outline" className="w-full py-6 text-lg">
-                📚 Browse Courses
+                Browse Courses
               </Button>
             </Link>
             <Link href="/events">
               <Button variant="outline" className="w-full py-6 text-lg">
-                🎉 Join Events
+                Join Events
               </Button>
             </Link>
           </div>
@@ -330,20 +332,42 @@ export default function StudentDashboard() {
 
         {/* Available Courses */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-4">
-            Available Courses
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-heading font-bold text-secondary-blue">
+              Available Courses
+            </h2>
+            {courses.length > 4 && (
+              <button
+                onClick={() => {
+                  const showAll = courses.length > 4;
+                  if (showAll) {
+                    router.push('/courses');
+                  }
+                }}
+                className="flex items-center gap-2 px-4 py-2 text-secondary-blue hover:text-primary-gold transition-colors font-semibold"
+              >
+                Show More
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
+          </div>
+          
           {courses.length > 0 ? (
-            <>
-              <div className="grid md:grid-cols-3 gap-6">
-                {courses.slice(0, 6).map((course: any) => (
-                  <div key={course.id} className="border-l-4 border-secondary-blue rounded-lg p-4 bg-warm-white hover:shadow-lg transition-shadow">
+            <div className="relative">
+              <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide scroll-smooth">
+                {courses.slice(0, 4).map((course: any) => (
+                  <div 
+                    key={course.id} 
+                    className="flex-shrink-0 w-80 border-l-4 border-secondary-blue rounded-lg p-4 bg-warm-white hover:shadow-lg transition-shadow"
+                  >
                     <h3 className="font-bold text-lg mb-2 text-secondary-blue">{course.name}</h3>
                     <p className="text-sm text-gray-600 mb-3">{course.category}</p>
                     
                     {/* Timeline - Single Line with Words */}
                     {(course.registration_deadline || course.start_date) && (
-                      <div className="mb-3 flex items-center gap-4 text-xs">
+                      <div className="mb-3 flex flex-col gap-2 text-xs">
                         {course.registration_deadline && (
                           <div className="flex items-center gap-1.5">
                             <span className="text-gray-600">Registration Deadline:</span>
@@ -377,18 +401,10 @@ export default function StudentDashboard() {
                   </div>
                 ))}
               </div>
-              {courses.length > 6 && (
-                <div className="text-center mt-6">
-                  <Link href="/courses">
-                    <Button variant="primary">View All Courses</Button>
-                  </Link>
-                </div>
-              )}
-            </>
+            </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              <div className="text-4xl mb-2">📚</div>
-              <p>No courses available at the moment</p>
+              <p className="text-lg font-medium">No courses available at the moment</p>
             </div>
           )}
         </div>

@@ -43,7 +43,7 @@ export default function InstructorProfilePage() {
         {/* Back Button */}
         <Link href="/dashboard" className="inline-block mb-6">
           <Button variant="outline">
-            ← Back to Dashboard
+            ← Back to My Account
           </Button>
         </Link>
 

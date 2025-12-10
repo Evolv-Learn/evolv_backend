@@ -65,7 +65,7 @@ export default function LoginPage() {
         });
       }
 
-      // Redirect to dashboard
+      // Redirect to account page
       router.push('/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
@@ -112,7 +112,7 @@ export default function LoginPage() {
               Welcome Back
             </h1>
             <p className="text-gray-600">
-              Login to access your learning dashboard
+              Login to access your account
             </p>
           </div>
 

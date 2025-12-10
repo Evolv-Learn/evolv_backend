@@ -15,7 +15,7 @@ export default function InstructorCalendarPage() {
             onClick={() => router.push('/dashboard')}
             className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
           >
-            <span>←</span> Back to Dashboard
+            <span>←</span> Back to My Account
           </button>
         </div>
 

@@ -1,20 +1,28 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import apiClient from '@/lib/api/client';
-import { useAuthStore } from '@/store/auth';
 
-export default function EditInstructorProfilePage() {
+export default function AdminEditUserProfilePage() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const params = useParams();
+  const userId = params.id as string;
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [userData, setUserData] = useState({
+    username: '',
+    email: '',
+    first_name: '',
+    last_name: '',
+  });
   const [formData, setFormData] = useState({
+    role: 'Student',
     title: '',
     bio: '',
     email: '',
@@ -25,22 +33,34 @@ export default function EditInstructorProfilePage() {
   const [currentPictureUrl, setCurrentPictureUrl] = useState<string>('');
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    fetchUserProfile();
+  }, [userId]);
 
-  const fetchProfile = async () => {
+  const fetchUserProfile = async () => {
     try {
-      const response = await apiClient.get('/profile/');
-      setFormData({
-        title: response.data.title || '',
-        bio: response.data.bio || '',
-        email: response.data.email || '',
-        twitter_url: response.data.twitter_url || '',
-        linkedin_url: response.data.linkedin_url || '',
+      const response = await apiClient.get(`/admin/users/${userId}/profile/`);
+      const data = response.data;
+      
+      setUserData({
+        username: data.username || '',
+        email: data.user_email || data.email || '',
+        first_name: data.first_name || '',
+        last_name: data.last_name || '',
       });
-      setCurrentPictureUrl(response.data.profile_picture || '');
+      
+      setFormData({
+        role: data.role || 'Student',
+        title: data.title || '',
+        bio: data.bio || '',
+        email: data.email || '',
+        twitter_url: data.twitter_url || '',
+        linkedin_url: data.linkedin_url || '',
+      });
+      
+      setCurrentPictureUrl(data.profile_picture || '');
     } catch (error) {
-      console.error('Failed to fetch profile:', error);
+      console.error('Failed to fetch user profile:', error);
+      setMessage('Failed to load user profile');
     } finally {
       setIsLoading(false);
     }
@@ -53,6 +73,7 @@ export default function EditInstructorProfilePage() {
 
     try {
       const data = new FormData();
+      data.append('role', formData.role);
       data.append('title', formData.title);
       data.append('bio', formData.bio);
       data.append('email', formData.email);
@@ -63,7 +84,7 @@ export default function EditInstructorProfilePage() {
         data.append('profile_picture', profilePicture);
       }
 
-      await apiClient.patch('/profile/', data, {
+      await apiClient.patch(`/admin/users/${userId}/profile/`, data, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -71,7 +92,7 @@ export default function EditInstructorProfilePage() {
       
       setMessage('Profile updated successfully!');
       setTimeout(() => {
-        router.push('/instructor/profile');
+        router.push('/admin/users');
       }, 1500);
     } catch (error: any) {
       console.error('Failed to update profile:', error);
@@ -96,17 +117,20 @@ export default function EditInstructorProfilePage() {
     <div className="min-h-screen bg-warm-white py-8">
       <div className="container mx-auto px-4 max-w-3xl">
         {/* Back Button */}
-        <Link href="/instructor/profile" className="inline-block mb-6">
+        <Link href="/admin/users" className="inline-block mb-6">
           <Button variant="outline">
-            ← Back to Profile
+            ← Back to Users
           </Button>
         </Link>
 
         {/* Edit Form */}
         <div className="bg-white rounded-xl shadow-lg p-8">
-          <h1 className="text-3xl font-heading font-bold text-secondary-blue mb-6">
-            Edit Profile
+          <h1 className="text-3xl font-heading font-bold text-secondary-blue mb-2">
+            Edit User Profile
           </h1>
+          <p className="text-gray-600 mb-6">
+            Editing profile for: <span className="font-semibold">{userData.username}</span> ({userData.email})
+          </p>
 
           {message && (
             <div className={`mb-6 p-4 rounded-lg ${
@@ -119,61 +143,21 @@ export default function EditInstructorProfilePage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Info */}
+            {/* Role Selection */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Basic Information</h2>
-              <div className="space-y-4">
-                <Input
-                  label="Professional Title"
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g., Data Science Instructor & Industry Expert"
-                />
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bio
-                  </label>
-                  <textarea
-                    value={formData.bio}
-                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                    rows={6}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-gold"
-                    placeholder="Tell students about your experience, expertise, and teaching philosophy..."
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Contact Information */}
-            <div className="pt-6 border-t">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Contact Information</h2>
-              <div className="space-y-4">
-                <Input
-                  label="Contact Email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="your.email@example.com"
-                />
-
-                <Input
-                  label="Twitter/X URL"
-                  type="url"
-                  value={formData.twitter_url}
-                  onChange={(e) => setFormData({ ...formData, twitter_url: e.target.value })}
-                  placeholder="https://x.com/yourusername"
-                />
-
-                <Input
-                  label="LinkedIn URL"
-                  type="url"
-                  value={formData.linkedin_url}
-                  onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
-                  placeholder="https://linkedin.com/in/yourusername"
-                />
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                User Role *
+              </label>
+              <select
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-gold"
+                required
+              >
+                <option value="Student">Student</option>
+                <option value="Instructor">Instructor</option>
+                <option value="Alumni">Alumni</option>
+              </select>
             </div>
 
             {/* Profile Picture Upload */}
@@ -215,7 +199,6 @@ export default function EditInstructorProfilePage() {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      // Validate file size (max 5MB)
                       if (file.size > 5 * 1024 * 1024) {
                         setMessage('Image size must be less than 5MB');
                         return;
@@ -231,7 +214,6 @@ export default function EditInstructorProfilePage() {
                 </p>
               </div>
 
-              {/* Remove Picture Button */}
               {profilePicture && (
                 <button
                   type="button"
@@ -241,6 +223,65 @@ export default function EditInstructorProfilePage() {
                   Remove selected image
                 </button>
               )}
+            </div>
+
+            {/* Professional Info (for Instructors) */}
+            {formData.role === 'Instructor' && (
+              <div className="pt-6 border-t">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Professional Information</h2>
+                <div className="space-y-4">
+                  <Input
+                    label="Professional Title"
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="e.g., Data Science Instructor & Industry Expert"
+                  />
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Bio
+                    </label>
+                    <textarea
+                      value={formData.bio}
+                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                      rows={6}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-gold"
+                      placeholder="Professional biography..."
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Contact Information */}
+            <div className="pt-6 border-t">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Contact Information</h2>
+              <div className="space-y-4">
+                <Input
+                  label="Contact Email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="contact@example.com"
+                />
+
+                <Input
+                  label="Twitter/X URL"
+                  type="url"
+                  value={formData.twitter_url}
+                  onChange={(e) => setFormData({ ...formData, twitter_url: e.target.value })}
+                  placeholder="https://x.com/username"
+                />
+
+                <Input
+                  label="LinkedIn URL"
+                  type="url"
+                  value={formData.linkedin_url}
+                  onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
+                  placeholder="https://linkedin.com/in/username"
+                />
+              </div>
             </div>
 
             {/* Action Buttons */}
@@ -253,7 +294,7 @@ export default function EditInstructorProfilePage() {
               >
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </Button>
-              <Link href="/instructor/profile" className="flex-1">
+              <Link href="/admin/users" className="flex-1">
                 <Button variant="outline" className="w-full">
                   Cancel
                 </Button>

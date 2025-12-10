@@ -90,10 +90,10 @@ export default function FeaturedCourses() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-heading font-bold text-secondary-blue mb-4">
-            Our Courses
+            Explore Our Training Programs
           </h2>
           <p className="text-xl text-gray-600">
-            Choose from our industry-leading programs
+            Choose from our industry-leading programs taught by expert instructors
           </p>
         </div>
         <div className="relative">
@@ -132,7 +132,7 @@ export default function FeaturedCourses() {
             {categories.map((category) => (
             <Link key={category.id} href={`/courses?category=${encodeURIComponent(category.name)}`}>
               <div className="bg-white rounded-xl overflow-hidden hover:shadow-2xl transition-all group cursor-pointer transform hover:-translate-y-2 flex-shrink-0 w-80">
-                {/* Category Image/Icon - Large Banner */}
+                {/* Category Image - Large Banner */}
                 {category.image ? (
                   <div className="h-48 overflow-hidden relative">
                     <img
@@ -142,17 +142,11 @@ export default function FeaturedCourses() {
                     />
                     {/* Overlay gradient for better text readability */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                    {/* Icon overlay on image */}
-                    {category.icon && (
-                      <div className="absolute bottom-4 right-4 text-5xl drop-shadow-lg">
-                        {category.icon}
-                      </div>
-                    )}
                   </div>
                 ) : (
-                  <div className={`${category.color || 'bg-gray-200'} h-48 flex items-center justify-center relative group-hover:brightness-110 transition-all`}>
-                    <div className="text-7xl group-hover:scale-110 transition-transform">
-                      {category.icon || '📁'}
+                  <div className={`${category.color || 'bg-gradient-to-br from-primary-gold to-secondary-blue'} h-48 flex items-center justify-center relative group-hover:brightness-110 transition-all`}>
+                    <div className="text-white text-3xl font-bold">
+                      {category.name}
                     </div>
                   </div>
                 )}

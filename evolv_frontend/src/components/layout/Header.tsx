@@ -1,31 +1,69 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/store/auth';
 import apiClient from '@/lib/api/client';
+
+interface Category {
+  id: number;
+  name: string;
+  icon: string;
+}
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const { isAuthenticated, user, logout } = useAuthStore();
+  
+  // Use refs to track if we've already fetched to prevent loops
+  const userRoleFetched = useRef(false);
+  const categoriesFetched = useRef(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchUserRole();
+    // Only fetch if authenticated and haven't fetched yet
+    if (!isAuthenticated) {
+      setUserRole(null);
+      return;
     }
+    
+    if (userRoleFetched.current) return;
+    
+    userRoleFetched.current = true;
+    
+    const fetchUserRole = async () => {
+      try {
+        const response = await apiClient.get('/profile/');
+        setUserRole(response.data.role);
+      } catch (error) {
+        // Silently fail - user might not be authenticated
+        console.error('Failed to fetch user role');
+      }
+    };
+
+    fetchUserRole();
   }, [isAuthenticated]);
 
-  const fetchUserRole = async () => {
-    try {
-      const response = await apiClient.get('/profile/me/');
-      setUserRole(response.data.role);
-    } catch (error) {
-      console.error('Failed to fetch user role:', error);
-    }
-  };
+  useEffect(() => {
+    if (categoriesFetched.current) return;
+    
+    categoriesFetched.current = true;
+    
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/?is_active=true`);
+        const data = await response.json();
+        setCategories((data.results || data).slice(0, 8)); // Limit to 8 categories
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []); // Only fetch categories once on mount
 
   const isAdmin = userRole === 'Admin' || user?.role === 'Admin';
 
@@ -40,7 +78,17 @@ export const Header = () => {
         { name: 'Impacts', href: '/about/impacts' },
       ]
     },
-    { name: 'Courses', href: '/courses' },
+    { 
+      name: 'Training', 
+      href: '/courses',
+      dropdown: categories.length > 0 ? [
+        { name: 'All Courses', href: '/courses' },
+        ...categories.map(cat => ({
+          name: cat.name,
+          href: `/courses?category=${encodeURIComponent(cat.name)}`
+        }))
+      ] : undefined
+    },
     { name: 'Events', href: '/events' },
     { 
       name: 'Companies', 
@@ -99,8 +147,8 @@ export const Header = () => {
                         onMouseEnter={() => setOpenDropdown(item.name)}
                         onMouseLeave={closeDropdown}
                       >
-                        <div className="w-52 bg-white rounded-lg shadow-xl border border-gray-200 py-2 overflow-hidden">
-                          {item.dropdown.map((subItem) => (
+                        <div className="w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 overflow-hidden max-h-96 overflow-y-auto">
+                          {item.dropdown.map((subItem: any) => (
                             <Link
                               key={subItem.name}
                               href={subItem.href}
@@ -132,7 +180,7 @@ export const Header = () => {
               <>
                 <Link href="/dashboard">
                   <Button variant="outline" size="sm">
-                    Dashboard
+                    My Account
                   </Button>
                 </Link>
                 {/* Only show Applications for Admins */}
@@ -216,8 +264,8 @@ export const Header = () => {
                         </svg>
                       </button>
                       {openDropdown === item.name && (
-                        <div className="ml-4 mt-2 flex flex-col gap-2">
-                          {item.dropdown.map((subItem) => (
+                        <div className="ml-4 mt-2 flex flex-col gap-2 max-h-64 overflow-y-auto">
+                          {item.dropdown.map((subItem: any) => (
                             <Link
                               key={subItem.name}
                               href={subItem.href}
@@ -246,7 +294,7 @@ export const Header = () => {
                   <>
                     <Link href="/dashboard">
                       <Button variant="outline" size="sm" className="w-full">
-                        Dashboard
+                        My Account
                       </Button>
                     </Link>
                     {/* Only show Applications for Admins */}

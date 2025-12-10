@@ -71,7 +71,7 @@ export default function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center bg-warm-white">
         <div className="text-center">
           <div className="text-4xl mb-4">⏳</div>
-          <p className="text-gray-600">Loading your dashboard...</p>
+          <p className="text-gray-600">Loading your account...</p>
         </div>
       </div>
     );

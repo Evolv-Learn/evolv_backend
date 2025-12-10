@@ -74,10 +74,10 @@ function CoursesContent() {
         <div className="kente-strip absolute top-0 left-0 right-0"></div>
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-5xl font-heading font-bold mb-4">
-            Our Courses
+            Our Training Programs
           </h1>
           <p className="text-xl text-gray-200 max-w-2xl mx-auto">
-            Discover world-class tech courses designed for Nigerian learners
+            Discover world-class tech training accessible to learners worldwide
           </p>
         </div>
       </div>
@@ -153,17 +153,10 @@ function CoursesContent() {
                   key={course.id}
                   className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow group"
                 >
-                  {/* Course Image Placeholder */}
+                  {/* Course Category Banner */}
                   <div className={`h-48 ${getCategoryColor(course.category)} flex items-center justify-center relative overflow-hidden`}>
-                    <div className="text-6xl">
-                      {course.category === 'Data & AI' && '📊'}
-                      {course.category === 'Cybersecurity' && '🔒'}
-                      {course.category === 'Microsoft Dynamics 365' && '💼'}
-                    </div>
-                    <div className="absolute top-4 right-4">
-                      <span className="px-3 py-1 bg-white text-gray-900 rounded-full text-xs font-semibold">
-                        {course.category}
-                      </span>
+                    <div className="text-white text-2xl font-bold text-center px-4">
+                      {course.category}
                     </div>
                   </div>
 

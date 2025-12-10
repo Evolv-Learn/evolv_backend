@@ -208,11 +208,11 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Back to Dashboard */}
+        {/* Back to My Account */}
         <div className="text-center">
           <Link href="/dashboard">
             <Button variant="outline">
-              ← Back to Dashboard
+              ← Back to My Account
             </Button>
           </Link>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import apiClient from '@/lib/api/client';
 
@@ -208,7 +209,7 @@ function UsersManagementContent() {
             onClick={() => router.push('/dashboard')}
             className="flex items-center gap-2"
           >
-            <span>←</span> Back to Dashboard
+            <span>←</span> Back to My Account
           </Button>
         </div>
 
@@ -359,6 +360,15 @@ function UsersManagementContent() {
                                 Alumni
                               </Button>
                             )}
+                            <Link href={`/admin/users/${user.id}/edit`}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-primary-gold border-primary-gold hover:bg-primary-gold hover:text-white"
+                              >
+                                ✏️ Edit Profile
+                              </Button>
+                            </Link>
                             <Button
                               variant="outline"
                               size="sm"

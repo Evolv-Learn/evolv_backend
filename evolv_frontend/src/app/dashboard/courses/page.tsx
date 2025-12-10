@@ -152,11 +152,11 @@ export default function MyCoursesPage() {
           </div>
         )}
 
-        {/* Back to Dashboard */}
+        {/* Back to My Account */}
         <div className="mt-8 text-center">
           <Link href="/dashboard">
             <Button variant="outline">
-              ← Back to Dashboard
+              ← Back to My Account
             </Button>
           </Link>
         </div>

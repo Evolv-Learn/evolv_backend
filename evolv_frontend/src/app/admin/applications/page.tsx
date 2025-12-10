@@ -172,7 +172,7 @@ export default function AdminApplicationsPage() {
             onClick={() => router.push('/dashboard')}
             className="flex items-center gap-2"
           >
-            <span>←</span> Back to Dashboard
+            <span>←</span> Back to My Account
           </Button>
         </div>
 

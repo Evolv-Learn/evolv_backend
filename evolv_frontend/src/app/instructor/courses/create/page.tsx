@@ -85,7 +85,7 @@ export default function CreateCoursePage() {
       <div className="container mx-auto px-4 max-w-4xl">
         <Link href="/dashboard" className="inline-block mb-6">
           <Button variant="outline">
-            ← Back to Dashboard
+            ← Back to My Account
           </Button>
         </Link>
 

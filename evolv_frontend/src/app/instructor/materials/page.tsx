@@ -141,7 +141,7 @@ export default function LearningMaterialsPage() {
           </div>
           <Link href="/dashboard">
             <Button variant="outline">
-              ← Back to Dashboard
+              ← Back to My Account
             </Button>
           </Link>
         </div>

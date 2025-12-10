@@ -86,7 +86,7 @@ export default function CreateSchedulePage() {
       <div className="container mx-auto px-4 max-w-3xl">
         <Link href="/dashboard" className="inline-block mb-6">
           <Button variant="outline">
-            ← Back to Dashboard
+            ← Back to My Account
           </Button>
         </Link>
 

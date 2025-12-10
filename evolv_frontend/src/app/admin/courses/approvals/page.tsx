@@ -160,7 +160,7 @@ export default function CourseApprovalsPage() {
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
         >
           <span className="text-xl">←</span>
-          <span className="font-medium">Back to Dashboard</span>
+          <span className="font-medium">Back to My Account</span>
         </button>
         <h1 className="text-3xl font-bold mb-2">Course Approvals</h1>
         <p className="text-gray-600">Review and approve courses created by instructors</p>
