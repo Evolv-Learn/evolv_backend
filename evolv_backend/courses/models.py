@@ -193,6 +193,24 @@ class Course(models.Model):
         return self.name
 
 
+def course_material_upload_path(instance, filename):
+    """
+    Generate upload path based on material type
+    Structure: course_files/{material_type}/{filename}
+    """
+    # Map material types to folder names
+    folder_map = {
+        'video': 'videos',
+        'document': 'documents',
+        'spreadsheet': 'spreadsheets',
+        'archive': 'archives',
+        'other': 'others',
+    }
+    
+    folder_name = folder_map.get(instance.material_type, 'others')
+    return f'course_files/{folder_name}/{filename}'
+
+
 class CourseMaterial(models.Model):
     """Model for storing multiple learning materials per course"""
     MATERIAL_TYPE_CHOICES = [
@@ -207,7 +225,7 @@ class CourseMaterial(models.Model):
     title = models.CharField(max_length=255, help_text="Material title/name")
     description = models.TextField(blank=True, null=True, help_text="Brief description of the material")
     material_type = models.CharField(max_length=20, choices=MATERIAL_TYPE_CHOICES, default='other')
-    file = models.FileField(upload_to='course_materials/%Y/%m/', help_text="Upload file (video, PDF, CSV, etc.)")
+    file = models.FileField(upload_to=course_material_upload_path, help_text="Upload file (video, PDF, CSV, etc.)")
     file_size = models.BigIntegerField(blank=True, null=True, help_text="File size in bytes")
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='uploaded_materials')
     uploaded_at = models.DateTimeField(auto_now_add=True)
@@ -216,9 +234,39 @@ class CourseMaterial(models.Model):
     class Meta:
         ordering = ['-uploaded_at']
     
+    def _detect_material_type(self):
+        """Auto-detect material type based on file extension"""
+        if not self.file:
+            return 'other'
+        
+        ext = self.get_file_extension().lower()
+        
+        # Video extensions
+        if ext in ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm', '.m4v']:
+            return 'video'
+        
+        # Document extensions (PDF, Word, PowerPoint, etc.)
+        elif ext in ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.txt', '.rtf', '.odt']:
+            return 'document'
+        
+        # Spreadsheet extensions
+        elif ext in ['.csv', '.xls', '.xlsx', '.ods']:
+            return 'spreadsheet'
+        
+        # Archive extensions
+        elif ext in ['.zip', '.rar', '.7z', '.tar', '.gz', '.bz2']:
+            return 'archive'
+        
+        return 'other'
+    
     def save(self, *args, **kwargs):
         if self.file:
             self.file_size = self.file.size
+            
+            # Auto-detect material type if not set or set to 'other'
+            if not self.material_type or self.material_type == 'other':
+                self.material_type = self._detect_material_type()
+        
         super().save(*args, **kwargs)
     
     @property
@@ -292,6 +340,9 @@ class Event(models.Model):
         null=True,
         help_text="Upload an image for the event (flyer, poster, banner)",
     )
+
+    class Meta:
+        ordering = ['-date']  # Most recent events first
 
     def __str__(self):
         return self.title

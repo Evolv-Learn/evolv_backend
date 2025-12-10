@@ -31,8 +31,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 # Let the parent class handle invalid credentials
                 return super().post(request, *args, **kwargs)
         
-        # Check if email is verified
-        if not user.is_email_verified:
+        # Check if email is verified (skip for superusers and staff)
+        if not user.is_email_verified and not user.is_superuser and not user.is_staff:
             return Response(
                 {
                     "detail": "Please verify your email before logging in. Check your inbox for the verification link.",

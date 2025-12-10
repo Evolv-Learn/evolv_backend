@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from .models import (
     Student, StudentSelection, Course, Event, 
-    LearningSchedule, Alumni, Review
+    LearningSchedule, Alumni, Review, CourseEnrollment, CourseMaterial
 )
 from .serializers import (
     StudentReadSerializer, StudentSelectionSerializer,
@@ -270,7 +270,7 @@ class EnrollScheduleView(APIView):
 
 class LearningMaterialsView(APIView):
     """
-    Get learning materials (GitHub, Discord, etc.)
+    Get learning materials for approved courses
     GET /api/v1/students/me/learning-materials/
     """
     permission_classes = [IsAuthenticated]
@@ -284,40 +284,76 @@ class LearningMaterialsView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Check if application is approved
-        selection_steps = StudentSelection.objects.filter(student=student)
-        total_steps = selection_steps.count()
-        completed_steps = selection_steps.filter(status="Completed").count()
+        # Get approved course enrollments
+        approved_enrollments = CourseEnrollment.objects.filter(
+            student=student,
+            status='Approved'
+        ).select_related('course')
 
-        if total_steps == 0 or completed_steps < total_steps:
-            return Response({
-                "access_granted": False,
-                "message": "Complete your application to access learning materials.",
-                "materials": None
+        if not approved_enrollments.exists():
+            return Response(
+                {"detail": "You do not have any approved course enrollments yet."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get course IDs and courses
+        approved_course_ids = [enrollment.course.id for enrollment in approved_enrollments]
+        approved_courses = [enrollment.course for enrollment in approved_enrollments]
+
+        # Fetch materials for approved courses
+        materials = CourseMaterial.objects.filter(
+            course_id__in=approved_course_ids
+        ).select_related('course', 'uploaded_by').order_by('-uploaded_at')
+
+        # Serialize materials
+        materials_data = []
+        for material in materials:
+            materials_data.append({
+                'id': material.id,
+                'title': material.title,
+                'description': material.description,
+                'material_type': material.material_type,
+                'file_url': request.build_absolute_uri(material.file.url) if material.file else None,
+                'file_size': material.get_file_size_display(),
+                'file_extension': material.get_file_extension(),
+                'course_id': material.course.id,
+                'course_name': material.course.name,
+                'uploaded_at': material.uploaded_at,
+                'uploaded_by': material.uploaded_by.username if material.uploaded_by else None,
             })
+
+        # Collect community links from all approved courses
+        community_links = {}
+        
+        # Get GitHub and Discord links from courses
+        github_links = []
+        discord_links = []
+        
+        for course in approved_courses:
+            if course.github_repository:
+                github_links.append(course.github_repository)
+            if course.discord_community:
+                discord_links.append(course.discord_community)
+        
+        # Use the first available link for each type
+        if github_links:
+            community_links["github"] = {
+                "url": github_links[0],
+                "description": "Access course code, projects, and resources"
+            }
+        
+        if discord_links:
+            community_links["discord"] = {
+                "url": discord_links[0],
+                "description": "Join our Discord community and get support"
+            }
 
         # Return learning materials
         return Response({
             "access_granted": True,
-            "message": "You have access to all learning materials!",
-            "materials": {
-                "github": {
-                    "url": "https://github.com/your-org/learning-materials",
-                    "description": "Access course code, projects, and resources"
-                },
-                "discord": {
-                    "url": "https://discord.gg/ksa9s6P95N",
-                    "description": "Join our Discord community and get support"
-                },
-                "video_materials": {
-                    "url": "https://youtube.com/playlist/your-playlist",
-                    "description": "Watch video tutorials and lectures"
-                },
-                "documentation": {
-                    "url": "https://docs.yoursite.com",
-                    "description": "Read comprehensive documentation"
-                }
-            }
+            "message": "You have access to learning materials for your approved courses!",
+            "results": materials_data,
+            "community_links": community_links if community_links else None
         })
 
 

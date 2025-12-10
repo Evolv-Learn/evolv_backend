@@ -8,6 +8,7 @@ from django.conf.urls.static import static
 
 from .views import (
     ProfileDetailView,
+    PublicInstructorListView,
     PublicInstructorProfileView,
     LocationListCreateView,
     LocationDetailView,
@@ -73,6 +74,7 @@ urlpatterns = [
     path("resend-verification/", resend_verification, name="resend-verification"),
     path("profile/", ProfileDetailView.as_view(), name="profile-detail"),
     path("users/me/", current_user, name="current-user"),
+    path("instructors/", PublicInstructorListView.as_view(), name="public-instructors-list"),
     path("instructors/<int:user_id>/profile/", PublicInstructorProfileView.as_view(), name="public-instructor-profile"),
 
     path("admin/profiles/", AdminProfileListView.as_view(), name="admin-profile-list"),

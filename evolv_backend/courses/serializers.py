@@ -93,7 +93,17 @@ class AdminProfileUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ["id", "user", "role"]
+        fields = [
+            "id", 
+            "user", 
+            "role", 
+            "title", 
+            "bio", 
+            "email", 
+            "twitter_url", 
+            "linkedin_url", 
+            "profile_picture"
+        ]
 
 
 class RegisterUserSerializer(serializers.Serializer):

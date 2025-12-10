@@ -78,6 +78,14 @@ class ProfileDetailView(generics.RetrieveUpdateAPIView):
         return Response(data)
 
 
+class PublicInstructorListView(generics.ListAPIView):
+    """Public endpoint to list instructors for homepage"""
+    permission_classes = [permissions.AllowAny]
+    serializer_class = ProfileSerializer
+    queryset = Profile.objects.select_related("user").filter(role="Instructor")
+    ordering = ["user__first_name"]
+
+
 class AdminProfileListView(generics.ListAPIView):
     permission_classes = [IsAdmin]
     serializer_class = ProfileSerializer
@@ -750,11 +758,12 @@ class MyStudentView(APIView):
         return Response(read_serializer.data)
 
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
 def verify_email(request):
     """Verify user email with token"""
-    token = request.data.get('token')
+    # Support both GET (from email link) and POST (from API call)
+    token = request.query_params.get('token') or request.data.get('token')
     
     if not token:
         return Response(
