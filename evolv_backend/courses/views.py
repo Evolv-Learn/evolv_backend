@@ -6,11 +6,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .utils import send_welcome_email
 from .throttles import RegisterRateThrottle, ContactUsRateThrottle
 
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
