@@ -844,6 +844,76 @@ def resend_verification(request):
         )
 
 
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def create_admin(request):
+    """Create a new admin user"""
+    try:
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+        first_name = request.data.get('first_name', '')
+        last_name = request.data.get('last_name', '')
+        
+        # Validate required fields
+        if not all([username, email, password]):
+            return Response(
+                {'error': 'Username, email, and password are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if user already exists
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {'error': 'Username already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if User.objects.filter(email=email).exists():
+            return Response(
+                {'error': 'Email already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Create admin user
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            is_staff=True,
+            is_superuser=True,
+            is_email_verified=True  # Admin accounts are pre-verified
+        )
+        
+        # Create profile
+        from .models import Profile
+        Profile.objects.create(
+            user=user,
+            role='Instructor'  # Admins can also be instructors
+        )
+        
+        return Response({
+            'message': 'Admin account created successfully',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser
+            }
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to create admin account: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 
 class CourseMaterialListCreateView(generics.ListCreateAPIView):
     serializer_class = CourseMaterialSerializer

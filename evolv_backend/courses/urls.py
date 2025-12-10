@@ -39,6 +39,7 @@ from .views import (
     event_calendar,
     verify_email,
     resend_verification,
+    create_admin,
     AboutUsDetailView,
     TeamMemberListCreateView,
     CoreValueListCreateView,
@@ -79,6 +80,7 @@ urlpatterns = [
 
     path("admin/profiles/", AdminProfileListView.as_view(), name="admin-profile-list"),
     path("admin/users/<int:user_id>/profile/", AdminUserProfileDetailView.as_view(), name="admin-user-profile-detail"),
+    path("admin/create-admin/", create_admin, name="create-admin"),
 
     path("locations/", LocationListCreateView.as_view(), name="location-list"),
     path("locations/<int:pk>/", LocationDetailView.as_view(), name="location-detail"),

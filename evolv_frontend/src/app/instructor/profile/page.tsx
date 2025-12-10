@@ -57,7 +57,7 @@ export default function InstructorProfilePage() {
                   <img 
                     src={profile.profile_picture.startsWith('http') 
                       ? profile.profile_picture 
-                      : `http://localhost:8000${profile.profile_picture}`
+                      : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '')}${profile.profile_picture}`
                     } 
                     alt={user?.first_name || user?.username}
                     className="w-full h-full object-cover"
