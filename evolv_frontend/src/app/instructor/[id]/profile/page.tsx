@@ -90,7 +90,7 @@ export default function PublicInstructorProfilePage() {
                   <img 
                     src={profile.profile_picture.startsWith('http') 
                       ? profile.profile_picture 
-                      : `http://localhost:8000${profile.profile_picture}`
+                      : `https://evolv-backend-e3fgbka2d2dmapcv.westeurope-01.azurewebsites.net${profile.profile_picture}`
                     } 
                     alt={profile.user?.first_name || 'Instructor'}
                     className="w-full h-full object-cover"

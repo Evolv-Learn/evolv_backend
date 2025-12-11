@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import apiClient from '@/lib/api/client';
 
 interface Instructor {
   id: number;
@@ -62,8 +63,8 @@ export default function FeaturedInstructors() {
 
   const fetchInstructors = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instructors/`);
-      const data = await response.json();
+      const response = await apiClient.get('/instructors/');
+      const data = response.data;
       setInstructors(data.results || data);
     } catch (error) {
       console.error('Failed to fetch instructors:', error);

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://evolv-backend-e3fgbka2d2dmapcv.westeurope-01.azurewebsites.net/api/v1';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import apiClient from '@/lib/api/client';
 
 interface Course {
   id: number;
@@ -38,16 +39,10 @@ export default function CourseApprovalsPage() {
   const fetchCourses = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/courses/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Handle both paginated and non-paginated responses
-        const coursesList = data.results || data;
+      const response = await apiClient.get('/courses/');
+      
+      // Handle both paginated and non-paginated responses
+      const coursesList = response.data.results || response.data;
         
         // Map courses to include approval_status (default to 'Pending' - awaiting admin review)
         const coursesWithStatus = coursesList.map((course: any) => ({

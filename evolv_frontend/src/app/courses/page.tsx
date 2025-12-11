@@ -53,8 +53,8 @@ function CoursesContent() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/?is_active=true`);
-      const data = await response.json();
+      const response = await apiClient.get('/categories/?is_active=true');
+      const data = response.data;
       setCategories(data.results || data);
     } catch (error) {
       console.error('Failed to fetch categories:', error);

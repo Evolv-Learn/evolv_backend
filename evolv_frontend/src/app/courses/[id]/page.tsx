@@ -222,7 +222,7 @@ export default function CourseDetailPage() {
                             <img 
                               src={instructorProfile.profile_picture.startsWith('http') 
                                 ? instructorProfile.profile_picture 
-                                : `http://localhost:8000${instructorProfile.profile_picture}`
+                                : `https://evolv-backend-e3fgbka2d2dmapcv.westeurope-01.azurewebsites.net${instructorProfile.profile_picture}`
                               } 
                               alt={instructorProfile.user?.first_name || 'Instructor'}
                               className="w-full h-full object-cover"

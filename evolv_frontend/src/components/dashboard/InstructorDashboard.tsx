@@ -97,7 +97,7 @@ export default function InstructorDashboard() {
                   <img 
                     src={profile.profile_picture.startsWith('http') 
                       ? profile.profile_picture 
-                      : `http://localhost:8000${profile.profile_picture}`
+                      : `https://evolv-backend-e3fgbka2d2dmapcv.westeurope-01.azurewebsites.net${profile.profile_picture}`
                     } 
                     alt={user?.first_name || user?.username}
                     className="w-full h-full object-cover"
