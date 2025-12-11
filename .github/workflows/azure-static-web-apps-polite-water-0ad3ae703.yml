@@ -19,6 +19,20 @@ jobs:
         with:
           submodules: true
           lfs: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.18.0'
+          cache: 'npm'
+          cache-dependency-path: evolv_frontend/package-lock.json
+      - name: Install dependencies
+        run: |
+          cd evolv_frontend
+          npm ci
+      - name: Build Next.js app
+        run: |
+          cd evolv_frontend
+          npm run build
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -31,6 +45,7 @@ jobs:
           app_location: "/evolv_frontend" # App source code path
           api_location: "" # Api source code path - optional
           output_location: "out" # Built app content directory - optional
+          skip_app_build: true # We handle the build ourselves with proper Node.js version
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
