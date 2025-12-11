@@ -7,11 +7,6 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import apiClient from '@/lib/api/client';
 
-// Required for static export
-export async function generateStaticParams() {
-  return [];
-}
-
 export default function AdminEditUserProfilePage() {
   const router = useRouter();
   const params = useParams();

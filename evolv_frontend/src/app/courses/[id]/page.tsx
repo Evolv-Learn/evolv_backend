@@ -7,11 +7,6 @@ import { Button } from '@/components/ui/Button';
 import apiClient from '@/lib/api/client';
 import { useAuthStore } from '@/store/auth';
 
-// Required for static export
-export async function generateStaticParams() {
-  return [];
-}
-
 export default function CourseDetailPage() {
   const params = useParams();
   const router = useRouter();
