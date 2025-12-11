@@ -6,6 +6,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import apiClient from '@/lib/api/client';
 
+// Required for static export
+export async function generateStaticParams() {
+  return [];
+}
+
 export default function PublicInstructorProfilePage() {
   const params = useParams();
   const instructorId = params.id;
