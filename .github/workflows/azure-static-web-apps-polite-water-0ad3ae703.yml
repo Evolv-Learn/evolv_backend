@@ -33,6 +33,9 @@ jobs:
           output_location: "" # Let Azure handle the build output detection
           skip_app_build: false # Let Azure handle the build
           ###### End of Repository/Build Configurations ######
+        env:
+          NODE_VERSION: "20.18.0"
+          WEBSITE_NODE_DEFAULT_VERSION: "20.18.0"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'

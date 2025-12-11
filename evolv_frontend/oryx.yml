@@ -1,0 +1,10 @@
+build:
+  commands: |
+    echo "Using Node.js version:"
+    node --version
+    npm --version
+    npm ci
+    npm run build
+platforms:
+  - name: nodejs
+    version: 20.18.0
