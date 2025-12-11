@@ -3,25 +3,15 @@
     "apiRuntime": "node:20"
   },
   "navigationFallback": {
-    "rewrite": "/index.html",
-    "exclude": ["/images/*.{png,jpg,gif}", "/css/*", "/_next/*"]
-  },
-  "mimeTypes": {
-    ".json": "application/json"
+    "rewrite": "/",
+    "exclude": ["/_next/*", "/favicon.ico"]
   },
   "routes": [
     {
       "route": "/_next/*",
-      "allowedRoles": ["anonymous"]
-    },
-    {
-      "route": "/api/*",
-      "allowedRoles": ["anonymous"]
-    },
-    {
-      "route": "/*",
-      "serve": "/index.html",
-      "statusCode": 200
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      }
     }
   ]
 }
