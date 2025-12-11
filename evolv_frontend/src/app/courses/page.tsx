@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { coursesApi } from '@/lib/api/courses';
+import apiClient from '@/lib/api/client';
 
 interface Course {
   id: number;
