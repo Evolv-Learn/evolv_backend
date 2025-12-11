@@ -44,18 +44,15 @@ export default function CourseApprovalsPage() {
       // Handle both paginated and non-paginated responses
       const coursesList = response.data.results || response.data;
         
-        // Map courses to include approval_status (default to 'Pending' - awaiting admin review)
-        const coursesWithStatus = coursesList.map((course: any) => ({
-          ...course,
-          approval_status: course.approval_status || 'Pending',
-          instructor: course.instructor_name || course.instructor || 'Not assigned',
-          instructor_id: course.instructor_id || course.instructor,
-        }));
-        
-        setCourses(coursesWithStatus);
-      } else {
-        console.error('Failed to fetch courses:', response.status);
-      }
+      // Map courses to include approval_status (default to 'Pending' - awaiting admin review)
+      const coursesWithStatus = coursesList.map((course: any) => ({
+        ...course,
+        approval_status: course.approval_status || 'Pending',
+        instructor: course.instructor_name || course.instructor || 'Not assigned',
+        instructor_id: course.instructor_id || course.instructor,
+      }));
+      
+      setCourses(coursesWithStatus);
     } catch (error) {
       console.error('Error fetching courses:', error);
     } finally {
