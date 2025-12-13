@@ -86,6 +86,9 @@ AUTHENTICATION_BACKENDS = [
 _frontends = [
     o.strip() for o in os.getenv("FRONTEND_ORIGINS", "").split(",") if o.strip()
 ]
+
+# Temporarily allow all origins for testing - REMOVE IN PRODUCTION
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = _frontends
 CORS_ALLOW_CREDENTIALS = False
 CSRF_TRUSTED_ORIGINS = [
