@@ -3,12 +3,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import FeaturedCourses from '@/components/home/FeaturedCourses';
 import FeaturedInstructors from '@/components/home/FeaturedInstructors';
-import ApiDebug from '@/components/debug/ApiDebug';
 
 export default function Home() {
   return (
     <main className="min-h-screen">
-      <ApiDebug />
       {/* Hero Section with Background Image */}
       <section className="relative min-h-[700px] md:min-h-[800px] flex items-center overflow-hidden">
         <div className="kente-strip absolute top-0 left-0 right-0 z-10"></div>
