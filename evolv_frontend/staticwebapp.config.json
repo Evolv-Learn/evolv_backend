@@ -3,15 +3,22 @@
     "apiRuntime": "node:20"
   },
   "navigationFallback": {
-    "rewrite": "/",
-    "exclude": ["/_next/*", "/favicon.ico"]
+    "rewrite": "/index.html"
+  },
+  "mimeTypes": {
+    ".js": "text/javascript",
+    ".json": "application/json"
   },
   "routes": [
     {
-      "route": "/_next/*",
+      "route": "/_next/static/*",
       "headers": {
         "cache-control": "public, max-age=31536000, immutable"
       }
+    },
+    {
+      "route": "/_next/*",
+      "allowedRoles": ["anonymous"]
     }
   ],
   "environmentVariables": {

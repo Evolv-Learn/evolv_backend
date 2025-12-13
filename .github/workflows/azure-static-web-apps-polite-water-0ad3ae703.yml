@@ -30,7 +30,7 @@ jobs:
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
           app_location: "/evolv_frontend" # App source code path
           api_location: "" # Api source code path - optional
-          output_location: "" # Let Azure handle the build output detection
+          output_location: ".next" # Next.js build output
           skip_app_build: false # Let Azure handle the build
           ###### End of Repository/Build Configurations ######
         env:
