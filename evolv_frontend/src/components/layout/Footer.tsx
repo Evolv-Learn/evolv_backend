@@ -12,7 +12,7 @@ export const Footer = () => {
           <div>
             <h3 className="text-xl font-heading font-bold mb-4">Evolv</h3>
             <p className="text-gray-300">
-              Empowering Nigerians with world-class tech education for a brighter future.
+              Research methods training for African scientists. Practical, affordable, and built by someone who understands the journey.
             </p>
           </div>
 
@@ -22,7 +22,7 @@ export const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link href="/courses" className="text-gray-300 hover:text-primary-gold transition-colors">
-                  Courses
+                  Programmes
                 </Link>
               </li>
               <li>
@@ -32,12 +32,17 @@ export const Footer = () => {
               </li>
               <li>
                 <Link href="/about" className="text-gray-300 hover:text-primary-gold transition-colors">
-                  About Us
+                  About
                 </Link>
               </li>
               <li>
                 <Link href="/alumni" className="text-gray-300 hover:text-primary-gold transition-colors">
                   Alumni
+                </Link>
+              </li>
+              <li>
+                <Link href="/admission" className="text-gray-300 hover:text-primary-gold transition-colors">
+                  Apply
                 </Link>
               </li>
             </ul>
@@ -98,7 +103,7 @@ export const Footer = () => {
         </div>
 
         <div className="border-t border-gray-600 mt-8 pt-8 text-center text-gray-300">
-          <p>&copy; {currentYear} Evolv. All rights reserved. Made with ❤️ in Europe 🇪🇺</p>
+          <p>&copy; {currentYear} Evolv. All rights reserved. Built with purpose, from Nigeria to the world 🇳🇬</p>
         </div>
       </div>
     </footer>

@@ -8,23 +8,15 @@ from django.conf.urls.static import static
 
 from .views import (
     ProfileDetailView,
-    PublicInstructorListView,
-    PublicInstructorProfileView,
     LocationListCreateView,
     LocationDetailView,
     PartnerListCreateView,
     PartnerDetailView,
-    CourseCategoryListCreateView,
-    CourseCategoryDetailView,
     CourseListCreateView,
     CourseDetailView,
-    CourseMaterialListCreateView,
-    CourseMaterialDetailView,
     StudentListCreateView,
     TeamMemberDetailView,
     StudentDetailView,
-    CourseEnrollmentListView,
-    CourseEnrollmentDetailView,
     SelectionProcedureDetailView,
     SelectionProcedureListCreateView,
     StudentSelectionListCreateView,
@@ -36,10 +28,8 @@ from .views import (
     AlumniDetailView,
     EventListCreateView,
     EventDetailView,
-    event_calendar,
     verify_email,
     resend_verification,
-    create_admin,
     AboutUsDetailView,
     TeamMemberListCreateView,
     CoreValueListCreateView,
@@ -54,7 +44,7 @@ from .views import (
     LessonDetailView,
     RegisterUserView,
     AdminProfileListView,
-    AdminUserProfileDetailView, MyStudentView, health_check, current_user
+    AdminUserProfileDetailView, MyStudentView, health_check
 )
 
 from .views_extended import (
@@ -65,6 +55,14 @@ from .views_extended import (
     LearningMaterialsView,
     my_courses,
     my_events,
+    LessonProgressView,
+    LiveSessionListView,
+    LiveSessionDetailView,
+    AssignmentListCreateView,
+    AssignmentDetailView,
+    AdminAssignmentListView,
+    AdminAssignmentDetailView,
+    CourseCurriculumView,
 )
 
 app_name = "courses"
@@ -74,13 +72,9 @@ urlpatterns = [
     path("verify-email/", verify_email, name="verify-email"),
     path("resend-verification/", resend_verification, name="resend-verification"),
     path("profile/", ProfileDetailView.as_view(), name="profile-detail"),
-    path("users/me/", current_user, name="current-user"),
-    path("instructors/", PublicInstructorListView.as_view(), name="public-instructors-list"),
-    path("instructors/<int:user_id>/profile/", PublicInstructorProfileView.as_view(), name="public-instructor-profile"),
 
     path("admin/profiles/", AdminProfileListView.as_view(), name="admin-profile-list"),
     path("admin/users/<int:user_id>/profile/", AdminUserProfileDetailView.as_view(), name="admin-user-profile-detail"),
-    path("admin/create-admin/", create_admin, name="create-admin"),
 
     path("locations/", LocationListCreateView.as_view(), name="location-list"),
     path("locations/<int:pk>/", LocationDetailView.as_view(), name="location-detail"),
@@ -88,13 +82,9 @@ urlpatterns = [
     path("partners/", PartnerListCreateView.as_view(), name="partner-list"),
     path("partners/<int:pk>/", PartnerDetailView.as_view(), name="partner-detail"),
 
-    path("categories/", CourseCategoryListCreateView.as_view(), name="category-list"),
-    path("categories/<int:pk>/", CourseCategoryDetailView.as_view(), name="category-detail"),
-
     path("courses/", CourseListCreateView.as_view(), name="course-list"),
     path("courses/<int:pk>/", CourseDetailView.as_view(), name="course-detail"),
-    path("courses/<int:course_id>/materials/", CourseMaterialListCreateView.as_view(), name="course-materials-list"),
-    path("course-materials/<int:pk>/", CourseMaterialDetailView.as_view(), name="course-material-detail"),
+    path("courses/<int:pk>/curriculum/", CourseCurriculumView.as_view(), name="course-curriculum"),
 
     path("selection-procedures/", SelectionProcedureListCreateView.as_view(), name="selectionprocedure-list"),
     path("selection-procedures/<int:pk>/", SelectionProcedureDetailView.as_view(), name="selectionprocedure-detail"),
@@ -110,7 +100,6 @@ urlpatterns = [
     path("alumni/<int:pk>/", AlumniDetailView.as_view(), name="alumni-detail"),
 
     path("events/", EventListCreateView.as_view(), name="event-list"),
-    path("events/calendar/", event_calendar, name="event-calendar"),
     path("events/<int:pk>/", EventDetailView.as_view(), name="event-detail"),
 
     path("about-us/", AboutUsDetailView.as_view(), name="about-us"),
@@ -138,16 +127,22 @@ urlpatterns = [
     path("students/<int:pk>/", StudentDetailView.as_view(), name="student-detail"),
     path("students/me/", MyStudentView.as_view(), name="student-me"),
 
-    path("enrollments/", CourseEnrollmentListView.as_view(), name="enrollment-list"),
-    path("enrollments/<int:pk>/", CourseEnrollmentDetailView.as_view(), name="enrollment-detail"),
-
     path("students/me/dashboard/", StudentDashboardView.as_view(), name="student-dashboard"),
     path("students/me/application-status/", StudentApplicationStatusView.as_view(), name="application-status"),
     path("students/me/enroll/<int:schedule_id>/", EnrollScheduleView.as_view(), name="enroll-schedule"),
     path("students/me/learning-materials/", LearningMaterialsView.as_view(), name="learning-materials"),
     path("students/me/courses/", my_courses, name="my-courses"),
     path("students/me/events/", my_events, name="my-events"),
+    path("students/me/progress/", LessonProgressView.as_view(), name="lesson-progress"),
+    path("students/me/assignments/", AssignmentListCreateView.as_view(), name="my-assignments"),
+    path("students/me/assignments/<int:pk>/", AssignmentDetailView.as_view(), name="assignment-detail"),
+
+    path("live-sessions/", LiveSessionListView.as_view(), name="live-session-list"),
+    path("live-sessions/<int:pk>/", LiveSessionDetailView.as_view(), name="live-session-detail"),
+
     path("admin/dashboard/", AdminDashboardView.as_view(), name="admin-dashboard"),
+    path("admin/assignments/", AdminAssignmentListView.as_view(), name="admin-assignments"),
+    path("admin/assignments/<int:pk>/", AdminAssignmentDetailView.as_view(), name="admin-assignment-detail"),
 
     path("health/", health_check, name="health-check"),
 ]

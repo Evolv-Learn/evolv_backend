@@ -5,17 +5,20 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, generics
 from django.db.models import Count, Q
 from django.utils import timezone
 
 from .models import (
-    Student, StudentSelection, Course, Event, 
-    LearningSchedule, Alumni, Review, CourseEnrollment, CourseMaterial
+    Student, StudentSelection, Course, Event,
+    LearningSchedule, Alumni, Review,
+    LessonProgress, LiveSession, Assignment, Module, Lesson,
 )
 from .serializers import (
     StudentReadSerializer, StudentSelectionSerializer,
-    CourseReadSerializer, EventReadSerializer
+    CourseReadSerializer, EventReadSerializer,
+    LessonProgressSerializer, LiveSessionSerializer,
+    AssignmentSerializer, CoursePublicDetailSerializer,
 )
 
 
@@ -270,7 +273,7 @@ class EnrollScheduleView(APIView):
 
 class LearningMaterialsView(APIView):
     """
-    Get learning materials for approved courses
+    Get learning materials (GitHub, Discord, etc.)
     GET /api/v1/students/me/learning-materials/
     """
     permission_classes = [IsAuthenticated]
@@ -284,76 +287,40 @@ class LearningMaterialsView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Get approved course enrollments
-        approved_enrollments = CourseEnrollment.objects.filter(
-            student=student,
-            status='Approved'
-        ).select_related('course')
+        # Check if application is approved
+        selection_steps = StudentSelection.objects.filter(student=student)
+        total_steps = selection_steps.count()
+        completed_steps = selection_steps.filter(status="Completed").count()
 
-        if not approved_enrollments.exists():
-            return Response(
-                {"detail": "You do not have any approved course enrollments yet."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        # Get course IDs and courses
-        approved_course_ids = [enrollment.course.id for enrollment in approved_enrollments]
-        approved_courses = [enrollment.course for enrollment in approved_enrollments]
-
-        # Fetch materials for approved courses
-        materials = CourseMaterial.objects.filter(
-            course_id__in=approved_course_ids
-        ).select_related('course', 'uploaded_by').order_by('-uploaded_at')
-
-        # Serialize materials
-        materials_data = []
-        for material in materials:
-            materials_data.append({
-                'id': material.id,
-                'title': material.title,
-                'description': material.description,
-                'material_type': material.material_type,
-                'file_url': request.build_absolute_uri(material.file.url) if material.file else None,
-                'file_size': material.get_file_size_display(),
-                'file_extension': material.get_file_extension(),
-                'course_id': material.course.id,
-                'course_name': material.course.name,
-                'uploaded_at': material.uploaded_at,
-                'uploaded_by': material.uploaded_by.username if material.uploaded_by else None,
+        if total_steps == 0 or completed_steps < total_steps:
+            return Response({
+                "access_granted": False,
+                "message": "Complete your application to access learning materials.",
+                "materials": None
             })
-
-        # Collect community links from all approved courses
-        community_links = {}
-        
-        # Get GitHub and Discord links from courses
-        github_links = []
-        discord_links = []
-        
-        for course in approved_courses:
-            if course.github_repository:
-                github_links.append(course.github_repository)
-            if course.discord_community:
-                discord_links.append(course.discord_community)
-        
-        # Use the first available link for each type
-        if github_links:
-            community_links["github"] = {
-                "url": github_links[0],
-                "description": "Access course code, projects, and resources"
-            }
-        
-        if discord_links:
-            community_links["discord"] = {
-                "url": discord_links[0],
-                "description": "Join our Discord community and get support"
-            }
 
         # Return learning materials
         return Response({
             "access_granted": True,
-            "message": "You have access to learning materials for your approved courses!",
-            "results": materials_data,
-            "community_links": community_links if community_links else None
+            "message": "You have access to all learning materials!",
+            "materials": {
+                "github": {
+                    "url": "https://github.com/your-org/learning-materials",
+                    "description": "Access course code, projects, and resources"
+                },
+                "discord": {
+                    "url": "https://discord.gg/ksa9s6P95N",
+                    "description": "Join our Discord community and get support"
+                },
+                "video_materials": {
+                    "url": "https://youtube.com/playlist/your-playlist",
+                    "description": "Watch video tutorials and lectures"
+                },
+                "documentation": {
+                    "url": "https://docs.yoursite.com",
+                    "description": "Read comprehensive documentation"
+                }
+            }
         })
 
 
@@ -396,3 +363,187 @@ def my_events(request):
             {"detail": "Student profile not found."},
             status=status.HTTP_404_NOT_FOUND
         )
+
+
+# ── Phase 2: Lesson Progress ───────────────────────────────────────────────────
+
+class LessonProgressView(APIView):
+    """
+    GET  /api/v1/students/me/progress/   — list all progress for the logged-in student
+    POST /api/v1/students/me/progress/   — mark a lesson complete (or update notes)
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            student = request.user.student
+        except Student.DoesNotExist:
+            return Response({"detail": "Student profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        progress = LessonProgress.objects.filter(student=student).select_related("lesson", "lesson__module")
+        serializer = LessonProgressSerializer(progress, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        """Mark a lesson as complete, or update personal notes."""
+        try:
+            student = request.user.student
+        except Student.DoesNotExist:
+            return Response({"detail": "Student profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        lesson_id = request.data.get("lesson")
+        if not lesson_id:
+            return Response({"detail": "lesson field is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            lesson = Lesson.objects.get(pk=lesson_id)
+        except Lesson.DoesNotExist:
+            return Response({"detail": "Lesson not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        progress, _ = LessonProgress.objects.get_or_create(student=student, lesson=lesson)
+        if not progress.completed_at:
+            progress.completed_at = timezone.now()
+        if "notes" in request.data:
+            progress.notes = request.data["notes"]
+        progress.save()
+
+        serializer = LessonProgressSerializer(progress)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# ── Phase 2: Live Sessions ─────────────────────────────────────────────────────
+
+class LiveSessionListView(generics.ListCreateAPIView):
+    """
+    GET  /api/v1/live-sessions/   — students see sessions for their enrolled schedules
+    POST /api/v1/live-sessions/   — admin creates a session (admin only)
+    """
+    serializer_class = LiveSessionSerializer
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [IsAuthenticated()]
+        return [IsAdminUser()]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return LiveSession.objects.select_related("schedule", "module").all()
+        try:
+            enrolled_ids = user.student.schedules.values_list("id", flat=True)
+            return LiveSession.objects.filter(schedule_id__in=enrolled_ids).select_related("schedule", "module")
+        except Exception:
+            return LiveSession.objects.none()
+
+
+class LiveSessionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    GET/PATCH/DELETE /api/v1/live-sessions/<pk>/
+    Students can only read; admin can update/delete.
+    """
+    serializer_class = LiveSessionSerializer
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [IsAuthenticated()]
+        return [IsAdminUser()]
+
+    def get_queryset(self):
+        return LiveSession.objects.all()
+
+
+# ── Phase 2: Assignments ───────────────────────────────────────────────────────
+
+class AssignmentListCreateView(APIView):
+    """
+    GET  /api/v1/students/me/assignments/   — list student's assignments
+    POST /api/v1/students/me/assignments/   — submit an assignment
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            student = request.user.student
+        except Student.DoesNotExist:
+            return Response({"detail": "Student profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        assignments = Assignment.objects.filter(student=student).select_related("module")
+        serializer = AssignmentSerializer(assignments, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        try:
+            student = request.user.student
+        except Student.DoesNotExist:
+            return Response({"detail": "Student profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AssignmentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(student=student)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AssignmentDetailView(generics.RetrieveUpdateAPIView):
+    """
+    GET/PATCH /api/v1/students/me/assignments/<pk>/
+    Student can update github_url/notes; instructor_feedback is admin-only via admin endpoint.
+    """
+    serializer_class = AssignmentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Assignment.objects.all()
+        try:
+            return Assignment.objects.filter(student=self.request.user.student)
+        except Exception:
+            return Assignment.objects.none()
+
+
+class AdminAssignmentListView(generics.ListAPIView):
+    """
+    GET /api/v1/admin/assignments/   — admin sees all submissions with feedback controls
+    """
+    permission_classes = [IsAdminUser]
+    serializer_class = AssignmentSerializer
+    queryset = Assignment.objects.select_related("module", "student").all()
+
+
+class AdminAssignmentDetailView(generics.RetrieveUpdateAPIView):
+    """
+    GET/PATCH /api/v1/admin/assignments/<pk>/   — admin can update status and add feedback
+    """
+    permission_classes = [IsAdminUser]
+    serializer_class = AssignmentSerializer
+    queryset = Assignment.objects.all()
+
+    def get_serializer_class(self):
+        # Override read_only_fields for admin so they can set status & feedback
+        class AdminAssignmentSerializer(AssignmentSerializer):
+            class Meta(AssignmentSerializer.Meta):
+                read_only_fields = ["id", "submitted_at"]
+        return AdminAssignmentSerializer
+
+
+# ── Phase 2: Public curriculum view ───────────────────────────────────────────
+
+class CourseCurriculumView(APIView):
+    """
+    Public endpoint — no auth required.
+    GET /api/v1/courses/<pk>/curriculum/
+    Returns course details with nested schedules → modules → lessons for the marketing page.
+    """
+    permission_classes = []
+
+    def get(self, request, pk):
+        try:
+            course = Course.objects.prefetch_related(
+                "schedules__modules__lessons",
+                "schedules__location",
+            ).get(pk=pk)
+        except Course.DoesNotExist:
+            return Response({"detail": "Course not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CoursePublicDetailSerializer(course)
+        return Response(serializer.data)

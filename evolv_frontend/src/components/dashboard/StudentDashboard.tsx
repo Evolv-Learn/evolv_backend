@@ -243,6 +243,15 @@ export default function StudentDashboard() {
                 </div>
               </Link>
 
+              {/* Assignments */}
+              <Link href="/dashboard/assignments">
+                <div className="bg-gradient-to-br from-hausa-indigo to-purple-900 rounded-xl p-6 text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
+                  <div className="text-4xl mb-3">📝</div>
+                  <h3 className="text-xl font-bold mb-2">Assignments</h3>
+                  <p className="text-sm text-gray-200">Submit your exercise links and view instructor feedback</p>
+                </div>
+              </Link>
+
               {/* Learning Materials - Always visible */}
               {applicationStatus === 'Approved' ? (
                 <Link href="/materials">

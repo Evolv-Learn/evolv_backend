@@ -30,24 +30,12 @@ class Profile(models.Model):
         ("Student", "Student"),
         ("Instructor", "Instructor"),
         ("Alumni", "Alumni"),
-        ("Admin", "Admin"),
     ]
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
     )
     role = models.CharField(max_length=20, choices=USER_ROLES)
-    profile_picture = models.ImageField(
-        upload_to="profiles/",
-        blank=True,
-        null=True,
-        help_text="Profile picture"
-    )
-    title = models.CharField(max_length=200, blank=True, null=True, help_text="Professional title (e.g., Data Science Instructor)")
-    bio = models.TextField(blank=True, null=True, help_text="Professional biography")
-    email = models.EmailField(blank=True, null=True, help_text="Contact email")
-    twitter_url = models.URLField(blank=True, null=True, help_text="Twitter/X profile URL")
-    linkedin_url = models.URLField(blank=True, null=True, help_text="LinkedIn profile URL")
 
     def __str__(self):
         return f"{self.user.username} ({self.role})"
@@ -90,38 +78,16 @@ class Partner(models.Model):
         return self.name
 
 
-class CourseCategory(models.Model):
-    """Course categories that can be managed by admins"""
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True, null=True)
-    icon = models.CharField(max_length=10, blank=True, null=True, help_text="Emoji icon for the category")
-    image = models.ImageField(
-        upload_to="categories/",
-        blank=True,
-        null=True,
-        help_text="Category image/banner"
-    )
-    color = models.CharField(max_length=50, blank=True, null=True, help_text="CSS color class (e.g., bg-primary-gold)")
-    is_active = models.BooleanField(default=True)
-    order = models.IntegerField(default=0, help_text="Display order")
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        ordering = ['order', 'name']
-        verbose_name_plural = "Course Categories"
-    
-    def __str__(self):
-        return self.name
-
-
 class Course(models.Model):
+    CATEGORY_CHOICES = [
+        ("Quantitative Methods", "Quantitative Methods"),
+        ("Qualitative Methods", "Qualitative Methods"),
+        ("Spatial Analysis", "Spatial Analysis"),
+        ("Research Productivity", "Research Productivity"),
+    ]
+
     name = models.CharField(max_length=255)
-    category = models.ForeignKey(
-        CourseCategory,
-        on_delete=models.CASCADE,
-        related_name="courses",
-        help_text="Course category"
-    )
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     parent = models.ForeignKey(
         "self",
         null=True,
@@ -152,12 +118,6 @@ class Course(models.Model):
     selection_date = models.DateField(null=True, blank=True, help_text="Date when selections are announced")
     start_date = models.DateField(null=True, blank=True, help_text="Training start date")
     end_date = models.DateField(null=True, blank=True, help_text="Training end date")
-    
-    # Learning materials
-    github_repository = models.URLField(blank=True, null=True, help_text="GitHub repository URL")
-    discord_community = models.URLField(blank=True, null=True, help_text="Discord community invite link")
-    video_content = models.FileField(upload_to="course_videos/", blank=True, null=True, help_text="Course video file")
-    additional_materials = models.FileField(upload_to="course_materials/", blank=True, null=True, help_text="Additional materials (PDF, CSV, etc.)")
     
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -192,106 +152,6 @@ class Course(models.Model):
         if self.parent:
             return f"{self.parent.name} -> {self.name}"
         return self.name
-
-
-def course_material_upload_path(instance, filename):
-    """
-    Generate upload path based on material type
-    Structure: course_files/{material_type}/{filename}
-    """
-    # Map material types to folder names
-    folder_map = {
-        'video': 'videos',
-        'document': 'documents',
-        'spreadsheet': 'spreadsheets',
-        'archive': 'archives',
-        'other': 'others',
-    }
-    
-    folder_name = folder_map.get(instance.material_type, 'others')
-    return f'course_files/{folder_name}/{filename}'
-
-
-class CourseMaterial(models.Model):
-    """Model for storing multiple learning materials per course"""
-    MATERIAL_TYPE_CHOICES = [
-        ('video', 'Video'),
-        ('document', 'Document'),
-        ('spreadsheet', 'Spreadsheet'),
-        ('archive', 'Archive'),
-        ('other', 'Other'),
-    ]
-    
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='materials')
-    title = models.CharField(max_length=255, help_text="Material title/name")
-    description = models.TextField(blank=True, null=True, help_text="Brief description of the material")
-    material_type = models.CharField(max_length=20, choices=MATERIAL_TYPE_CHOICES, default='other')
-    file = models.FileField(upload_to=course_material_upload_path, help_text="Upload file (video, PDF, CSV, etc.)")
-    file_size = models.BigIntegerField(blank=True, null=True, help_text="File size in bytes")
-    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='uploaded_materials')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        ordering = ['-uploaded_at']
-    
-    def _detect_material_type(self):
-        """Auto-detect material type based on file extension"""
-        if not self.file:
-            return 'other'
-        
-        ext = self.get_file_extension().lower()
-        
-        # Video extensions
-        if ext in ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm', '.m4v']:
-            return 'video'
-        
-        # Document extensions (PDF, Word, PowerPoint, etc.)
-        elif ext in ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.txt', '.rtf', '.odt']:
-            return 'document'
-        
-        # Spreadsheet extensions
-        elif ext in ['.csv', '.xls', '.xlsx', '.ods']:
-            return 'spreadsheet'
-        
-        # Archive extensions
-        elif ext in ['.zip', '.rar', '.7z', '.tar', '.gz', '.bz2']:
-            return 'archive'
-        
-        return 'other'
-    
-    def save(self, *args, **kwargs):
-        if self.file:
-            self.file_size = self.file.size
-            
-            # Auto-detect material type if not set or set to 'other'
-            if not self.material_type or self.material_type == 'other':
-                self.material_type = self._detect_material_type()
-        
-        super().save(*args, **kwargs)
-    
-    @property
-    def file_size_mb(self):
-        """Return file size in MB"""
-        if self.file_size:
-            return round(self.file_size / (1024 * 1024), 2)
-        return 0
-    
-    def __str__(self):
-        return f"{self.course.name} - {self.title}"
-    
-    def get_file_extension(self):
-        import os
-        return os.path.splitext(self.file.name)[1].lower()
-    
-    def get_file_size_display(self):
-        """Return human-readable file size"""
-        size = self.file_size or 0
-        for unit in ['B', 'KB', 'MB', 'GB']:
-            if size < 1024.0:
-                return f"{size:.2f} {unit}"
-            size /= 1024.0
-        return f"{size:.2f} TB"
 
 
 class Alumni(models.Model):
@@ -341,9 +201,6 @@ class Event(models.Model):
         null=True,
         help_text="Upload an image for the event (flyer, poster, banner)",
     )
-
-    class Meta:
-        ordering = ['-date']  # Most recent events first
 
     def __str__(self):
         return self.title
@@ -570,3 +427,56 @@ class EventAttendance(models.Model):
     attended = models.BooleanField(default=False)
 
 
+class LessonProgress(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="lesson_progress")
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="progress")
+    completed_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True, help_text="Student's personal notes for this lesson")
+
+    class Meta:
+        unique_together = ["student", "lesson"]
+        ordering = ["lesson__order"]
+
+    def __str__(self):
+        return f"{self.student} — {self.lesson.title}"
+
+
+class LiveSession(models.Model):
+    schedule = models.ForeignKey(LearningSchedule, on_delete=models.CASCADE, related_name="live_sessions")
+    module = models.ForeignKey(Module, on_delete=models.SET_NULL, null=True, blank=True, related_name="live_sessions")
+    title = models.CharField(max_length=255)
+    session_date = models.DateTimeField()
+    discord_link = models.URLField(help_text="Discord channel or event link for this session")
+    recording_url = models.URLField(blank=True, null=True, help_text="Link to recording after session ends")
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["session_date"]
+
+    def __str__(self):
+        return f"{self.title} — {self.session_date.strftime('%Y-%m-%d')}"
+
+
+class Assignment(models.Model):
+    STATUS_CHOICES = [
+        ("Submitted", "Submitted"),
+        ("Under Review", "Under Review"),
+        ("Returned", "Returned"),
+        ("Passed", "Passed"),
+    ]
+
+    module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name="assignments")
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="assignments")
+    github_url = models.URLField(blank=True, help_text="Link to your R script or GitHub repository")
+    notes = models.TextField(blank=True, help_text="Any notes or questions for your instructor")
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Submitted")
+    instructor_feedback = models.TextField(blank=True)
+
+    class Meta:
+        unique_together = ["module", "student"]
+        ordering = ["-submitted_at"]
+
+    def __str__(self):
+        return f"{self.student} — {self.module.title} ({self.status})"

@@ -1,11 +1,9 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { coursesApi } from '@/lib/api/courses';
-import apiClient from '@/lib/api/client';
 
 interface Course {
   id: number;
@@ -23,27 +21,19 @@ interface Course {
   end_date: string;
 }
 
-function CoursesContent() {
-  const searchParams = useSearchParams();
+export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    // Get category from URL query parameter
-    const categoryFromUrl = searchParams.get('category');
-    if (categoryFromUrl) {
-      setSelectedCategory(categoryFromUrl);
-    }
     fetchCourses();
-    fetchCategories();
-  }, [searchParams]);
+  }, []);
 
   const fetchCourses = async () => {
     try {
-      const data = await coursesApi.getAll({ public: 'true' });
+      const data = await coursesApi.getAll();
       setCourses(data.results || data);
     } catch (error) {
       console.error('Failed to fetch courses:', error);
@@ -52,15 +42,7 @@ function CoursesContent() {
     }
   };
 
-  const fetchCategories = async () => {
-    try {
-      const response = await apiClient.get('/categories/?is_active=true');
-      const data = response.data;
-      setCategories(data.results || data);
-    } catch (error) {
-      console.error('Failed to fetch categories:', error);
-    }
-  };
+  const categories = ['all', 'Quantitative Methods', 'Qualitative Methods', 'Spatial Analysis', 'Research Productivity'];
 
   const filteredCourses = courses.filter(course => {
     const matchesCategory = selectedCategory === 'all' || course.category === selectedCategory;
@@ -70,9 +52,12 @@ function CoursesContent() {
   });
 
   const getCategoryColor = (category: string) => {
-    const categoryIndex = categories.findIndex(cat => cat.name === category);
-    const colors = ['bg-primary-gold', 'bg-igbo-red', 'bg-hausa-indigo', 'bg-success', 'bg-secondary-blue'];
-    return categoryIndex >= 0 ? colors[categoryIndex % colors.length] : 'bg-success';
+    switch (category) {
+      case 'Data & AI': return 'bg-primary-gold';
+      case 'Cybersecurity': return 'bg-igbo-red';
+      case 'Microsoft Dynamics 365': return 'bg-hausa-indigo';
+      default: return 'bg-success';
+    }
   };
 
   return (
@@ -82,10 +67,10 @@ function CoursesContent() {
         <div className="kente-strip absolute top-0 left-0 right-0"></div>
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-5xl font-heading font-bold mb-4">
-            Our Training Programs
+            Our Programmes
           </h1>
           <p className="text-xl text-gray-200 max-w-2xl mx-auto">
-            Discover world-class tech training accessible to learners worldwide
+            Research methods training designed for scientists who take their work seriously
           </p>
         </div>
       </div>
@@ -111,28 +96,17 @@ function CoursesContent() {
 
           {/* Category Filter */}
           <div className="flex flex-wrap justify-center gap-3">
-            <button
-              key="all"
-              onClick={() => setSelectedCategory('all')}
-              className={`px-6 py-2 rounded-full font-semibold transition-all ${
-                selectedCategory === 'all'
-                  ? 'bg-primary-gold text-gray-900'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              All Courses
-            </button>
             {categories.map((category) => (
               <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.name)}
+                key={category}
+                onClick={() => setSelectedCategory(category)}
                 className={`px-6 py-2 rounded-full font-semibold transition-all ${
-                  selectedCategory === category.name
+                  selectedCategory === category
                     ? 'bg-primary-gold text-gray-900'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                {category.name}
+                {category === 'all' ? 'All Programmes' : category}
               </button>
             ))}
           </div>
@@ -172,10 +146,17 @@ function CoursesContent() {
                   key={course.id}
                   className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow group"
                 >
-                  {/* Course Category Banner */}
+                  {/* Course Image Placeholder */}
                   <div className={`h-48 ${getCategoryColor(course.category)} flex items-center justify-center relative overflow-hidden`}>
-                    <div className="text-white text-2xl font-bold text-center px-4">
-                      {course.category}
+                    <div className="text-6xl">
+                      {course.category === 'Data & AI' && '📊'}
+                      {course.category === 'Cybersecurity' && '🔒'}
+                      {course.category === 'Microsoft Dynamics 365' && '💼'}
+                    </div>
+                    <div className="absolute top-4 right-4">
+                      <span className="px-3 py-1 bg-white text-gray-900 rounded-full text-xs font-semibold">
+                        {course.category}
+                      </span>
                     </div>
                   </div>
 
@@ -298,21 +279,5 @@ function CoursesContent() {
         )}
       </div>
     </div>
-  );
-}
-
-
-export default function CoursesPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-warm-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-gold mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading courses...</p>
-        </div>
-      </div>
-    }>
-      <CoursesContent />
-    </Suspense>
   );
 }

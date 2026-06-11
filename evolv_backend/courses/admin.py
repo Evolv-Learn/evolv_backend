@@ -22,6 +22,9 @@ from .models import (
     StudentSelection,
     Profile,
     EventAttendance,
+    LessonProgress,
+    LiveSession,
+    Assignment,
 )
 
 
@@ -76,16 +79,63 @@ class CourseCategoryAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Location)
-admin.site.register(Course)
 admin.site.register(Alumni)
 admin.site.register(Event)
 admin.site.register(AboutUs)
 admin.site.register(CoreValue)
 admin.site.register(TeamMember)
 admin.site.register(Review)
-admin.site.register(LearningSchedule)
-admin.site.register(Module)
-admin.site.register(Lesson)
 admin.site.register(StudentSelection)
 admin.site.register(EventAttendance)
 admin.site.register(Profile)
+
+
+@admin.register(Course)
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ("name", "category", "instructor", "registration_deadline", "start_date", "end_date")
+    list_filter = ("category",)
+    search_fields = ("name",)
+
+
+@admin.register(LearningSchedule)
+class LearningScheduleAdmin(admin.ModelAdmin):
+    list_display = ("course", "location", "instructor", "start_date", "end_date", "duration")
+    list_filter = ("course",)
+
+
+@admin.register(Module)
+class ModuleAdmin(admin.ModelAdmin):
+    list_display = ("title", "schedule", "order")
+    list_filter = ("schedule__course",)
+    ordering = ("schedule", "order")
+
+
+@admin.register(Lesson)
+class LessonAdmin(admin.ModelAdmin):
+    list_display = ("title", "module", "order")
+    list_filter = ("module__schedule__course",)
+    ordering = ("module", "order")
+
+
+@admin.register(LiveSession)
+class LiveSessionAdmin(admin.ModelAdmin):
+    list_display = ("title", "schedule", "module", "session_date", "recording_url")
+    list_filter = ("schedule__course",)
+    ordering = ("session_date",)
+
+
+@admin.register(Assignment)
+class AssignmentAdmin(admin.ModelAdmin):
+    list_display = ("student", "module", "status", "submitted_at", "updated_at")
+    list_filter = ("status", "module__schedule__course")
+    search_fields = ("student__first_name", "student__last_name", "student__email")
+    list_editable = ("status",)
+    readonly_fields = ("submitted_at", "updated_at")
+    ordering = ("-submitted_at",)
+
+
+@admin.register(LessonProgress)
+class LessonProgressAdmin(admin.ModelAdmin):
+    list_display = ("student", "lesson", "completed_at")
+    list_filter = ("lesson__module__schedule__course",)
+    search_fields = ("student__first_name", "student__last_name")
