@@ -18,13 +18,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .permissions import IsAdmin, IsAdminOrReadOnly, AllowAnyCreateReadAdminModify, IsAdminOrInstructorOwner, AuthenticatedCreateReadAdminModify, IsAdminOrInstructor
 
 from .models import (
-    Profile,Location,Partner,CourseCategory,Course,CourseMaterial,Student,CourseEnrollment,SelectionProcedure,StudentSelection,ContactUs,EventAttendance,
-    Alumni,Event,AboutUs,TeamMember,CoreValue,Review,LearningSchedule,Module,Lesson,)
+    Profile, Location, Partner, Course, Student, CourseEnrollment, SelectionProcedure, StudentSelection, ContactUs, EventAttendance,
+    Alumni, Event, AboutUs, TeamMember, CoreValue, Review, LearningSchedule, Module, Lesson,)
 
 from .serializers import (
-    ProfileSerializer,LocationSerializer,PartnerSerializer,CourseCategorySerializer,ProfileSelfSerializer,CourseReadSerializer,CourseWriteSerializer,CourseMaterialSerializer,
-    SelectionProcedureSerializer,StudentSelectionSerializer,ContactUsSerializer,EventAttendanceSerializer,AlumniReadSerializer,AlumniWriteSerializer,
-    EventWriteSerializer,EventReadSerializer,AboutUsSerializer, TeamMemberReadSerializer,TeamMemberWriteSerializer,CoreValueSerializer,ReviewSerializer,
+    ProfileSerializer, LocationSerializer, PartnerSerializer, ProfileSelfSerializer, CourseReadSerializer, CourseWriteSerializer,
+    SelectionProcedureSerializer, StudentSelectionSerializer, ContactUsSerializer, EventAttendanceSerializer, AlumniReadSerializer, AlumniWriteSerializer,
+    EventWriteSerializer, EventReadSerializer, AboutUsSerializer, TeamMemberReadSerializer, TeamMemberWriteSerializer, CoreValueSerializer, ReviewSerializer,
     LearningScheduleSerializer, LessonReadSerializer, LessonWriteSerializer, UserProfileCreateSerializer, RegisterUserSerializer, AdminProfileUpdateSerializer,
     ModuleReadSerializer, ModuleWriteSerializer, StudentReadSerializer, StudentWriteSerializer, CourseEnrollmentSerializer)
 
@@ -230,24 +230,6 @@ class PartnerDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdminOrReadOnly]
 
 
-class CourseCategoryListCreateView(generics.ListCreateAPIView):
-    queryset = CourseCategory.objects.all()
-    serializer_class = CourseCategorySerializer
-    permission_classes = [IsAdminOrReadOnly]
-    
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["is_active"]
-    search_fields = ["name", "description"]
-    ordering_fields = ["name", "order", "created_at"]
-    ordering = ["order", "name"]
-
-
-class CourseCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = CourseCategory.objects.all()
-    serializer_class = CourseCategorySerializer
-    permission_classes = [IsAdminOrReadOnly]
-
-
 class CourseListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAdminOrInstructor]
 
@@ -290,28 +272,6 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
             if self.request.method in ("PUT", "PATCH")
             else CourseReadSerializer
         )
-
-
-class CourseMaterialListCreateView(generics.ListCreateAPIView):
-    serializer_class = CourseMaterialSerializer
-    permission_classes = [IsAdminOrInstructor]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['course', 'material_type']
-    search_fields = ['title', 'description']
-    ordering_fields = ['uploaded_at', 'title']
-    ordering = ['-uploaded_at']
-    
-    def get_queryset(self):
-        return CourseMaterial.objects.select_related('course', 'uploaded_by').all()
-    
-    def perform_create(self, serializer):
-        serializer.save(uploaded_by=self.request.user)
-
-
-class CourseMaterialDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = CourseMaterial.objects.select_related('course', 'uploaded_by').all()
-    serializer_class = CourseMaterialSerializer
-    permission_classes = [IsAdminOrInstructor]
 
 
 class SelectionProcedureListCreateView(generics.ListCreateAPIView):
@@ -918,27 +878,6 @@ def create_admin(request):
             {'error': f'Failed to create admin account: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
-
-
-class CourseMaterialListCreateView(generics.ListCreateAPIView):
-    serializer_class = CourseMaterialSerializer
-    permission_classes = [IsAdminOrInstructor]
-    
-    def get_queryset(self):
-        course_id = self.kwargs.get('course_id')
-        if course_id:
-            return CourseMaterial.objects.filter(course_id=course_id)
-        return CourseMaterial.objects.all()
-    
-    def perform_create(self, serializer):
-        serializer.save(uploaded_by=self.request.user)
-
-
-class CourseMaterialDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = CourseMaterial.objects.all()
-    serializer_class = CourseMaterialSerializer
-    permission_classes = [IsAdminOrInstructor]
 
 
 

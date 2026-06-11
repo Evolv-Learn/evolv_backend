@@ -10,6 +10,12 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from datetime import date
 
 
+# Kept for migration compatibility — CourseMaterial model was removed but
+# migrations still reference this upload path function.
+def course_material_upload_path(instance, filename):
+    return f'course_materials/{instance.course_id}/{filename}'
+
+
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     is_email_verified = models.BooleanField(default=False)
