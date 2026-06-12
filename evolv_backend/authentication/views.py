@@ -9,9 +9,9 @@ from courses.throttles import LoginRateThrottle
 User = get_user_model()
 
 class CustomTokenObtainPairView(TokenObtainPairView):
+    throttle_classes = [LoginRateThrottle]
+
     def post(self, request, *args, **kwargs):
-        throttle_classes = [LoginRateThrottle]
-        
         # Get username/email from request
         username = request.data.get('username')
         

@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
+from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .utils import send_welcome_email
@@ -277,25 +277,25 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
 class SelectionProcedureListCreateView(generics.ListCreateAPIView):
     queryset = SelectionProcedure.objects.all()
     serializer_class = SelectionProcedureSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class SelectionProcedureDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SelectionProcedure.objects.all()
     serializer_class = SelectionProcedureSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class StudentSelectionListCreateView(generics.ListCreateAPIView):
     queryset = StudentSelection.objects.all()
     serializer_class = StudentSelectionSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAuthenticated]
 
 
 class StudentSelectionDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = StudentSelection.objects.all()
     serializer_class = StudentSelectionSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAuthenticated]
 
 
 class ContactUsCreateView(generics.CreateAPIView):
@@ -332,7 +332,7 @@ class ContactUsCreateView(generics.CreateAPIView):
             subject=subject,
             body=admin_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=['evolvngo@gmail.com'],
+            to=[settings.ADMIN_EMAIL],
             reply_to=[contact.email],
         )
         admin_email.send(fail_silently=True)
@@ -354,8 +354,7 @@ class ContactUsCreateView(generics.CreateAPIView):
         
         ---
         EvolvLearn
-        Marsaskala, Malta
-        evolvngo@gmail.com
+        {settings.ADMIN_EMAIL}
         """
         
         user_email = EmailMessage(
@@ -363,7 +362,7 @@ class ContactUsCreateView(generics.CreateAPIView):
             body=user_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[contact.email],
-            reply_to=['evolvngo@gmail.com'],
+            reply_to=[settings.ADMIN_EMAIL],
         )
         user_email.send(fail_silently=True)
     throttle_classes = [ContactUsRateThrottle] 
@@ -372,13 +371,13 @@ class ContactUsCreateView(generics.CreateAPIView):
 class EventAttendanceListCreateView(generics.ListCreateAPIView):
     queryset = EventAttendance.objects.all()
     serializer_class = EventAttendanceSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAuthenticated]
 
 
 class EventAttendanceDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = EventAttendance.objects.all()
     serializer_class = EventAttendanceSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAuthenticated]
 
 
 class AlumniListCreateView(generics.ListCreateAPIView):
@@ -478,7 +477,9 @@ def event_calendar(request):
         events = Event.objects.filter(
             date__gte=start_date,
             date__lt=end_date
-        ).select_related('location', 'course').prefetch_related('partners')
+        ).select_related('location', 'course').prefetch_related('partners').annotate(
+            attendee_count=Count('attendances')
+        )
         
         # Format events for calendar
         events_data = []
@@ -496,7 +497,7 @@ def event_calendar(request):
                 'speaker_name': None,  # Add if you have this field
                 'meeting_link': None,  # Add if you have this field
                 'capacity': None,  # Add if you have this field
-                'attendee_count': event.attendances.count() if hasattr(event, 'attendances') else 0,
+                'attendee_count': event.attendee_count,
                 'is_full': False,  # Calculate based on capacity if available
             })
         
@@ -679,7 +680,11 @@ class LessonDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class StudentListCreateView(generics.ListCreateAPIView):
     queryset = Student.objects.prefetch_related("courses", "schedules").all()
-    permission_classes = [AuthenticatedCreateReadAdminModify]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
 
     def get_serializer_class(self):
         return StudentWriteSerializer if self.request.method == "POST" else StudentReadSerializer
@@ -786,34 +791,27 @@ def resend_verification(request):
     
     try:
         user = User.objects.get(email__iexact=email)
-        
-        if user.is_email_verified:
-            return Response(
-                {'error': 'Email is already verified'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Resend verification email
-        from .utils import send_verification_email
-        send_verification_email(user)
-        
-        return Response({
-            'message': 'Verification email sent! Please check your inbox.',
-            'email': user.email
-        }, status=status.HTTP_200_OK)
-        
+        if not user.is_email_verified:
+            from .utils import send_verification_email
+            send_verification_email(user)
     except User.DoesNotExist:
-        return Response(
-            {'error': 'No account found with this email'},
-            status=status.HTTP_404_NOT_FOUND
-        )
+        pass  # Do not reveal whether the email exists
+
+    return Response(
+        {'message': 'If an account with this email exists and is unverified, a verification email has been sent.'},
+        status=status.HTTP_200_OK
+    )
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def create_admin(request):
-    """Create a new admin user"""
-    print(f"Create admin request from user: {request.user.username}, is_superuser: {request.user.is_superuser}")
+    """Create a new admin user — superuser only"""
+    if not request.user.is_superuser:
+        return Response(
+            {'error': 'Superuser access required'},
+            status=status.HTTP_403_FORBIDDEN
+        )
     try:
         username = request.data.get('username')
         email = request.data.get('email')
@@ -821,14 +819,12 @@ def create_admin(request):
         first_name = request.data.get('first_name', '')
         last_name = request.data.get('last_name', '')
         
-        # Validate required fields
         if not all([username, email, password]):
             return Response(
                 {'error': 'Username, email, and password are required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Check if user already exists
         if User.objects.filter(username=username).exists():
             return Response(
                 {'error': 'Username already exists'},
@@ -841,7 +837,6 @@ def create_admin(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Create admin user
         user = User.objects.create_user(
             username=username,
             email=email,
@@ -850,15 +845,11 @@ def create_admin(request):
             last_name=last_name,
             is_staff=True,
             is_superuser=True,
-            is_email_verified=True  # Admin accounts are pre-verified
+            is_email_verified=True
         )
         
-        # Create profile
         from .models import Profile
-        Profile.objects.create(
-            user=user,
-            role='Admin'  # Set role as Admin for admin users
-        )
+        Profile.objects.create(user=user, role='Instructor')
         
         return Response({
             'message': 'Admin account created successfully',
@@ -873,9 +864,9 @@ def create_admin(request):
             }
         }, status=status.HTTP_201_CREATED)
         
-    except Exception as e:
+    except Exception:
         return Response(
-            {'error': f'Failed to create admin account: {str(e)}'},
+            {'error': 'Failed to create admin account'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 

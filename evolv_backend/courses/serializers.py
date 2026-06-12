@@ -144,7 +144,6 @@ class RegisterUserSerializer(serializers.Serializer):
 class UserProfileCreateSerializer(serializers.ModelSerializer):
     role = serializers.ChoiceField(choices=Profile.USER_ROLES)
     password = serializers.CharField(write_only=True)
-    token = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -156,19 +155,12 @@ class UserProfileCreateSerializer(serializers.ModelSerializer):
             "email",
             "password",
             "role",
-            "token",
         ]
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("This email is already registered.")
         return value
-
-    def get_token(self, obj):
-        from rest_framework.authtoken.models import Token
-
-        token, created = Token.objects.get_or_create(user=obj)
-        return token.key
 
     def create(self, validated_data):
         role = validated_data.pop("role")

@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status, generics
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Avg
 from django.utils import timezone
 
 from .models import (
@@ -51,7 +51,7 @@ class StudentDashboardView(APIView):
                 application_status = "in_progress"
 
         # Get enrolled schedules
-        enrolled_schedules = student.schedules.all()
+        enrolled_schedules = student.schedules.select_related('course', 'location').all()
 
         # Get upcoming events
         upcoming_events = Event.objects.filter(
@@ -131,8 +131,8 @@ class AdminDashboardView(APIView):
         # Review statistics
         total_reviews = Review.objects.count()
         avg_rating = Review.objects.aggregate(
-            avg=Count('rating')
-        ).get('avg', 0)
+            avg=Avg('rating')
+        ).get('avg') or 0
 
         data = {
             "students": {

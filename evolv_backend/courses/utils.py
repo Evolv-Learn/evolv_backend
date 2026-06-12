@@ -54,7 +54,7 @@ def send_welcome_email(user):
                     <a href="{frontend_url}/dashboard" class="button">Go to Dashboard →</a>
                 </center>
                 
-                <p>If you have any questions, feel free to contact us at <a href="mailto:evolvngo@gmail.com">evolvngo@gmail.com</a></p>
+                <p>If you have any questions, feel free to contact us at <a href="mailto:{settings.ADMIN_EMAIL}">{settings.ADMIN_EMAIL}</a></p>
                 
                 <p>Best regards,<br>The EvolvLearn Team</p>
             </div>
@@ -80,7 +80,7 @@ def send_welcome_email(user):
     
     Visit your dashboard: {frontend_url}/dashboard
     
-    If you have any questions, contact us at evolvngo@gmail.com
+    If you have any questions, contact us at {settings.ADMIN_EMAIL}
     
     Best regards,
     The EvolvLearn Team
@@ -91,7 +91,7 @@ def send_welcome_email(user):
         body=text_message,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[user.email],
-        reply_to=['evolvngo@gmail.com'],
+        reply_to=[settings.ADMIN_EMAIL],
     )
     email.content_subtype = "html"
     email.body = html_message
@@ -256,7 +256,7 @@ def send_verification_email(user):
                     <li>Join our community</li>
                 </ul>
                 
-                <p>If you have any questions, contact us at <a href="mailto:evolvngo@gmail.com">evolvngo@gmail.com</a></p>
+                <p>If you have any questions, contact us at <a href="mailto:{settings.ADMIN_EMAIL}">{settings.ADMIN_EMAIL}</a></p>
                 
                 <p>Best regards,<br>The EvolvLearn Team</p>
             </div>
@@ -289,8 +289,7 @@ def send_verification_email(user):
     
     ---
     EvolvLearn
-    Marsaskala, Malta
-    evolvngo@gmail.com
+    {settings.ADMIN_EMAIL}
     """
     
     email = EmailMessage(
@@ -298,7 +297,7 @@ def send_verification_email(user):
         body=text_message,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[user.email],
-        reply_to=['evolvngo@gmail.com'],
+        reply_to=[settings.ADMIN_EMAIL],
     )
     email.content_subtype = "html"
     email.body = html_message
