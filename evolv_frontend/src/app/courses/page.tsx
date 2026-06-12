@@ -53,10 +53,11 @@ export default function CoursesPage() {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'Data & AI': return 'bg-primary-gold';
-      case 'Cybersecurity': return 'bg-igbo-red';
-      case 'Microsoft Dynamics 365': return 'bg-hausa-indigo';
-      default: return 'bg-success';
+      case 'Quantitative Methods': return 'bg-primary-gold';
+      case 'Qualitative Methods': return 'bg-igbo-red';
+      case 'Spatial Analysis': return 'bg-hausa-indigo';
+      case 'Research Productivity': return 'bg-success';
+      default: return 'bg-secondary-blue';
     }
   };
 

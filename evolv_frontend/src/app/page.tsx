@@ -1,6 +1,8 @@
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import Image from 'next/image';
+import ProgrammesCarousel from '@/components/home/ProgrammesCarousel';
+import WhyEvolvRotator from '@/components/home/WhyEvolvRotator';
 
 export default function Home() {
   return (
@@ -64,63 +66,88 @@ export default function Home() {
       {/* Impact Stats */}
       <section className="py-12 bg-white border-y-4 border-primary-gold">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { number: '30+', label: 'Researchers Trained', icon: '👨‍🔬' },
-              { number: '2', label: 'Cohorts Completed', icon: '🎓' },
-              { number: '3', label: 'Nigerian States Reached', icon: '🌍' },
-              { number: '11', label: 'Course Modules', icon: '📊' },
-            ].map((stat, index) => (
-              <div key={index} className="group hover:scale-105 transition-transform">
-                <div className="text-4xl mb-2">{stat.icon}</div>
-                <div className="text-4xl md:text-5xl font-bold text-secondary-blue mb-2">
-                  {stat.number}
-                </div>
-                <div className="text-gray-600 font-medium">{stat.label}</div>
-              </div>
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-100">
+            <div className="px-6 py-4 text-center">
+              <div className="text-5xl md:text-6xl font-heading font-bold text-secondary-blue">30+</div>
+              <div className="text-gray-500 mt-1 text-sm uppercase tracking-wide">Researchers Trained</div>
+            </div>
+            <div className="px-6 py-4 text-center">
+              <div className="text-5xl md:text-6xl font-heading font-bold text-secondary-blue">2</div>
+              <div className="text-gray-500 mt-1 text-sm uppercase tracking-wide">Cohorts Completed</div>
+            </div>
+            <div className="px-6 py-4 text-center">
+              <div className="text-5xl md:text-6xl font-heading font-bold text-secondary-blue">3</div>
+              <div className="text-gray-500 mt-1 text-sm uppercase tracking-wide">Nigerian States Reached</div>
+            </div>
+            <div className="px-6 py-4 text-center">
+              <div className="text-5xl md:text-6xl font-heading font-bold text-secondary-blue">11</div>
+              <div className="text-gray-500 mt-1 text-sm uppercase tracking-wide">Course Modules</div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="py-20 bg-warm-white">
+      <section className="py-16 bg-warm-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-heading font-bold text-secondary-blue mb-4">
+          <div className="mb-12 text-center">
+            <h2 className="text-4xl md:text-5xl font-heading font-bold text-secondary-blue mb-3">
               How It Works
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              From application to your first analysis — here is what to expect
+            <p className="text-xl text-gray-600">
+              From application to your first published analysis — here is what to expect
             </p>
           </div>
-          <div className="grid md:grid-cols-4 gap-8">
-            {[
-              { step: '1', title: 'Apply', desc: 'Tell us about your research background and goals', icon: '📝', color: 'from-primary-gold to-yellow-600' },
-              { step: '2', title: 'Get Accepted', desc: 'We review your application and confirm your spot in the cohort', icon: '✅', color: 'from-igbo-red to-red-700' },
-              { step: '3', title: 'Learn Live', desc: 'Join weekly sessions on Discord and work through hands-on exercises', icon: '📡', color: 'from-success to-green-700' },
-              { step: '4', title: 'Apply It', desc: 'Use what you learn directly in your thesis, paper, or lab work', icon: '🔬', color: 'from-hausa-indigo to-purple-900' },
-            ].map((item, index) => (
-              <div key={index} className="relative">
-                <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-shadow h-full">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${item.color} rounded-full flex items-center justify-center text-3xl mb-4 mx-auto`}>
-                    {item.icon}
-                  </div>
-                  <div className="text-center">
-                    <div className="text-sm text-primary-gold font-bold mb-2">STEP {item.step}</div>
-                    <h3 className="text-2xl font-heading font-bold text-secondary-blue mb-3">
-                      {item.title}
-                    </h3>
-                    <p className="text-gray-600">{item.desc}</p>
-                  </div>
+
+          {/* Process flow */}
+          <div className="relative">
+            {/* Connecting dashed line — desktop only */}
+            <div className="hidden md:block absolute top-12 left-[12.5%] right-[12.5%] h-px border-t-2 border-dashed border-primary-gold/50 z-0" />
+
+            <div className="grid md:grid-cols-4 gap-8 relative z-10">
+              {/* Step 1 */}
+              <div className="group flex flex-col items-center text-center cursor-pointer">
+                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-primary-gold shadow-md mb-4 relative flex-shrink-0 group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
+                  <Image src="/images/team/moshood-working.jpeg" alt="Apply" fill className="object-cover object-[center_30%]" />
+                  <div className="absolute inset-0 bg-secondary-blue/30 group-hover:bg-secondary-blue/10 transition-colors duration-300" />
+                  <span className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-primary-gold text-gray-900 text-xs font-bold flex items-center justify-center">01</span>
                 </div>
-                {index < 3 && (
-                  <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 text-primary-gold text-3xl">
-                    →
-                  </div>
-                )}
+                <h3 className="text-lg font-heading font-bold text-secondary-blue mb-2">Apply</h3>
+                <p className="text-gray-600 text-sm leading-relaxed md:opacity-0 md:translate-y-2 md:max-h-0 md:overflow-hidden group-hover:opacity-100 group-hover:translate-y-0 group-hover:max-h-20 transition-all duration-500 ease-out">Tell us about your research background and what you want to do differently.</p>
               </div>
-            ))}
+
+              {/* Step 2 */}
+              <div className="group flex flex-col items-center text-center cursor-pointer">
+                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-igbo-red shadow-md mb-4 relative flex-shrink-0 group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
+                  <Image src="/images/programmes/get-accepted.png" alt="Get Accepted" fill className="object-cover object-center" />
+                  <div className="absolute inset-0 bg-igbo-red/20 group-hover:bg-igbo-red/5 transition-colors duration-300" />
+                  <span className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-igbo-red text-white text-xs font-bold flex items-center justify-center">02</span>
+                </div>
+                <h3 className="text-lg font-heading font-bold text-secondary-blue mb-2">Get Accepted</h3>
+                <p className="text-gray-600 text-sm leading-relaxed md:opacity-0 md:translate-y-2 md:max-h-0 md:overflow-hidden group-hover:opacity-100 group-hover:translate-y-0 group-hover:max-h-20 transition-all duration-500 ease-out">We read every application. If you are a good fit, your spot is confirmed and materials sent.</p>
+              </div>
+
+              {/* Step 3 */}
+              <div className="group flex flex-col items-center text-center cursor-pointer">
+                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-success shadow-md mb-4 relative flex-shrink-0 group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
+                  <Image src="/images/programmes/learn.png" alt="Learn Live" fill className="object-cover object-[center_20%]" />
+                  <div className="absolute inset-0 bg-success/20 group-hover:bg-success/5 transition-colors duration-300" />
+                  <span className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-success text-white text-xs font-bold flex items-center justify-center">03</span>
+                </div>
+                <h3 className="text-lg font-heading font-bold text-secondary-blue mb-2">Learn Live on Discord</h3>
+                <p className="text-gray-600 text-sm leading-relaxed md:opacity-0 md:translate-y-2 md:max-h-0 md:overflow-hidden group-hover:opacity-100 group-hover:translate-y-0 group-hover:max-h-20 transition-all duration-500 ease-out">Every module taught live. You ask questions. Real data problems, solved together.</p>
+              </div>
+
+              {/* Step 4 */}
+              <div className="group flex flex-col items-center text-center cursor-pointer">
+                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-hausa-indigo shadow-md mb-4 relative bg-white flex-shrink-0 group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
+                  <Image src="/images/programmes/apply_to_research.png" alt="Apply It" fill className="object-contain p-2" />
+                  <span className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-hausa-indigo text-white text-xs font-bold flex items-center justify-center">04</span>
+                </div>
+                <h3 className="text-lg font-heading font-bold text-secondary-blue mb-2">Apply It to Your Research</h3>
+                <p className="text-gray-600 text-sm leading-relaxed md:opacity-0 md:translate-y-2 md:max-h-0 md:overflow-hidden group-hover:opacity-100 group-hover:translate-y-0 group-hover:max-h-20 transition-all duration-500 ease-out">Use what you learn in your thesis, paper, or lab. Skills that show up in your actual science.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -128,148 +155,118 @@ export default function Home() {
       {/* Featured Courses */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-heading font-bold text-secondary-blue mb-4">
+          <div className="mb-12 text-center">
+            <h2 className="text-4xl md:text-5xl font-heading font-bold text-secondary-blue mb-3">
               Our Programmes
             </h2>
+            <div className="w-16 h-1 bg-primary-gold mx-auto mb-4 rounded-full"></div>
             <p className="text-xl text-gray-600">
               Research methods training designed for scientists who work with data
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
-            {[
-              { 
-                title: 'R for Quantitative Research', 
-                icon: '📊', 
-                color: 'bg-primary-gold', 
-                badge: 'Now Open',
-                badgeColor: 'bg-success text-white',
-                desc: 'Learn to analyse experimental and field data using R. Covers statistics, data visualisation, and common experimental designs used in agricultural and biological sciences.' 
-              },
-              { 
-                title: 'Qualitative Research Methods', 
-                icon: '🗂️', 
-                color: 'bg-igbo-red', 
-                badge: 'Coming Soon',
-                badgeColor: 'bg-gray-400 text-white',
-                desc: 'Structured approaches to interviews, focus groups, and thematic analysis. For social scientists and mixed-methods researchers.' 
-              },
-              { 
-                title: 'QGIS & Spatial Analysis', 
-                icon: '🗺️', 
-                color: 'bg-hausa-indigo', 
-                badge: 'Coming Soon',
-                badgeColor: 'bg-gray-400 text-white',
-                desc: 'Geospatial data analysis for researchers working with land use, crop mapping, ecology, and environmental data using free open-source tools.' 
-              },
-            ].map((course, index) => (
-              <div key={index} className="bg-warm-white rounded-xl p-8 hover:shadow-xl transition-shadow group relative">
-                <span className={`absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full ${course.badgeColor}`}>{course.badge}</span>
-                <div className={`${course.color} w-20 h-20 rounded-2xl flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform`}>
-                  {course.icon}
-                </div>
-                <h3 className="text-2xl font-heading font-bold text-secondary-blue mb-3">
-                  {course.title}
-                </h3>
-                <p className="text-gray-600 mb-6">{course.desc}</p>
-                {index === 0 && (
-                  <Link href="/courses" className="text-primary-gold font-semibold hover:underline">
-                    See curriculum →
-                  </Link>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="text-center">
+          <ProgrammesCarousel />
+          <div className="mt-8 text-center">
             <Link href="/courses">
               <Button variant="outline" size="lg">
-                View All Courses
+                View All Programmes
               </Button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Why Researchers Choose Evolv */}
       <section className="py-20 bg-gradient-to-br from-secondary-blue to-secondary-blue-dark text-white pattern-adire">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-heading font-bold mb-4">
-              Why Researchers Choose Evolv
+          <div className="mb-12 text-center">
+            <p className="text-primary-gold font-bold uppercase tracking-widest text-xl mb-4">Why Evolv</p>
+            <h2 className="text-4xl md:text-5xl font-heading font-bold mb-6 leading-tight">
+              Built for people serious about their research
             </h2>
-            <p className="text-xl text-gray-200 max-w-2xl mx-auto">
-              We built this for people who are serious about their research — not people looking for shortcuts
+            <p className="text-gray-300 text-lg leading-relaxed">
+              Not for people looking for shortcuts. Not for people who want a certificate. For researchers who need to actually understand their data.
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { 
-                icon: '🎙️', 
-                title: 'Live, Interactive Sessions',
-                desc: 'Every module is taught live on Discord. You ask questions, we work through problems together in real time. No pre-recorded videos you watch alone at midnight.' 
-              },
-              { 
-                icon: '🌱', 
-                title: 'Built for African Researchers',
-                desc: 'Most R courses are made for Western data scientists. Ours uses datasets from agriculture, plant science, and biological research contexts familiar to African scientists.' 
-              },
-              { 
-                icon: '💸', 
-                title: 'Affordable Without Compromise',
-                desc: 'Quality training should not be a luxury. We offer regional pricing so cost is never the reason you cannot develop your research skills.' 
-              },
-            ].map((item, index) => (
-              <div key={index} className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-8">
-                <div className="text-5xl mb-4">{item.icon}</div>
-                <h3 className="text-xl font-heading font-bold mb-3">{item.title}</h3>
-                <p className="text-gray-200 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
+
+          <WhyEvolvRotator />
         </div>
       </section>
 
-      {/* Meet Your Instructor */}
+      {/* Teaching Team */}
       <section className="py-20 bg-warm-white">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              {/* Photo side */}
-              <div className="relative">
-                <div className="rounded-2xl overflow-hidden shadow-2xl aspect-[4/3]">
+            <p className="text-primary-gold font-semibold uppercase tracking-wider text-sm mb-3 text-center">
+              The Teaching Team
+            </p>
+            <h2 className="text-4xl font-heading font-bold text-secondary-blue mb-4 text-center">
+              Learn from people who do the work
+            </h2>
+            <p className="text-gray-600 text-lg text-center mb-14 max-w-2xl mx-auto">
+              Every tutor at Evolv is an active researcher or practitioner — not a career teacher. You learn from people who use these tools in the field every day.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+
+              {/* Moshood */}
+              <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-gray-100 group">
+                <div className="aspect-[4/3] overflow-hidden relative">
                   <img
                     src="/images/team/moshood-working.jpeg"
                     alt="Moshood Owolabi teaching"
-                    className="w-full h-full object-cover object-center"
+                    className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                   />
+                  <div className="absolute bottom-3 right-3 bg-primary-gold text-gray-900 rounded-lg px-3 py-1.5 text-xs font-semibold shadow">
+                    Live on Discord every week
+                  </div>
                 </div>
-                {/* Floating badge */}
-                <div className="absolute -bottom-4 -right-4 bg-primary-gold text-gray-900 rounded-xl px-5 py-3 shadow-lg font-semibold text-sm">
-                  Live on Discord every week
+                <div className="p-6">
+                  <div className="flex flex-wrap items-center gap-3 mb-3">
+                    <h3 className="text-2xl font-heading font-bold text-secondary-blue">
+                      Moshood Owolabi
+                    </h3>
+                    <span className="inline-block bg-secondary-blue text-white text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full">
+                      Founder · R &amp; Statistics
+                    </span>
+                  </div>
+                  <p className="text-gray-600 leading-relaxed text-sm md:opacity-0 md:translate-y-2 md:max-h-0 md:overflow-hidden group-hover:opacity-100 group-hover:translate-y-0 group-hover:max-h-40 transition-all duration-500 ease-out">
+                    Nigerian researcher based in Europe. He started Evolv after watching brilliant researchers stall because no one had taught them to handle their data. Every cohort he teaches personally — live, every session, every question answered.
+                  </p>
                 </div>
               </div>
 
-              {/* Text side */}
-              <div>
-                <p className="text-primary-gold font-semibold uppercase tracking-wider text-sm mb-3">
-                  Your Instructor
-                </p>
-                <h2 className="text-4xl font-heading font-bold text-secondary-blue mb-6 leading-tight">
-                  Moshood Owolabi
-                </h2>
-                <div className="kente-strip mb-6"></div>
-                <p className="text-gray-700 text-lg leading-relaxed mb-4">
-                  I am a Nigerian researcher based in Europe. I started Evolv because I kept seeing the same problem — brilliant researchers who could not move forward with their work simply because nobody had taught them how to handle their data properly.
-                </p>
-                <p className="text-gray-700 text-lg leading-relaxed mb-8">
-                  Every cohort I teach personally. Every session is live. Every question gets an answer. This is not a course you buy and forget — it is training that stays with you.
-                </p>
-                <Link href="/about">
-                  <Button variant="outline" size="md">
-                    Read more about Evolv →
-                  </Button>
-                </Link>
+              {/* Ridwan */}
+              <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-gray-100 group">
+                <div className="aspect-[4/3] overflow-hidden">
+                  <img
+                    src="/images/team/ridwan.jpeg"
+                    alt="Ridwan Alade"
+                    className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="flex flex-wrap items-center gap-3 mb-3">
+                    <h3 className="text-2xl font-heading font-bold text-secondary-blue">
+                      Ridwan Alade
+                    </h3>
+                    <span className="inline-block bg-hausa-indigo text-white text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full">
+                      QGIS · Spatial Analysis
+                    </span>
+                  </div>
+                  <p className="text-gray-600 leading-relaxed text-sm md:opacity-0 md:translate-y-2 md:max-h-0 md:overflow-hidden group-hover:opacity-100 group-hover:translate-y-0 group-hover:max-h-40 transition-all duration-500 ease-out">
+                    Based in Nigeria, Ridwan is a videographer with deep expertise in QGIS and spatial analysis. He brings visual storytelling and technical precision to every lesson — making spatial data feel intuitive and practical.
+                  </p>
+                </div>
               </div>
+
+            </div>
+
+            <div className="text-center mt-10">
+              <Link href="/about">
+                <Button variant="outline" size="md">
+                  Read more about Evolv →
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

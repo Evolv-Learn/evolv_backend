@@ -26,19 +26,23 @@ module.exports = {
           DEFAULT: '#228B22',
         },
 
+        // African-inspired named colors used across the site
+        'igbo-red': '#C1440E',
+        'hausa-indigo': '#2D1B69',
+
         // extra flat colors to match your globals.css usage
         'warm-white': '#FFF8F0',
         'earth-gray': '#8B7355',
         'deep-black': '#1A1A1A',
 
         // this defines the `border-border` utility
-        border: '#E5E7EB', // change to any color you prefer
+        border: '#E5E7EB',
       },
       fontFamily: {
-        // ensures font-sans works nicely
-        sans: ['system-ui', 'ui-sans-serif', 'sans-serif'],
-        // this makes `font-heading` valid
-        heading: ['system-ui', 'ui-sans-serif', 'sans-serif'],
+        // Open Sans for body text
+        sans: ['var(--font-sans)', 'system-ui', 'ui-sans-serif', 'sans-serif'],
+        // Poppins for headings — wired from layout.tsx via CSS variable
+        heading: ['var(--font-heading)', 'system-ui', 'ui-sans-serif', 'sans-serif'],
       },
     },
   },
