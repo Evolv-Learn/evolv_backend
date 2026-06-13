@@ -19,7 +19,7 @@ def course_material_upload_path(instance, filename):
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     is_email_verified = models.BooleanField(default=False)
-    email_verification_token = models.CharField(max_length=100, blank=True, null=True)
+    email_verification_token = models.CharField(max_length=100, blank=True, null=True, db_index=True)
     email_verification_sent_at = models.DateTimeField(blank=True, null=True)
     
     groups = models.ManyToManyField(Group, related_name="customuser_groups", blank=True)
@@ -188,7 +188,7 @@ class Alumni(models.Model):
 class Event(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
-    date = models.DateTimeField()
+    date = models.DateTimeField(db_index=True)
     location = models.ForeignKey(
         "Location",
         on_delete=models.SET_NULL,
@@ -386,7 +386,7 @@ class CourseEnrollment(models.Model):
     
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="enrollments")
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="enrollments")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Pending")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Pending", db_index=True)
     applied_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

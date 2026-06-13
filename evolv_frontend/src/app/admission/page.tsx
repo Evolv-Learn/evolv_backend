@@ -396,35 +396,35 @@ export default function AdmissionPage() {
                   required
                 >
                   <option value="">Select Country</option>
-                  <option value="NG">🇳🇬 Nigeria</option>
-                  <option value="GH">🇬🇭 Ghana</option>
-                  <option value="KE">🇰🇪 Kenya</option>
-                  <option value="ZA">🇿🇦 South Africa</option>
-                  <option value="EG">🇪🇬 Egypt</option>
-                  <option value="ET">🇪🇹 Ethiopia</option>
-                  <option value="TZ">🇹🇿 Tanzania</option>
-                  <option value="UG">🇺🇬 Uganda</option>
-                  <option value="RW">🇷🇼 Rwanda</option>
-                  <option value="SN">🇸🇳 Senegal</option>
-                  <option value="CI">🇨🇮 Ivory Coast</option>
-                  <option value="CM">🇨🇲 Cameroon</option>
-                  <option value="MA">🇲🇦 Morocco</option>
-                  <option value="TN">🇹🇳 Tunisia</option>
-                  <option value="DZ">🇩🇿 Algeria</option>
-                  <option value="GB">🇬🇧 United Kingdom</option>
-                  <option value="US">🇺🇸 United States</option>
-                  <option value="CA">🇨🇦 Canada</option>
-                  <option value="DE">🇩🇪 Germany</option>
-                  <option value="FR">🇫🇷 France</option>
-                  <option value="ES">🇪🇸 Spain</option>
-                  <option value="IT">🇮🇹 Italy</option>
-                  <option value="NL">🇳🇱 Netherlands</option>
-                  <option value="IN">🇮🇳 India</option>
-                  <option value="CN">🇨🇳 China</option>
-                  <option value="JP">🇯🇵 Japan</option>
-                  <option value="BR">🇧🇷 Brazil</option>
-                  <option value="AU">🇦🇺 Australia</option>
-                  <option value="NZ">🇳🇿 New Zealand</option>
+                  <option value="NG">Nigeria</option>
+                  <option value="GH">Ghana</option>
+                  <option value="KE">Kenya</option>
+                  <option value="ZA">South Africa</option>
+                  <option value="EG">Egypt</option>
+                  <option value="ET">Ethiopia</option>
+                  <option value="TZ">Tanzania</option>
+                  <option value="UG">Uganda</option>
+                  <option value="RW">Rwanda</option>
+                  <option value="SN">Senegal</option>
+                  <option value="CI">Ivory Coast</option>
+                  <option value="CM">Cameroon</option>
+                  <option value="MA">Morocco</option>
+                  <option value="TN">Tunisia</option>
+                  <option value="DZ">Algeria</option>
+                  <option value="GB">United Kingdom</option>
+                  <option value="US">United States</option>
+                  <option value="CA">Canada</option>
+                  <option value="DE">Germany</option>
+                  <option value="FR">France</option>
+                  <option value="ES">Spain</option>
+                  <option value="IT">Italy</option>
+                  <option value="NL">Netherlands</option>
+                  <option value="IN">India</option>
+                  <option value="CN">China</option>
+                  <option value="JP">Japan</option>
+                  <option value="BR">Brazil</option>
+                  <option value="AU">Australia</option>
+                  <option value="NZ">New Zealand</option>
                 </select>
                 <p className="text-xs text-gray-500 mt-1">Click to open dropdown and scroll</p>
               </div>
@@ -440,35 +440,35 @@ export default function AdmissionPage() {
                   required
                 >
                   <option value="">Select Nationality</option>
-                  <option value="NG">🇳🇬 Nigerian</option>
-                  <option value="GH">🇬🇭 Ghanaian</option>
-                  <option value="KE">🇰🇪 Kenyan</option>
-                  <option value="ZA">🇿🇦 South African</option>
-                  <option value="EG">🇪🇬 Egyptian</option>
-                  <option value="ET">🇪🇹 Ethiopian</option>
-                  <option value="TZ">🇹🇿 Tanzanian</option>
-                  <option value="UG">🇺🇬 Ugandan</option>
-                  <option value="RW">🇷🇼 Rwandan</option>
-                  <option value="SN">🇸🇳 Senegalese</option>
-                  <option value="CI">🇨🇮 Ivorian</option>
-                  <option value="CM">🇨🇲 Cameroonian</option>
-                  <option value="MA">🇲🇦 Moroccan</option>
-                  <option value="TN">🇹🇳 Tunisian</option>
-                  <option value="DZ">🇩🇿 Algerian</option>
-                  <option value="GB">🇬🇧 British</option>
-                  <option value="US">🇺🇸 American</option>
-                  <option value="CA">🇨🇦 Canadian</option>
-                  <option value="DE">🇩🇪 German</option>
-                  <option value="FR">🇫🇷 French</option>
-                  <option value="ES">🇪🇸 Spanish</option>
-                  <option value="IT">🇮🇹 Italian</option>
-                  <option value="NL">🇳🇱 Dutch</option>
-                  <option value="IN">🇮🇳 Indian</option>
-                  <option value="CN">🇨🇳 Chinese</option>
-                  <option value="JP">🇯🇵 Japanese</option>
-                  <option value="BR">🇧🇷 Brazilian</option>
-                  <option value="AU">🇦🇺 Australian</option>
-                  <option value="NZ">🇳🇿 New Zealander</option>
+                  <option value="NG">Nigerian</option>
+                  <option value="GH">Ghanaian</option>
+                  <option value="KE">Kenyan</option>
+                  <option value="ZA">South African</option>
+                  <option value="EG">Egyptian</option>
+                  <option value="ET">Ethiopian</option>
+                  <option value="TZ">Tanzanian</option>
+                  <option value="UG">Ugandan</option>
+                  <option value="RW">Rwandan</option>
+                  <option value="SN">Senegalese</option>
+                  <option value="CI">Ivorian</option>
+                  <option value="CM">Cameroonian</option>
+                  <option value="MA">Moroccan</option>
+                  <option value="TN">Tunisian</option>
+                  <option value="DZ">Algerian</option>
+                  <option value="GB">British</option>
+                  <option value="US">American</option>
+                  <option value="CA">Canadian</option>
+                  <option value="DE">German</option>
+                  <option value="FR">French</option>
+                  <option value="ES">Spanish</option>
+                  <option value="IT">Italian</option>
+                  <option value="NL">Dutch</option>
+                  <option value="IN">Indian</option>
+                  <option value="CN">Chinese</option>
+                  <option value="JP">Japanese</option>
+                  <option value="BR">Brazilian</option>
+                  <option value="AU">Australian</option>
+                  <option value="NZ">New Zealander</option>
                 </select>
                 <p className="text-xs text-gray-500 mt-1">Click to open dropdown and scroll</p>
               </div>
@@ -751,7 +751,7 @@ export default function AdmissionPage() {
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-blue-800">
-                <strong>📧 Next Steps:</strong> After submitting your application, our team will review it and contact you within 3-5 business days via email.
+                <strong>Next Steps:</strong> After submitting your application, our team will review it and contact you within 3–5 business days via email.
               </p>
             </div>
           </div>
@@ -766,7 +766,13 @@ export default function AdmissionPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-warm-white">
         <div className="text-center max-w-md mx-auto px-4">
-          <div className="text-6xl mb-4">🔒</div>
+          <div className="text-6xl mb-4">
+            <div className="w-16 h-16 rounded-full bg-secondary-blue/10 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-secondary-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+          </div>
           <h1 className="text-3xl font-heading font-bold text-secondary-blue mb-4">Login Required</h1>
           <p className="text-gray-600 mb-6">Please login or create an account to access the admission form.</p>
           <div className="flex gap-4 justify-center">
@@ -801,7 +807,9 @@ export default function AdmissionPage() {
         {currentStep === 4 && formData.email && (
           <div className="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
             <div className="flex items-center">
-              <span className="text-2xl mr-3">ℹ️</span>
+              <svg className="w-5 h-5 text-blue-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
               <div>
                 <h3 className="font-bold text-blue-800">Welcome Back!</h3>
                 <p className="text-sm text-blue-700">

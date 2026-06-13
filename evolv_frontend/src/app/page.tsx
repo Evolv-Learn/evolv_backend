@@ -272,6 +272,95 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <section className="py-20 bg-secondary-blue relative overflow-hidden">
+        {/* Subtle pattern overlay */}
+        <div className="absolute inset-0 pattern-adire opacity-10"></div>
+        <div className="kente-strip absolute bottom-0 left-0 right-0"></div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <p className="text-primary-gold text-sm font-semibold uppercase tracking-widest text-center mb-2">
+            From Our Researchers
+          </p>
+          <h2 className="text-4xl font-heading font-bold text-white mb-4 text-center">
+            What participants say
+          </h2>
+          <p className="text-gray-300 text-lg text-center mb-14 max-w-2xl mx-auto">
+            Real words from people who came in with messy data and left with clean, analysed results.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            {/* Testimonial 1 — Amaka (female) */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl pt-10 pb-8 px-8 flex flex-col items-center gap-5 hover:bg-white/10 transition-colors duration-300">
+              {/* Portrait oval */}
+              <div className="w-24 h-32 rounded-full overflow-hidden border-2 border-primary-gold/50 flex-shrink-0">
+                <img
+                  src="/images/testimonials/testimonial-female-1.jpeg"
+                  alt="Amaka Chukwu"
+                  className="w-full h-full object-cover object-top"
+                />
+              </div>
+              {/* Quote */}
+              <p className="text-gray-200 leading-relaxed flex-1 italic text-center text-sm">
+                "Working with R used to feel like reading a foreign language. After two months with Evolv, I analysed my entire dissertation dataset myself — no statistician needed."
+              </p>
+              {/* Attribution */}
+              <div className="flex flex-col items-center gap-1 pt-3 border-t border-white/10 w-full">
+                <p className="text-white font-semibold text-sm">Fatima Aliyu</p>
+                <p className="text-gray-400 text-xs">MSc Agronomy · University of Ibadan</p>
+                <span className="mt-1 text-xs bg-primary-gold/20 text-primary-gold px-3 py-1 rounded-full font-medium">
+                  Cohort 1
+                </span>
+              </div>
+            </div>
+
+            {/* Testimonial 2 — Ibrahim (male) */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl pt-10 pb-8 px-8 flex flex-col items-center gap-5 hover:bg-white/10 transition-colors duration-300">
+              <div className="w-24 h-32 rounded-full overflow-hidden border-2 border-primary-gold/50 flex-shrink-0">
+                <img
+                  src="/images/testimonials/testimonial-male-1.jpeg"
+                  alt="Ibrahim Bello"
+                  className="w-full h-full object-cover object-top"
+                />
+              </div>
+              <p className="text-gray-200 leading-relaxed flex-1 italic text-center text-sm">
+                "The live sessions on Discord made all the difference. I could ask questions in real time and watch the exact code being typed. It felt like sitting beside a mentor, not watching a recording."
+              </p>
+              <div className="flex flex-col items-center gap-1 pt-3 border-t border-white/10 w-full">
+                <p className="text-white font-semibold text-sm">Ibrahim Bello</p>
+                <p className="text-gray-400 text-xs">PhD Candidate · ABU Zaria</p>
+                <span className="mt-1 text-xs bg-primary-gold/20 text-primary-gold px-3 py-1 rounded-full font-medium">
+                  Cohort 2
+                </span>
+              </div>
+            </div>
+
+            {/* Testimonial 3 — Fatima (female) */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl pt-10 pb-8 px-8 flex flex-col items-center gap-5 hover:bg-white/10 transition-colors duration-300">
+              <div className="w-24 h-32 rounded-full overflow-hidden border-2 border-primary-gold/50 flex-shrink-0">
+                <img
+                  src="/images/testimonials/testimonial-male-2.jpeg"
+                  alt="Fatima Aliyu"
+                  className="w-full h-full object-cover object-top"
+                />
+              </div>
+              <p className="text-gray-200 leading-relaxed flex-1 italic text-center text-sm">
+                "I had tried YouTube tutorials before and nothing stuck. Evolv's structure — the assignments, the feedback, the follow-through — that is what made it work for me this time."
+              </p>
+              <div className="flex flex-col items-center gap-1 pt-3 border-t border-white/10 w-full">
+                <p className="text-white font-semibold text-sm">Emeka Okafor</p>
+                <p className="text-gray-400 text-xs">Research Officer · IITA Kano</p>
+                <span className="mt-1 text-xs bg-primary-gold/20 text-primary-gold px-3 py-1 rounded-full font-medium">
+                  Cohort 1
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="py-20 bg-warm-white">
         <div className="container mx-auto px-4">

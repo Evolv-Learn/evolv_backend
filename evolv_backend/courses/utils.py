@@ -176,15 +176,22 @@ def generate_student_register_number(student):
     """Generate unique registration number for student"""
     # Format: EVOLV-YYYY-XXXX (e.g., EVOLV-2024-0001)
     from datetime import datetime
+    from django.db import transaction
+
     year = datetime.now().year
-    
-    # Get count of students registered this year
+    prefix = f"EVOLV-{year}"
+
+    # select_for_update locks matched rows so concurrent requests
+    # cannot read the same count and produce duplicate register numbers.
     from .models import Student
-    count = Student.objects.filter(
-        register_number__startswith=f"EVOLV-{year}"
-    ).count() + 1
-    
-    return f"EVOLV-{year}-{count:04d}"
+    with transaction.atomic():
+        count = (
+            Student.objects.select_for_update()
+            .filter(register_number__startswith=prefix)
+            .count()
+        ) + 1
+
+    return f"{prefix}-{count:04d}"
 
 
 

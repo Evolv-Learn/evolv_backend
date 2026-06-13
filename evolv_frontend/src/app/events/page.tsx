@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
-import { eventsApi } from '@/lib/api/courses';
-import { formatDateTime } from '@/lib/utils';
+import apiClient from '@/lib/api/client';
 
 interface Event {
   id: number;
@@ -11,242 +11,229 @@ interface Event {
   description: string;
   date: string;
   is_virtual: boolean;
-  location: string;
-  course: string;
-  partners: string[];
-  image?: string;
+  image?: string | null;
+  location: { name: string } | string | null;
+  course: { name: string } | string | null;
+}
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return {
+    day: d.toLocaleDateString('en-GB', { day: '2-digit' }),
+    month: d.toLocaleDateString('en-GB', { month: 'short' }).toUpperCase(),
+    full: d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+    time: d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+  };
+}
+
+function locationName(loc: Event['location']): string | null {
+  if (!loc) return null;
+  return typeof loc === 'string' ? loc : loc.name;
+}
+
+function courseName(c: Event['course']): string | null {
+  if (!c) return null;
+  return typeof c === 'string' ? c : c.name;
 }
 
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('upcoming');
+  const [error, setError] = useState('');
+  const [filter, setFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
   const [typeFilter, setTypeFilter] = useState<'all' | 'virtual' | 'physical'>('all');
 
   useEffect(() => {
-    fetchEvents();
+    apiClient
+      .get('/events/')
+      .then((r) => setEvents(r.data.results ?? r.data))
+      .catch(() => setError('Could not load events. Please try again later.'))
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const fetchEvents = async () => {
-    try {
-      const data = await eventsApi.getAll();
-      setEvents(data.results || data);
-    } catch (error) {
-      console.error('Failed to fetch events:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const filteredEvents = events.filter(event => {
-    const eventDate = new Date(event.date);
-    const now = new Date();
-    
-    const matchesTimeFilter = 
+  const now = new Date();
+  const filtered = events.filter((e) => {
+    const d = new Date(e.date);
+    const timeOk =
       filter === 'all' ||
-      (filter === 'upcoming' && eventDate >= now) ||
-      (filter === 'past' && eventDate < now);
-    
-    const matchesTypeFilter =
+      (filter === 'upcoming' && d >= now) ||
+      (filter === 'past' && d < now);
+    const typeOk =
       typeFilter === 'all' ||
-      (typeFilter === 'virtual' && event.is_virtual) ||
-      (typeFilter === 'physical' && !event.is_virtual);
-    
-    return matchesTimeFilter && matchesTypeFilter;
+      (typeFilter === 'virtual' && e.is_virtual) ||
+      (typeFilter === 'physical' && !e.is_virtual);
+    return timeOk && typeOk;
   });
 
   return (
     <div className="min-h-screen bg-warm-white">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-success to-green-700 text-white py-16 pattern-adire relative">
+      {/* Hero */}
+      <section className="relative bg-secondary-blue text-white py-20 overflow-hidden">
         <div className="kente-strip absolute top-0 left-0 right-0"></div>
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-heading font-bold mb-4">
-            Events & Workshops
-          </h1>
-          <p className="text-xl text-gray-100 max-w-2xl mx-auto">
-            Join our community events, workshops, and networking sessions
+        <div className="absolute inset-0 pattern-adire opacity-10"></div>
+        <div className="container mx-auto px-4 relative z-10 text-center">
+          <p className="text-primary-gold text-sm font-semibold uppercase tracking-widest mb-3">
+            Evolv Events
+          </p>
+          <h1 className="text-5xl font-heading font-bold mb-4">Live Sessions &amp; Workshops</h1>
+          <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+            Join our live Discord sessions, workshops, and cohort events. All sessions are recorded for enrolled students.
           </p>
         </div>
-      </div>
+      </section>
 
       <div className="container mx-auto px-4 py-12">
         {/* Filters */}
-        <div className="mb-8 space-y-4">
-          {/* Time Filter */}
-          <div className="flex flex-wrap justify-center gap-3">
-            {[
-              { value: 'upcoming', label: 'Upcoming', icon: '📅' },
-              { value: 'past', label: 'Past Events', icon: '📚' },
-              { value: 'all', label: 'All Events', icon: '🎉' },
-            ].map((item) => (
-              <button
-                key={item.value}
-                onClick={() => setFilter(item.value as any)}
-                className={`px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 ${
-                  filter === item.value
-                    ? 'bg-primary-gold text-gray-900 shadow-md'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <span>{item.icon}</span>
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Type Filter */}
-          <div className="flex flex-wrap justify-center gap-3">
-            {[
-              { value: 'all', label: 'All Types' },
-              { value: 'virtual', label: '💻 Virtual' },
-              { value: 'physical', label: '🏢 Physical' },
-            ].map((item) => (
-              <button
-                key={item.value}
-                onClick={() => setTypeFilter(item.value as any)}
-                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-                  typeFilter === item.value
-                    ? 'bg-secondary-blue text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+        <div className="flex flex-wrap gap-3 justify-center mb-10">
+          {([['upcoming', 'Upcoming'], ['past', 'Past Events'], ['all', 'All Events']] as const).map(([val, label]) => (
+            <button
+              key={val}
+              onClick={() => setFilter(val)}
+              className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all border ${
+                filter === val
+                  ? 'bg-primary-gold text-gray-900 border-primary-gold shadow-sm'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-primary-gold'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+          <span className="w-px h-9 bg-gray-200 self-center hidden sm:block" />
+          {([['all', 'All Types'], ['virtual', 'Virtual'], ['physical', 'Physical']] as const).map(([val, label]) => (
+            <button
+              key={val}
+              onClick={() => setTypeFilter(val)}
+              className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all border ${
+                typeFilter === val
+                  ? 'bg-secondary-blue text-white border-secondary-blue shadow-sm'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-secondary-blue'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
-        {/* Loading State */}
+        {/* Loading */}
         {isLoading && (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-gold mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading events...</p>
+          <div className="flex justify-center py-20">
+            <div className="w-10 h-10 border-4 border-primary-gold border-t-transparent rounded-full animate-spin" />
           </div>
         )}
 
-        {/* Empty State */}
-        {!isLoading && filteredEvents.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">📅</div>
-            <h3 className="text-2xl font-heading font-bold mb-2">No events found</h3>
-            <p className="text-gray-600">
-              {filter === 'upcoming' ? 'No upcoming events at the moment' : 'No events match your filters'}
+        {/* Error */}
+        {error && !isLoading && (
+          <div className="max-w-md mx-auto text-center py-20">
+            <svg className="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-gray-500">{error}</p>
+          </div>
+        )}
+
+        {/* Empty */}
+        {!isLoading && !error && filtered.length === 0 && (
+          <div className="bg-white rounded-2xl border border-gray-100 p-14 text-center max-w-lg mx-auto">
+            <svg className="w-12 h-12 text-gray-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p className="text-gray-500 font-medium">No events found</p>
+            <p className="text-gray-400 text-sm mt-1">
+              {filter === 'upcoming' ? 'No upcoming events scheduled â€” check back soon.' : 'Try adjusting your filters.'}
             </p>
           </div>
         )}
 
-        {/* Events Grid */}
-        {!isLoading && filteredEvents.length > 0 && (
-          <>
-            <div className="mb-6 text-center">
-              <p className="text-gray-600">
-                Showing <span className="font-bold text-secondary-blue">{filteredEvents.length}</span> event{filteredEvents.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredEvents.map((event) => {
-                const eventDate = new Date(event.date);
-                const isPast = eventDate < new Date();
-                
-                return (
-                  <div
-                    key={event.id}
-                    className={`bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow ${
-                      isPast ? 'opacity-75' : ''
-                    }`}
-                  >
-                    {/* Event Image/Header */}
-                    <div className="relative h-48 bg-gradient-to-br from-primary-gold to-primary-gold-dark flex items-center justify-center">
-                      <div className="text-6xl">🎉</div>
-                      
-                      {/* Date Badge */}
-                      <div className="absolute top-4 left-4 bg-white rounded-lg p-3 text-center shadow-md">
-                        <div className="text-2xl font-bold text-secondary-blue">
-                          {eventDate.getDate()}
-                        </div>
-                        <div className="text-xs text-gray-600 uppercase">
-                          {eventDate.toLocaleString('default', { month: 'short' })}
-                        </div>
+        {/* Grid */}
+        {!isLoading && !error && filtered.length > 0 && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((event) => {
+              const isPast = new Date(event.date) < now;
+              const d = formatDate(event.date);
+              const loc = locationName(event.location);
+              const course = courseName(event.course);
+              return (
+                <div
+                  key={event.id}
+                  className={`bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex flex-col ${isPast ? 'opacity-70' : ''}`}
+                >
+                  {/* Image / header */}
+                  <div className="relative h-40 bg-secondary-blue/5 overflow-hidden">
+                    {event.image ? (
+                      <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <svg className="w-12 h-12 text-secondary-blue/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
                       </div>
-
-                      {/* Virtual/Physical Badge */}
-                      <div className="absolute top-4 right-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          event.is_virtual
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-green-500 text-white'
-                        }`}>
-                          {event.is_virtual ? '💻 Virtual' : '🏢 Physical'}
-                        </span>
+                    )}
+                    {/* Date badge */}
+                    <div className="absolute top-3 left-3 bg-white rounded-xl px-3 py-2 text-center shadow-sm min-w-[52px]">
+                      <p className="text-xs font-bold text-primary-gold leading-none">{d.month}</p>
+                      <p className="text-xl font-heading font-bold text-secondary-blue leading-tight">{d.day}</p>
+                    </div>
+                    {/* Type badge */}
+                    <div className="absolute top-3 right-3">
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${event.is_virtual ? 'bg-hausa-indigo text-white' : 'bg-success text-white'}`}>
+                        {event.is_virtual ? 'Virtual' : 'In-person'}
+                      </span>
+                    </div>
+                    {isPast && (
+                      <div className="absolute inset-0 bg-gray-900/25 flex items-center justify-center">
+                        <span className="bg-gray-800 text-gray-200 text-xs font-semibold px-3 py-1 rounded-full">Past Event</span>
                       </div>
+                    )}
+                  </div>
 
-                      {/* Past Event Overlay */}
-                      {isPast && (
-                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                          <span className="px-4 py-2 bg-white text-gray-900 rounded-full font-semibold">
-                            Past Event
-                          </span>
+                  {/* Body */}
+                  <div className="p-5 flex flex-col flex-1 gap-3">
+                    <h3 className="font-heading font-bold text-secondary-blue text-lg leading-snug">{event.title}</h3>
+                    <p className="text-gray-500 text-sm leading-relaxed line-clamp-2">{event.description}</p>
+
+                    <div className="mt-auto pt-3 border-t border-gray-50 space-y-1.5">
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {d.full} &middot; {d.time}
+                      </div>
+                      {loc && (
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          </svg>
+                          {loc}
                         </div>
                       )}
-                    </div>
-
-                    {/* Event Content */}
-                    <div className="p-6">
-                      <h3 className="text-xl font-heading font-bold text-secondary-blue mb-2">
-                        {event.title}
-                      </h3>
-
-                      <p className="text-gray-600 mb-4 line-clamp-3">
-                        {event.description}
-                      </p>
-
-                      {/* Event Details */}
-                      <div className="space-y-2 mb-4 text-sm">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span>{formatDateTime(event.date)}</span>
-                        </div>
-
-                        {event.location && (
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            </svg>
-                            <span>{event.location}</span>
-                          </div>
-                        )}
-
-                        {event.course && (
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                            </svg>
-                            <span>{event.course}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="kente-strip mb-4"></div>
-
-                      <Button
-                        variant={isPast ? 'outline' : 'primary'}
-                        className="w-full"
-                        disabled={isPast}
-                      >
-                        {isPast ? 'Event Ended' : 'Register Now'}
-                      </Button>
+                      {course && (
+                        <span className="inline-block text-xs bg-primary-gold/10 text-primary-gold font-medium px-2 py-0.5 rounded-full">
+                          {course}
+                        </span>
+                      )}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
+
+      {/* CTA */}
+      <section className="py-14 bg-white border-t border-gray-100">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-3">
+            Want to attend future sessions?
+          </h2>
+          <p className="text-gray-500 mb-6 max-w-md mx-auto text-sm">
+            All live sessions are included when you enrol in a programme.
+          </p>
+          <Link href="/admission">
+            <Button variant="primary" size="md">Apply for the Next Cohort</Button>
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

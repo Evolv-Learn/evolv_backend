@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" fill="none">
+  <rect width="200" height="240" fill="#1E3A8A"/>
+  <!-- Head -->
+  <ellipse cx="100" cy="80" rx="38" ry="42" fill="#FFF0E0"/>
+  <!-- Hair (top + sides) -->
+  <ellipse cx="100" cy="56" rx="38" ry="24" fill="#3D2B1F"/>
+  <ellipse cx="68" cy="78" rx="12" ry="20" fill="#3D2B1F"/>
+  <ellipse cx="132" cy="78" rx="12" ry="20" fill="#3D2B1F"/>
+  <!-- Neck -->
+  <rect x="88" y="118" width="24" height="18" rx="4" fill="#FFF0E0"/>
+  <!-- Shoulders / body -->
+  <path d="M30 240 Q30 180 62 168 Q80 158 100 156 Q120 158 138 168 Q170 180 170 240Z" fill="#C1440E"/>
+  <!-- Collar detail -->
+  <path d="M88 156 Q100 172 112 156" stroke="#FFF0E0" stroke-width="2" fill="none"/>
+</svg>

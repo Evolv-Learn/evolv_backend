@@ -44,7 +44,8 @@ from .views import (
     LessonDetailView,
     RegisterUserView,
     AdminProfileListView,
-    AdminUserProfileDetailView, MyStudentView, health_check
+    AdminUserProfileDetailView, MyStudentView, health_check,
+    CourseEnrollmentAdminListView, CourseEnrollmentUpdateStatusView,
 )
 
 from .views_extended import (
@@ -143,6 +144,9 @@ urlpatterns = [
     path("admin/dashboard/", AdminDashboardView.as_view(), name="admin-dashboard"),
     path("admin/assignments/", AdminAssignmentListView.as_view(), name="admin-assignments"),
     path("admin/assignments/<int:pk>/", AdminAssignmentDetailView.as_view(), name="admin-assignment-detail"),
+
+    path("admin/enrollments/", CourseEnrollmentAdminListView.as_view(), name="admin-enrollment-list"),
+    path("admin/enrollments/<int:pk>/status/", CourseEnrollmentUpdateStatusView.as_view(), name="admin-enrollment-update-status"),
 
     path("health/", health_check, name="health-check"),
 ]

@@ -33,7 +33,7 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-warm-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-accent-terracotta to-red-700 text-white py-16 pattern-adire relative">
+      <div className="bg-gradient-to-r from-igbo-red to-red-800 text-white py-16 pattern-adire relative">
         <div className="kente-strip absolute top-0 left-0 right-0"></div>
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-5xl font-heading font-bold mb-4">

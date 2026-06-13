@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
+from django.conf import settings
 from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -26,7 +28,8 @@ from .serializers import (
     SelectionProcedureSerializer, StudentSelectionSerializer, ContactUsSerializer, EventAttendanceSerializer, AlumniReadSerializer, AlumniWriteSerializer,
     EventWriteSerializer, EventReadSerializer, AboutUsSerializer, TeamMemberReadSerializer, TeamMemberWriteSerializer, CoreValueSerializer, ReviewSerializer,
     LearningScheduleSerializer, LessonReadSerializer, LessonWriteSerializer, UserProfileCreateSerializer, RegisterUserSerializer, AdminProfileUpdateSerializer,
-    ModuleReadSerializer, ModuleWriteSerializer, StudentReadSerializer, StudentWriteSerializer, CourseEnrollmentSerializer)
+    ModuleReadSerializer, ModuleWriteSerializer, StudentReadSerializer, StudentWriteSerializer,
+    CourseEnrollmentSerializer, CourseEnrollmentAdminSerializer)
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -900,3 +903,60 @@ class CourseEnrollmentDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = CourseEnrollmentSerializer
     permission_classes = [IsAdminOrReadOnly]
     queryset = CourseEnrollment.objects.all()
+
+
+class CourseEnrollmentAdminListView(generics.ListAPIView):
+    """Admin: list all enrollments with student details."""
+    serializer_class = CourseEnrollmentAdminSerializer
+    permission_classes = [IsAdminUser]
+    queryset = CourseEnrollment.objects.select_related('student', 'course').order_by('-applied_at')
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['status', 'course']
+    search_fields = ['student__first_name', 'student__last_name', 'student__email', 'course__name']
+    ordering_fields = ['applied_at', 'updated_at', 'status']
+
+
+class CourseEnrollmentUpdateStatusView(generics.UpdateAPIView):
+    """
+    Admin: update enrollment status.
+    PATCH /admin/enrollments/<pk>/status/
+    Body: {"status": "Approved" | "Rejected" | "Under Review" | "Pending"}
+    Sends a notification email to the student on Approved or Rejected.
+    """
+    serializer_class = CourseEnrollmentAdminSerializer
+    permission_classes = [IsAdminUser]
+    queryset = CourseEnrollment.objects.select_related('student', 'course')
+    http_method_names = ['patch', 'options', 'head']
+
+    def perform_update(self, serializer):
+        enrollment = serializer.save()
+        if enrollment.status in ('Approved', 'Rejected'):
+            self._notify_student(enrollment)
+
+    def _notify_student(self, enrollment):
+        student = enrollment.student
+        course_name = enrollment.course.name
+        if enrollment.status == 'Approved':
+            subject = f"Application Approved \u2013 {course_name}"
+            body = (
+                f"Dear {student.first_name},\n\n"
+                f"We are pleased to inform you that your application for {course_name} has been approved.\n\n"
+                "Please log in to your dashboard to view next steps.\n\n"
+                "Best regards,\nThe EvolvLearn Team"
+            )
+        else:
+            subject = f"Application Update \u2013 {course_name}"
+            body = (
+                f"Dear {student.first_name},\n\n"
+                f"Thank you for applying for {course_name}. After careful review, "
+                "your application was not successful for this cohort.\n\n"
+                "We encourage you to apply again for future cohorts.\n\n"
+                "Best regards,\nThe EvolvLearn Team"
+            )
+        send_mail(
+            subject=subject,
+            message=body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[student.email],
+            fail_silently=True,
+        )

@@ -717,6 +717,27 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'applied_at', 'updated_at']
 
 
+class CourseEnrollmentAdminSerializer(serializers.ModelSerializer):
+    """Admin-facing serializer: includes student details; only status is writable."""
+    course_name = serializers.CharField(source='course.name', read_only=True)
+    student_first_name = serializers.CharField(source='student.first_name', read_only=True)
+    student_last_name = serializers.CharField(source='student.last_name', read_only=True)
+    student_email = serializers.EmailField(source='student.email', read_only=True)
+
+    class Meta:
+        model = CourseEnrollment
+        fields = [
+            'id', 'course', 'course_name',
+            'student', 'student_first_name', 'student_last_name', 'student_email',
+            'status', 'applied_at', 'updated_at',
+        ]
+        read_only_fields = [
+            'id', 'course', 'course_name',
+            'student', 'student_first_name', 'student_last_name', 'student_email',
+            'applied_at', 'updated_at',
+        ]
+
+
 class StudentReadSerializer(serializers.ModelSerializer):
     courses = serializers.StringRelatedField(many=True)
     enrollments = CourseEnrollmentSerializer(many=True, read_only=True)

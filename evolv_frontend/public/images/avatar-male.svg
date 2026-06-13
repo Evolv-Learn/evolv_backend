@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" fill="none">
+  <rect width="200" height="240" fill="#1E3A8A"/>
+  <!-- Head -->
+  <ellipse cx="100" cy="82" rx="36" ry="40" fill="#FFF0E0"/>
+  <!-- Hair (close crop) -->
+  <ellipse cx="100" cy="56" rx="36" ry="22" fill="#2D1B0E"/>
+  <!-- Neck -->
+  <rect x="88" y="118" width="24" height="18" rx="4" fill="#FFF0E0"/>
+  <!-- Shoulders / body (broader for male) -->
+  <path d="M20 240 Q22 178 56 166 Q76 156 100 154 Q124 156 144 166 Q178 178 180 240Z" fill="#2D1B69"/>
+  <!-- Collar detail -->
+  <path d="M86 154 L100 172 L114 154" stroke="#FFF0E0" stroke-width="2" fill="none"/>
+</svg>
