@@ -12,8 +12,9 @@ variables:
   pythonVersion: '3.11'
   # Node.js version
   nodeVersion: '18.x'
-  # Azure subscription
-  azureSubscription: 'YOUR_AZURE_SUBSCRIPTION_NAME'
+  # Azure subscription — set this to your service connection name in Azure DevOps
+  # (Pipelines → Service connections → name of your Azure Resource Manager connection)
+  azureSubscription: 'YOUR_AZURE_SUBSCRIPTION_NAME'  # <-- UPDATE THIS
   # Backend App Service name
   backendAppName: 'evolvlearn-backend'
   # Frontend App Service name

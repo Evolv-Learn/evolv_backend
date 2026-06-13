@@ -1,1 +1,1 @@
-gunicorn --bind=0.0.0.0:8000 --timeout 600 evolv_backend.wsgi:application
+gunicorn --bind=0.0.0.0:8000 --workers=4 --timeout=600 --access-logfile '-' --error-logfile '-' evolv_backend.wsgi:application

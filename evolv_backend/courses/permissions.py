@@ -60,5 +60,5 @@ class IsAdminOrInstructor(BasePermission):
         # Allow instructors
         try:
             return request.user.profile.role == 'Instructor'
-        except:
+        except AttributeError:
             return False

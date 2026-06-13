@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 const cards = [
   {
     title: 'Live, Interactive Sessions',
-    body: 'Every module is taught live on Discord. You ask questions, we work through problems together in real time. No pre-recorded videos you watch alone at midnight.',
+    body: 'Every module is taught live on Discord — ask questions, solve problems in real time. No pre-recorded videos.',
     accent: 'bg-primary-gold',
   },
   {
@@ -15,7 +15,7 @@ const cards = [
   },
   {
     title: 'Affordable Without Compromise',
-    body: 'Quality training should not be a luxury. We offer regional pricing so cost is never the reason you cannot develop your research skills.',
+    body: 'Quality training should not be a luxury. We offer regional pricing so cost is never a barrier.',
     accent: 'bg-success',
   },
 ];
@@ -73,10 +73,12 @@ export default function WhyEvolvRotator() {
       <div
         className={`rounded-2xl p-10 md:p-14 bg-white bg-opacity-10 backdrop-blur-sm border border-white border-opacity-10 transition-opacity duration-300 min-h-[200px] ${fading ? 'opacity-0' : 'opacity-100'}`}
       >
-        <div className={`inline-block w-10 h-1 ${cards[active].accent} rounded-full mb-6`} />
-        <h3 className="text-2xl md:text-3xl font-heading font-bold text-white mb-4">
-          {cards[active].title}
-        </h3>
+        <div className="flex items-center gap-4 mb-4">
+          <div className={`flex-shrink-0 w-10 h-1 ${cards[active].accent} rounded-full`} />
+          <h3 className="text-2xl md:text-3xl font-heading font-bold text-white leading-tight">
+            {cards[active].title}
+          </h3>
+        </div>
         <p className="text-gray-300 text-lg leading-relaxed max-w-3xl">
           {cards[active].body}
         </p>

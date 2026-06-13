@@ -523,14 +523,14 @@ class AboutUsDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = AboutUsSerializer
 
     def get_object(self):
-        obj, _ = AboutUs.objects.get_or_create(
-            defaults={
-                "title": "About EvolvLearn",
-                "description": "We empower learners with practical tech skills.",
-                "mission": "",
-                "vision": "",
-            }
-        )
+        obj = AboutUs.objects.first()
+        if obj is None:
+            obj = AboutUs.objects.create(
+                title="About EvolvLearn",
+                description="We empower learners with practical tech skills.",
+                mission="",
+                vision="",
+            )
         return obj
 
 

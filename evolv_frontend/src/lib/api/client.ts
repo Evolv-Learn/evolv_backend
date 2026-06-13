@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://evolv-backend-e3fgbka2d2dmapcv.westeurope-01.azurewebsites.net/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_BASE_URL) {
+  console.warn('NEXT_PUBLIC_API_URL is not set — API calls will fail.');
+}
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -9,7 +13,7 @@ const apiClient = axios.create({
   },
 });
 
-// Add token to requests
+// Attach access token to every request
 apiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
@@ -23,16 +27,45 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle token refresh - temporarily disabled to prevent loops
+// Auto-refresh access token on 401, then retry original request once
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // Temporarily disable auto-refresh to prevent infinite loops
-    if (error.response?.status === 401) {
-      console.log('Unauthorized - please login again');
-      // Don't auto-redirect, just log the error
+    const originalRequest = error.config;
+
+    // Only attempt refresh once, and not for the refresh endpoint itself
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      originalRequest.url !== '/auth/token/refresh/'
+    ) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = typeof window !== 'undefined'
+          ? localStorage.getItem('refresh_token')
+          : null;
+
+        if (!refreshToken) throw new Error('No refresh token');
+
+        const { data } = await axios.post(
+          `${API_BASE_URL}/auth/token/refresh/`,
+          { refresh: refreshToken }
+        );
+
+        localStorage.setItem('access_token', data.access);
+        originalRequest.headers.Authorization = `Bearer ${data.access}`;
+        return apiClient(originalRequest);
+      } catch {
+        // Refresh failed — clear session and redirect to login
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          window.location.href = '/login';
+        }
+      }
     }
-    
+
     return Promise.reject(error);
   }
 );

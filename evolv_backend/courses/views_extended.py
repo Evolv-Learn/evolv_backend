@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status, generics
+from rest_framework.pagination import PageNumberPagination
 from django.db.models import Count, Q, Avg
 from django.utils import timezone
 
@@ -106,10 +107,9 @@ class AdminDashboardView(APIView):
         # Student statistics
         total_students = Student.objects.count()
         
-        # Count pending applications (students with incomplete selection steps)
+        # Count pending applications (students with at least one Pending selection step)
         pending_applications = Student.objects.filter(
-            Q(selection_steps__status="Pending") |
-            ~Q(selection_steps__isnull=False)
+            selection_steps__status="Pending"
         ).distinct().count()
 
         # Course statistics
@@ -328,14 +328,18 @@ class LearningMaterialsView(APIView):
 @permission_classes([IsAuthenticated])
 def my_courses(request):
     """
-    Get courses the authenticated student is enrolled in
-    GET /api/v1/students/me/courses/
+    Get courses the authenticated student is enrolled in.
+    GET /api/v1/students/me/courses/?page=1
     """
     try:
         student = request.user.student
-        courses = student.courses.all()
-        serializer = CourseReadSerializer(courses, many=True)
-        return Response(serializer.data)
+        courses = student.courses.all().order_by('name')
+
+        paginator = PageNumberPagination()
+        paginator.page_size = 20
+        result_page = paginator.paginate_queryset(courses, request)
+        serializer = CourseReadSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
     except Student.DoesNotExist:
         return Response(
             {"detail": "Student profile not found."},
@@ -347,17 +351,20 @@ def my_courses(request):
 @permission_classes([IsAuthenticated])
 def my_events(request):
     """
-    Get events the authenticated student is attending
-    GET /api/v1/students/me/events/
+    Get events the authenticated student is attending.
+    GET /api/v1/students/me/events/?page=1
     """
     try:
         student = request.user.student
-        # Get events student is attending
         attended_events = Event.objects.filter(
             attendances__student=student
-        )
-        serializer = EventReadSerializer(attended_events, many=True, context={'request': request})
-        return Response(serializer.data)
+        ).order_by('-date')
+
+        paginator = PageNumberPagination()
+        paginator.page_size = 20
+        result_page = paginator.paginate_queryset(attended_events, request)
+        serializer = EventReadSerializer(result_page, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
     except Student.DoesNotExist:
         return Response(
             {"detail": "Student profile not found."},

@@ -322,6 +322,7 @@ class Module(models.Model):
 
     class Meta:
         ordering = ["order"]
+        unique_together = [("schedule", "order")]
 
     def __str__(self):
         return f"{self.schedule.course.name} - {self.title}"
@@ -339,6 +340,7 @@ class Lesson(models.Model):
 
     class Meta:
         ordering = ["order"]
+        unique_together = [("module", "order")]
 
     def __str__(self):
         return f"{self.module.title} - {self.title}"
@@ -400,7 +402,7 @@ class CourseEnrollment(models.Model):
 
 class ContactUs(models.Model):
     name = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
+    email = models.EmailField()
     message = models.TextField()
 
     def __str__(self):

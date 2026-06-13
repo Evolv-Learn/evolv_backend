@@ -8,6 +8,8 @@ from django.conf.urls.static import static
 
 from .views import (
     ProfileDetailView,
+    event_calendar,
+    PublicInstructorProfileView,
     LocationListCreateView,
     LocationDetailView,
     PartnerListCreateView,
@@ -102,6 +104,7 @@ urlpatterns = [
 
     path("events/", EventListCreateView.as_view(), name="event-list"),
     path("events/<int:pk>/", EventDetailView.as_view(), name="event-detail"),
+    path("events/calendar/", event_calendar, name="event-calendar"),
 
     path("about-us/", AboutUsDetailView.as_view(), name="about-us"),
     path("team-members/", TeamMemberListCreateView.as_view(), name="team-members"),
@@ -147,6 +150,8 @@ urlpatterns = [
 
     path("admin/enrollments/", CourseEnrollmentAdminListView.as_view(), name="admin-enrollment-list"),
     path("admin/enrollments/<int:pk>/status/", CourseEnrollmentUpdateStatusView.as_view(), name="admin-enrollment-update-status"),
+
+    path("instructors/<int:user_id>/profile/", PublicInstructorProfileView.as_view(), name="public-instructor-profile"),
 
     path("health/", health_check, name="health-check"),
 ]

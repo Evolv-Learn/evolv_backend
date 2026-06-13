@@ -33,10 +33,8 @@ export default function LoginPage() {
 
       // Get user profile
       try {
-        console.log('=== Login: Fetching user profile ===');
         
         const profile = await authApi.getProfile();
-        console.log('Profile data:', profile);
         
         // Profile now includes is_superuser and is_staff
         const userData = {
@@ -49,7 +47,6 @@ export default function LoginPage() {
           is_staff: profile?.is_staff || false,
         };
         
-        console.log('âœ… Final user data to store:', userData);
         setUser(userData);
       } catch (profileError) {
         console.error('âŒ Profile fetch error:', profileError);

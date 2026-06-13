@@ -100,6 +100,8 @@ def send_welcome_email(user):
 
 def send_application_received_email(student):
     """Send confirmation email when student application is received"""
+    # Evaluate courses once; callers in a loop should prefetch_related('courses')
+    course_names = ', '.join(student.courses.values_list('name', flat=True))
     subject = "Application Received - EvolvLearn"
     message = f"""
     Hi {student.first_name},
@@ -112,7 +114,7 @@ def send_application_received_email(student):
     Application Details:
     - Name: {student.first_name} {student.last_name}
     - Email: {student.email}
-    - Courses: {', '.join([c.name for c in student.courses.all()])}
+    - Courses: {course_names}
     
     Best regards,
     The EvolvLearn Team

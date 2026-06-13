@@ -3,6 +3,7 @@ import { Open_Sans, Poppins } from 'next/font/google'
 import './globals.css'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import ErrorBoundary from '@/components/ui/ErrorBoundary'
 
 const openSans = Open_Sans({ 
   subsets: ['latin'],
@@ -29,7 +30,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${openSans.variable} ${poppins.variable}`}>
         <Header />
-        {children}
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
         <Footer />
       </body>
     </html>
