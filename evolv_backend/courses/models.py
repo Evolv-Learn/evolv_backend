@@ -488,3 +488,140 @@ class Assignment(models.Model):
 
     def __str__(self):
         return f"{self.student} — {self.module.title} ({self.status})"
+
+
+class CoursePrice(models.Model):
+    CURRENCY_CHOICES = [
+        ('USD', 'US Dollar'),
+        ('EUR', 'Euro'),
+        ('GBP', 'British Pound'),
+        ('NGN', 'Nigerian Naira'),
+        ('GHS', 'Ghanaian Cedi'),
+        ('KES', 'Kenyan Shilling'),
+        ('ZAR', 'South African Rand'),
+        ('TZS', 'Tanzanian Shilling'),
+        ('UGX', 'Ugandan Shilling'),
+        ('ETB', 'Ethiopian Birr'),
+        ('XOF', 'West African CFA Franc'),
+        ('MAD', 'Moroccan Dirham'),
+    ]
+
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='prices')
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = [('course', 'currency')]
+        ordering = ['currency']
+
+    def __str__(self):
+        return f"{self.course.name} — {self.currency} {self.amount}"
+
+
+class DiscountCode(models.Model):
+    DISCOUNT_TYPE_CHOICES = [
+        ('percentage', 'Percentage'),
+        ('fixed', 'Fixed Amount'),
+    ]
+
+    code = models.CharField(max_length=50, unique=True)
+    discount_type = models.CharField(max_length=10, choices=DISCOUNT_TYPE_CHOICES)
+    discount_value = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        help_text="Percentage (0–100) or fixed amount in USD-equivalent"
+    )
+    max_uses = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text="Leave blank for unlimited uses"
+    )
+    uses_count = models.PositiveIntegerField(default=0)
+    valid_from = models.DateTimeField(null=True, blank=True)
+    valid_until = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    courses = models.ManyToManyField(
+        Course, blank=True,
+        help_text="Restrict to specific courses. Leave empty to apply to all."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        suffix = f"{self.discount_value}%" if self.discount_type == 'percentage' else f"${self.discount_value} off"
+        return f"{self.code} ({suffix})"
+
+    def is_valid_for(self, course=None):
+        """
+        Return (True, None) if usable, or (False, error_message) if not.
+        Pass a Course instance to check course-level restrictions.
+        """
+        from django.utils import timezone
+        now = timezone.now()
+
+        if not self.is_active:
+            return False, "This discount code is no longer active."
+        if self.max_uses is not None and self.uses_count >= self.max_uses:
+            return False, "This discount code has reached its usage limit."
+        if self.valid_from and now < self.valid_from:
+            return False, "This discount code is not yet valid."
+        if self.valid_until and now > self.valid_until:
+            return False, "This discount code has expired."
+        if course and self.courses.exists() and not self.courses.filter(pk=course.pk).exists():
+            return False, "This discount code does not apply to this course."
+        return True, None
+
+    def calculate_discount(self, amount):
+        """
+        Return (discount_amount, final_amount) given the original Decimal amount.
+        """
+        from decimal import Decimal
+        if self.discount_type == 'percentage':
+            discount = (amount * self.discount_value / Decimal('100')).quantize(Decimal('0.01'))
+        else:
+            discount = min(self.discount_value, amount)
+        final = max(amount - discount, Decimal('0.00'))
+        return discount, final
+
+
+class Payment(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('failed', 'Failed'),
+        ('refunded', 'Refunded'),
+    ]
+    PROCESSOR_CHOICES = [
+        ('stripe', 'Stripe'),
+        ('paystack', 'Paystack'),
+        ('flutterwave', 'Flutterwave'),
+        ('manual', 'Manual'),
+    ]
+
+    enrollment = models.OneToOneField(
+        CourseEnrollment, on_delete=models.CASCADE, related_name='payment'
+    )
+    original_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        help_text="Amount before discount"
+    )
+    discount_code = models.ForeignKey(
+        DiscountCode, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='payments'
+    )
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Final amount charged")
+    currency = models.CharField(max_length=3)
+    processor = models.CharField(max_length=20, choices=PROCESSOR_CHOICES, default='manual')
+    processor_reference = models.CharField(max_length=255, blank=True, null=True, db_index=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    paid_at = models.DateTimeField(blank=True, null=True)
+    metadata = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.enrollment} — {self.currency} {self.amount} ({self.status})"

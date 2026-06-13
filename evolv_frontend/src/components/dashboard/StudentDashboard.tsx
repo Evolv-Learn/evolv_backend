@@ -42,8 +42,6 @@ export default function StudentDashboard() {
       // Fetch student profile
       try {
         const studentRes = await apiClient.get('/students/me/');
-        console.log('Student profile with enrollments:', studentRes.data);
-        console.log('Enrollments:', studentRes.data.enrollments);
         setStudentProfile(studentRes.data);
         
         // Check if any enrollment is approved
@@ -290,8 +288,31 @@ export default function StudentDashboard() {
                         <h3 className="font-bold text-secondary-blue">{enrollment.course_name}</h3>
                         <p className="text-xs text-gray-600">{enrollment.course_category}</p>
                       </div>
-                      <div className={`px-4 py-2 rounded-full font-bold text-sm ${getStatusColor(enrollment.status)}`}>
-                        {enrollment.status}
+                      <div className="flex items-center gap-3">
+                        <div className={`px-4 py-2 rounded-full font-bold text-sm ${getStatusColor(enrollment.status)}`}>
+                          {enrollment.status}
+                        </div>
+                        {enrollment.status === 'Approved' && !enrollment.payment_status && (
+                          <Link
+                            href="/pricing"
+                            className="bg-primary-gold text-secondary-blue-dark text-xs font-semibold px-3 py-2 rounded-lg hover:bg-yellow-400 transition-colors whitespace-nowrap"
+                          >
+                            Pay Now
+                          </Link>
+                        )}
+                        {enrollment.payment_status === 'paid' && (
+                          <span className="text-xs font-semibold text-green-600 bg-green-50 border border-green-200 px-3 py-2 rounded-lg">
+                            Paid
+                          </span>
+                        )}
+                        {enrollment.payment_status === 'pending' && (
+                          <Link
+                            href="/pricing"
+                            className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg hover:bg-amber-100 transition-colors whitespace-nowrap"
+                          >
+                            Complete Payment
+                          </Link>
+                        )}
                       </div>
                     </div>
                   ))}

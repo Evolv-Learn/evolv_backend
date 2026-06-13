@@ -68,6 +68,19 @@ from .views_extended import (
     CourseCurriculumView,
 )
 
+from .views_payment import (
+    PublicPricingListView,
+    CoursePriceListView,
+    CoursePriceAdminView,
+    CoursePriceAdminDetailView,
+    DiscountCodeAdminListCreateView,
+    DiscountCodeAdminDetailView,
+    InitiatePaymentView,
+    ValidateDiscountView,
+    PaymentStatusView,
+    PaymentWebhookView,
+)
+
 app_name = "courses"
 
 urlpatterns = [
@@ -154,6 +167,20 @@ urlpatterns = [
     path("instructors/<int:user_id>/profile/", PublicInstructorProfileView.as_view(), name="public-instructor-profile"),
 
     path("health/", health_check, name="health-check"),
+
+    # ── Pricing & Payments ──────────────────────────────────────────────────
+    path("pricing/", PublicPricingListView.as_view(), name="pricing-list"),
+    path("courses/<int:course_id>/prices/", CoursePriceListView.as_view(), name="course-prices"),
+
+    path("admin/prices/", CoursePriceAdminView.as_view(), name="admin-price-list"),
+    path("admin/prices/<int:pk>/", CoursePriceAdminDetailView.as_view(), name="admin-price-detail"),
+
+    path("admin/discount-codes/", DiscountCodeAdminListCreateView.as_view(), name="admin-discount-list"),
+    path("admin/discount-codes/<int:pk>/", DiscountCodeAdminDetailView.as_view(), name="admin-discount-detail"),
+    path("payments/initiate/", InitiatePaymentView.as_view(), name="payment-initiate"),
+    path("payments/validate-discount/", ValidateDiscountView.as_view(), name="payment-validate-discount"),
+    path("payments/<int:pk>/", PaymentStatusView.as_view(), name="payment-status"),
+    path("payments/webhook/", PaymentWebhookView.as_view(), name="payment-webhook"),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

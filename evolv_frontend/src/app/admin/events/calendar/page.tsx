@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import EventCalendar from '@/components/calendar/EventCalendar';
+import { Button } from '@/components/ui/Button';
 
 export default function AdminEventCalendarPage() {
   const router = useRouter();
@@ -11,28 +12,29 @@ export default function AdminEventCalendarPage() {
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Back Button */}
         <div className="mb-6">
-          <button
+          <Button
+            variant="outline"
             onClick={() => router.push('/dashboard')}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+            className="flex items-center gap-2"
           >
             <span>←</span> Back to My Account
-          </button>
+          </Button>
         </div>
 
         {/* Header */}
         <div className="mb-6 flex justify-between items-center">
           <div>
             <h1 className="text-4xl font-heading font-bold text-secondary-blue mb-2">
-              Event Calendar 📅
+              Event Calendar
             </h1>
             <p className="text-gray-600">View and manage all scheduled events</p>
           </div>
-          <button
+          <Button
+            variant="primary"
             onClick={() => router.push('/admin/events/create')}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
-            ➕ Create Event
-          </button>
+            Create Event
+          </Button>
         </div>
 
         {/* Calendar Component */}

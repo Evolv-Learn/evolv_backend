@@ -27,6 +27,9 @@ from .models import (
     LessonProgress,
     LiveSession,
     Assignment,
+    CoursePrice,
+    Payment,
+    DiscountCode,
 )
 
 User = get_user_model()
@@ -943,3 +946,104 @@ class CoursePublicDetailSerializer(serializers.ModelSerializer):
             "registration_deadline", "selection_date", "start_date", "end_date",
             "schedules",
         ]
+
+
+# ── Pricing & Payment serializers ─────────────────────────────────────────────
+
+class CoursePriceSerializer(serializers.ModelSerializer):
+    currency_display = serializers.CharField(source='get_currency_display', read_only=True)
+
+    class Meta:
+        model = CoursePrice
+        fields = ['id', 'course', 'currency', 'currency_display', 'amount', 'is_active']
+        read_only_fields = ['id']
+
+
+class CourseWithPricesSerializer(serializers.ModelSerializer):
+    """Lightweight course representation with all active prices — used on the /pricing page."""
+    prices = serializers.SerializerMethodField()
+    instructor_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course
+        fields = [
+            'id', 'name', 'category', 'description', 'instructor_name',
+            'start_date', 'end_date', 'registration_deadline', 'prices',
+        ]
+
+    def get_prices(self, obj):
+        active_prices = obj.prices.filter(is_active=True)
+        return CoursePriceSerializer(active_prices, many=True).data
+
+    def get_instructor_name(self, obj):
+        if obj.instructor:
+            return f"{obj.instructor.first_name} {obj.instructor.last_name}".strip() or obj.instructor.username
+        return None
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    processor_display = serializers.CharField(source='get_processor_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    enrollment_id = serializers.IntegerField(source='enrollment.id', read_only=True)
+    course_name = serializers.CharField(source='enrollment.course.name', read_only=True)
+    discount_code_str = serializers.CharField(source='discount_code.code', read_only=True, default=None)
+
+    class Meta:
+        model = Payment
+        fields = [
+            'id', 'enrollment_id', 'course_name', 'original_amount', 'discount_code_str',
+            'discount_amount', 'amount', 'currency',
+            'processor', 'processor_display', 'processor_reference',
+            'status', 'status_display', 'created_at', 'paid_at',
+        ]
+        read_only_fields = [
+            'id', 'processor_display', 'status_display', 'enrollment_id',
+            'course_name', 'created_at', 'paid_at', 'discount_code_str',
+        ]
+
+
+class DiscountCodeSerializer(serializers.ModelSerializer):
+    discount_label = serializers.SerializerMethodField()
+    # code is optional on create — auto-generated if blank
+    code = serializers.CharField(required=False, allow_blank=True, max_length=50)
+
+    class Meta:
+        model = DiscountCode
+        fields = [
+            'id', 'code', 'discount_type', 'discount_value', 'discount_label',
+            'max_uses', 'uses_count', 'valid_from', 'valid_until', 'is_active', 'courses',
+        ]
+        read_only_fields = ['id', 'uses_count', 'discount_label']
+
+    def get_discount_label(self, obj):
+        if obj.discount_type == 'percentage':
+            return f"{obj.discount_value}% off"
+        return f"${obj.discount_value} off"
+
+    def validate_code(self, value):
+        value = value.strip().upper()
+        if not value:
+            return value  # Will be auto-generated in create()
+        # Check uniqueness (exclude current instance on update)
+        qs = DiscountCode.objects.filter(code=value)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError("A discount code with this value already exists.")
+        return value
+
+    @staticmethod
+    def _generate_unique_code():
+        import secrets
+        import string
+        chars = string.ascii_uppercase + string.digits
+        for _ in range(20):  # 20 attempts is more than enough
+            code = 'EVOLV-' + ''.join(secrets.choice(chars) for _ in range(6))
+            if not DiscountCode.objects.filter(code=code).exists():
+                return code
+        raise serializers.ValidationError("Could not generate a unique code. Please try again.")
+
+    def create(self, validated_data):
+        if not validated_data.get('code'):
+            validated_data['code'] = self._generate_unique_code()
+        return super().create(validated_data)

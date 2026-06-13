@@ -212,6 +212,23 @@ export default function AdminDashboard() {
               </div>
             </div>
           </Link>
+
+          <Link href="/admin/discount-codes">
+            <div className="group relative bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 rounded-2xl p-6 text-white hover:shadow-2xl transition-all cursor-pointer transform hover:-translate-y-2 border-2 border-emerald-300 overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full -mr-12 -mt-12"></div>
+              <div className="relative z-10">
+                <div className="mb-4 group-hover:scale-110 transition-transform">
+                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                </div>
+                <h3 className="text-xl font-bold mb-2 drop-shadow-md">Discount Codes</h3>
+                <p className="text-sm opacity-95">Manage promo codes</p>
+                <div className="mt-4 flex items-center text-sm font-semibold bg-white bg-opacity-20 rounded-lg px-3 py-1 w-fit backdrop-blur-sm">
+                  <span>Create &amp; manage</span>
+                  <span className="ml-2 group-hover:ml-4 transition-all">→</span>
+                </div>
+              </div>
+            </div>
+          </Link>
         </div>
 
 

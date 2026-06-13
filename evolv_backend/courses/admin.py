@@ -24,6 +24,9 @@ from .models import (
     LessonProgress,
     LiveSession,
     Assignment,
+    CoursePrice,
+    Payment,
+    DiscountCode,
 )
 
 
@@ -125,3 +128,32 @@ class LessonProgressAdmin(admin.ModelAdmin):
     list_display = ("student", "lesson", "completed_at")
     list_filter = ("lesson__module__schedule__course",)
     search_fields = ("student__first_name", "student__last_name")
+
+
+@admin.register(CoursePrice)
+class CoursePriceAdmin(admin.ModelAdmin):
+    list_display = ("course", "currency", "amount", "is_active")
+    list_filter = ("currency", "is_active", "course")
+    search_fields = ("course__name",)
+    list_editable = ("amount", "is_active")
+    ordering = ("course__name", "currency")
+
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ("enrollment", "currency", "amount", "processor", "status", "created_at", "paid_at")
+    list_filter = ("status", "processor", "currency")
+    search_fields = ("enrollment__student__first_name", "enrollment__student__last_name", "processor_reference")
+    readonly_fields = ("created_at", "paid_at", "metadata")
+    ordering = ("-created_at",)
+
+
+@admin.register(DiscountCode)
+class DiscountCodeAdmin(admin.ModelAdmin):
+    list_display = ("code", "discount_type", "discount_value", "uses_count", "max_uses", "valid_until", "is_active")
+    list_filter = ("discount_type", "is_active")
+    search_fields = ("code",)
+    list_editable = ("is_active",)
+    filter_horizontal = ("courses",)
+    readonly_fields = ("uses_count", "created_at")
+    ordering = ("-created_at",)
