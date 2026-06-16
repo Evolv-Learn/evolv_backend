@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api/client';
+import { Button } from '@/components/ui/Button';
 
 interface Course {
   id: number;
@@ -147,13 +148,17 @@ export default function CourseApprovalsPage() {
     <div className="container mx-auto px-4 py-8">
       {/* Back Button */}
       <div className="mb-6">
-        <button
+        <Button
+          variant="outline"
           onClick={() => router.push('/dashboard')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+          className="flex items-center gap-2"
         >
-          <span className="text-xl">←</span>
-          <span className="font-medium">Back to My Account</span>
-        </button>
+          <span>←</span> Back to My Account
+        </Button>
+      </div>
+
+      {/* Header */}
+      <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Course Approvals</h1>
         <p className="text-gray-600">Review and approve courses created by instructors</p>
       </div>

@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
+import { useSearchParams } from 'next/navigation';
 import apiClient from '@/lib/api/client';
 import { useAuthStore } from '@/store/auth';
 import EventCalendar from '@/components/calendar/EventCalendar';
 
 export default function StudentDashboard() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuthStore();
   const [courses, setCourses] = useState<any[]>([]);
@@ -18,6 +16,7 @@ export default function StudentDashboard() {
   const [applicationStatus, setApplicationStatus] = useState<string>('Not Applied');
   const [isLoading, setIsLoading] = useState(true);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [payingEnrollmentId, setPayingEnrollmentId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -88,129 +87,111 @@ export default function StudentDashboard() {
 
   const onboarding = getOnboardingProgress();
 
+  const firstName = user?.first_name || user?.username || 'there';
+  const initials = firstName.slice(0, 2).toUpperCase();
+
   return (
-    <div className="min-h-screen bg-warm-white py-8">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-warm-white py-6">
+      <div className="container mx-auto px-4 max-w-5xl">
+
         {/* Success Message */}
         {showSuccessMessage && (
-          <div className="mb-6 bg-green-50 border-l-4 border-success p-4 rounded-lg animate-fade-in">
-            <div className="flex items-center">
-              <span className="text-2xl mr-3">✅</span>
-              <div>
-                {searchParams.get('success') === 'courses-updated' ? (
-                  <>
-                    <h3 className="font-bold text-success">Courses Updated Successfully!</h3>
-                    <p className="text-sm text-gray-700">Your course selection has been updated.</p>
-                  </>
-                ) : (
-                  <>
-                    <h3 className="font-bold text-success">Application Submitted Successfully!</h3>
-                    <p className="text-sm text-gray-700">We'll review your application and get back to you within 3-5 business days.</p>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Welcome Header with Motivation */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-heading font-bold text-secondary-blue mb-4">
-            Welcome back, {user?.first_name || user?.username}!
-          </h1>
-          <p className="text-xl text-gray-600 italic font-medium text-center max-w-3xl mx-auto">
-            "Every expert started as a beginner. You're one step closer to your future."
-          </p>
-        </div>
-
-        {/* Onboarding Progress Card - For New Students */}
-        {!studentProfile && (
-          <div className="bg-gradient-to-br from-primary-gold to-primary-gold-dark rounded-xl p-8 mb-8 shadow-xl">
-            <div className="mb-6">
-              <h2 className="text-3xl font-heading font-bold text-gray-900 mb-2">
-                Start Strong With EvolvLearn in 3 Steps
-              </h2>
-              <p className="text-gray-800 text-lg">
-                Welcome to your learning journey! Complete these steps to unlock your potential.
+          <div className="mb-4 bg-green-50 border-l-4 border-success p-3 rounded-lg flex items-center gap-3">
+            <svg className="w-5 h-5 text-success shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+            </svg>
+            <div>
+              <p className="font-semibold text-success text-sm">
+                {searchParams.get('success') === 'courses-updated' ? 'Courses updated!' : 'Application submitted!'}
+              </p>
+              <p className="text-xs text-gray-600">
+                {searchParams.get('success') === 'courses-updated'
+                  ? 'Your course selection has been updated.'
+                  : "We'll review your application within 3–5 business days."}
               </p>
             </div>
-
-            {/* Progress Bar */}
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-semibold text-gray-900">
-                  You've completed {onboarding.completed} out of {onboarding.total} onboarding steps
-                </span>
-                <span className="text-sm font-bold text-gray-900">
-                  {Math.round(onboarding.percentage)}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-900/20 rounded-full h-4 overflow-hidden">
-                <div 
-                  className="bg-secondary-blue h-full rounded-full transition-all duration-500"
-                  style={{ width: `${onboarding.percentage}%` }}
-                ></div>
-              </div>
-            </div>
-
-            {/* Steps Checklist */}
-            <div className="space-y-3">
-              {onboarding.steps.map((step, index) => (
-                <div 
-                  key={index}
-                  className={`flex items-center gap-3 p-4 rounded-lg ${
-                    step.done ? 'bg-white/30' : 'bg-white/50'
-                  }`}
-                >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                    step.done ? 'bg-success text-white' : 'bg-gray-300 text-gray-600'
-                  }`}>
-                    {step.done ? '✓' : index + 1}
-                  </div>
-                  <span className={`font-semibold ${step.done ? 'text-gray-900' : 'text-gray-700'}`}>
-                    {step.name}
-                  </span>
-                  {!step.done && index === 1 && (
-                    <span className="ml-auto">
-                      <Link href="/admission">
-                        <Button variant="secondary" size="sm">
-                          Start Now →
-                        </Button>
-                      </Link>
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
           </div>
         )}
 
-        {/* For students who haven't applied - Show Application CTA */}
+        {/* Welcome Row */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-12 h-12 rounded-full bg-secondary-blue flex items-center justify-center text-white font-bold text-lg shrink-0">
+            {initials}
+          </div>
+          <div>
+            <h1 className="text-2xl font-heading font-bold text-secondary-blue leading-tight">
+              Welcome back, {firstName}
+            </h1>
+            <p className="text-sm text-gray-500">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
+          <div className="ml-auto hidden md:block">
+            <span className={`px-4 py-1.5 rounded-full text-sm font-semibold ${getStatusColor(applicationStatus)}`}>
+              {applicationStatus}
+            </span>
+          </div>
+        </div>
+
+        {/* New Student — compact onboarding + CTA combined */}
         {!studentProfile && (
-          <div className="bg-gradient-to-r from-secondary-blue to-secondary-blue-dark rounded-xl p-6 text-white mb-8 shadow-lg">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="rounded-2xl overflow-hidden shadow-lg mb-6 border border-gray-100">
+            {/* Top strip */}
+            <div className="bg-secondary-blue px-6 py-4 flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-heading font-bold mb-2">Application Status</h2>
-                <p className="text-gray-200">Ready to begin your journey?</p>
+                <h2 className="text-white font-heading font-bold text-lg">Your journey starts here</h2>
+                <p className="text-gray-300 text-xs mt-0.5">3 steps to get started — you've already completed step 1</p>
               </div>
-              <div className="px-6 py-3 rounded-full font-bold text-lg bg-gray-300 text-gray-700">
-                NOT STARTED
+              <span className="text-xs font-bold text-secondary-blue bg-primary-gold px-3 py-1 rounded-full">
+                {Math.round(onboarding.percentage)}% done
+              </span>
+            </div>
+
+            {/* Progress bar */}
+            <div className="bg-secondary-blue-dark px-6 pb-4">
+              <div className="w-full bg-white/10 rounded-full h-1.5">
+                <div
+                  className="bg-primary-gold h-full rounded-full transition-all duration-700"
+                  style={{ width: `${onboarding.percentage}%` }}
+                />
               </div>
             </div>
-            
-            <div className="mt-6 pt-6 border-t border-white/20">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-4">
-                <p className="text-lg mb-2 font-semibold">You haven't applied to any course yet.</p>
-                <p className="text-sm text-gray-200">
-                  Take the first step towards your tech career. Our application process is simple and free!
-                </p>
+
+            {/* Steps — horizontal compact */}
+            <div className="bg-white px-6 py-5">
+              <div className="flex items-start gap-3">
+                {onboarding.steps.map((step, index) => (
+                  <div key={index} className="flex-1 flex flex-col items-center text-center relative">
+                    {/* Connector line */}
+                    {index < onboarding.steps.length - 1 && (
+                      <div className={`absolute top-4 left-1/2 w-full h-0.5 ${step.done ? 'bg-primary-gold' : 'bg-gray-200'}`} />
+                    )}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm z-10 relative ${
+                      step.done ? 'bg-success text-white' : index === 1 ? 'bg-secondary-blue text-white ring-2 ring-secondary-blue ring-offset-2' : 'bg-gray-100 text-gray-400'
+                    }`}>
+                      {step.done
+                        ? <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>
+                        : index + 1}
+                    </div>
+                    <p className={`text-xs mt-2 font-medium ${step.done ? 'text-gray-500' : index === 1 ? 'text-secondary-blue' : 'text-gray-400'}`}>
+                      {step.name}
+                    </p>
+                  </div>
+                ))}
               </div>
 
-              <Link href="/admission">
-                <Button variant="primary" className="bg-primary-gold hover:bg-primary-gold-dark text-gray-900 w-full md:w-auto px-8 py-4 text-lg font-bold">
-                  Apply Now - It's Free! →
-                </Button>
-              </Link>
+              {/* CTA */}
+              <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-4 border-t border-gray-100">
+                <div>
+                  <p className="font-semibold text-gray-800 text-sm">Ready to apply?</p>
+                  <p className="text-xs text-gray-500">The application takes less than 5 minutes. It's free.</p>
+                </div>
+                <Link href="/admission">
+                  <button className="bg-primary-gold hover:bg-yellow-500 text-secondary-blue-dark font-bold text-sm px-6 py-2.5 rounded-lg transition-colors whitespace-nowrap">
+                    Submit Application →
+                  </button>
+                </Link>
+              </div>
             </div>
           </div>
         )}
@@ -219,62 +200,54 @@ export default function StudentDashboard() {
         {studentProfile && (
           <>
             {/* Primary Action Cards */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              {/* Profile Button */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
               <Link href="/dashboard/profile">
-                <div className="bg-gradient-to-br from-secondary-blue to-secondary-blue-dark rounded-xl p-6 text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
-                  <h3 className="text-xl font-bold mb-2">My Profile</h3>
-                  <p className="text-sm text-gray-200">View and update your application details</p>
+                <div className="bg-secondary-blue rounded-xl p-4 text-white hover:opacity-90 transition-opacity cursor-pointer group">
+                  <svg className="w-6 h-6 mb-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                  <p className="font-bold text-sm">My Profile</p>
+                  <p className="text-xs text-gray-300 mt-0.5">View & update details</p>
                 </div>
               </Link>
 
-              {/* My Courses */}
               <Link href="/dashboard/courses">
-                <div className="bg-gradient-to-br from-primary-gold to-primary-gold-dark rounded-xl p-6 text-gray-900 hover:shadow-xl transition-shadow cursor-pointer h-full">
-                  <h3 className="text-xl font-bold mb-2">My Courses</h3>
-                  <p className="text-sm">View your enrolled courses</p>
-                  {studentProfile.courses && (
-                    <div className="mt-2 bg-white/30 rounded-full px-3 py-1 inline-block">
-                      <span className="font-bold">{studentProfile.courses.length}</span> enrolled
-                    </div>
+                <div className="bg-primary-gold rounded-xl p-4 text-gray-900 hover:opacity-90 transition-opacity cursor-pointer">
+                  <svg className="w-6 h-6 mb-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                  <p className="font-bold text-sm">My Courses</p>
+                  {studentProfile.courses?.length > 0 && (
+                    <p className="text-xs mt-0.5 font-semibold">{studentProfile.courses.length} enrolled</p>
                   )}
                 </div>
               </Link>
 
-              {/* Assignments */}
               <Link href="/dashboard/assignments">
-                <div className="bg-gradient-to-br from-hausa-indigo to-purple-900 rounded-xl p-6 text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
-                  <div className="text-4xl mb-3">📝</div>
-                  <h3 className="text-xl font-bold mb-2">Assignments</h3>
-                  <p className="text-sm text-gray-200">Submit your exercise links and view instructor feedback</p>
+                <div className="bg-hausa-indigo rounded-xl p-4 text-white hover:opacity-90 transition-opacity cursor-pointer">
+                  <svg className="w-6 h-6 mb-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                  <p className="font-bold text-sm">Assignments</p>
+                  <p className="text-xs text-gray-300 mt-0.5">Submit & view feedback</p>
                 </div>
               </Link>
 
-              {/* Learning Materials - Always visible */}
               {applicationStatus === 'Approved' ? (
                 <Link href="/materials">
-                  <div className="bg-gradient-to-br from-success to-green-700 rounded-xl p-6 text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
-                    <h3 className="text-xl font-bold mb-2">Learning Materials</h3>
-                    <p className="text-sm text-gray-200">Access your course resources</p>
+                  <div className="bg-success rounded-xl p-4 text-white hover:opacity-90 transition-opacity cursor-pointer">
+                    <svg className="w-6 h-6 mb-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    <p className="font-bold text-sm">Materials</p>
+                    <p className="text-xs text-gray-200 mt-0.5">Access resources</p>
                   </div>
                 </Link>
               ) : (
-                <div className="bg-gradient-to-br from-gray-300 to-gray-400 rounded-xl p-6 text-gray-600 h-full relative overflow-hidden">
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-                    Locked
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Learning Materials</h3>
-                  <p className="text-sm">Available upon approval</p>
-                  <div className="mt-3 text-xs bg-white/50 rounded px-2 py-1 inline-block">
-                    Pending approval
-                  </div>
+                <div className="bg-gray-100 rounded-xl p-4 text-gray-400 relative overflow-hidden">
+                  <span className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full">Soon</span>
+                  <svg className="w-6 h-6 mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                  <p className="font-bold text-sm">Materials</p>
+                  <p className="text-xs mt-0.5">Unlocks on approval</p>
                 </div>
               )}
             </div>
 
             {/* Course Application Status */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-              <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-4">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6">
+              <h2 className="text-base font-heading font-bold text-secondary-blue mb-3">
                 Course Application Status
               </h2>
               {studentProfile.enrollments && studentProfile.enrollments.length > 0 ? (
@@ -293,12 +266,27 @@ export default function StudentDashboard() {
                           {enrollment.status}
                         </div>
                         {enrollment.status === 'Approved' && !enrollment.payment_status && (
-                          <Link
-                            href="/pricing"
-                            className="bg-primary-gold text-secondary-blue-dark text-xs font-semibold px-3 py-2 rounded-lg hover:bg-yellow-400 transition-colors whitespace-nowrap"
+                          <button
+                            disabled={payingEnrollmentId === enrollment.id}
+                            onClick={async () => {
+                              setPayingEnrollmentId(enrollment.id);
+                              try {
+                                const res = await apiClient.post('/payments/initiate/', {
+                                  enrollment_id: enrollment.id,
+                                  currency: 'NGN',
+                                });
+                                if (res.data.authorization_url) {
+                                  sessionStorage.setItem('evolv_payment_id', String(res.data.id));
+                                  window.location.href = res.data.authorization_url;
+                                }
+                              } catch {
+                                setPayingEnrollmentId(null);
+                              }
+                            }}
+                            className="bg-primary-gold text-secondary-blue-dark text-xs font-semibold px-3 py-2 rounded-lg hover:bg-yellow-400 disabled:opacity-60 transition-colors whitespace-nowrap"
                           >
-                            Pay Now
-                          </Link>
+                            {payingEnrollmentId === enrollment.id ? 'Redirecting…' : 'Pay Now'}
+                          </button>
                         )}
                         {enrollment.payment_status === 'paid' && (
                           <span className="text-xs font-semibold text-green-600 bg-green-50 border border-green-200 px-3 py-2 rounded-lg">
@@ -306,137 +294,123 @@ export default function StudentDashboard() {
                           </span>
                         )}
                         {enrollment.payment_status === 'pending' && (
-                          <Link
-                            href="/pricing"
-                            className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg hover:bg-amber-100 transition-colors whitespace-nowrap"
+                          <button
+                            disabled={payingEnrollmentId === enrollment.id}
+                            onClick={async () => {
+                              setPayingEnrollmentId(enrollment.id);
+                              try {
+                                const res = await apiClient.post('/payments/initiate/', {
+                                  enrollment_id: enrollment.id,
+                                  currency: 'NGN',
+                                });
+                                if (res.data.authorization_url) {
+                                  sessionStorage.setItem('evolv_payment_id', String(res.data.id));
+                                  window.location.href = res.data.authorization_url;
+                                }
+                              } catch {
+                                setPayingEnrollmentId(null);
+                              }
+                            }}
+                            className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg hover:bg-amber-100 disabled:opacity-60 transition-colors whitespace-nowrap"
                           >
-                            Complete Payment
-                          </Link>
+                            {payingEnrollmentId === enrollment.id ? 'Redirecting…' : 'Complete Payment'}
+                          </button>
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <p className="text-lg font-medium">No course applications yet</p>
+                <div className="text-center py-6 text-gray-400">
+                  <p className="text-sm">No course applications yet</p>
                 </div>
               )}
             </div>
-
-
           </>
         )}
 
         {/* Event Calendar */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6">
+          <h2 className="text-base font-heading font-bold text-secondary-blue mb-3">
             Event Calendar
           </h2>
           <EventCalendar userRole="student" compact={true} />
         </div>
 
-        {/* Quick Actions - For All Students */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-4">
-            Quick Actions
-          </h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            <Link href="/admission">
-              <Button variant="primary" className="w-full py-6 text-lg">
-                Apply for Courses
-              </Button>
-            </Link>
-            <Link href="/courses">
-              <Button variant="outline" className="w-full py-6 text-lg">
-                Browse Courses
-              </Button>
-            </Link>
-            <Link href="/events">
-              <Button variant="outline" className="w-full py-6 text-lg">
-                Join Events
-              </Button>
-            </Link>
-          </div>
-        </div>
+        {/* Quick Actions + Available Courses — side by side on desktop */}
+        <div className="grid md:grid-cols-3 gap-6">
 
-        {/* Available Courses */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-heading font-bold text-secondary-blue">
-              Available Courses
-            </h2>
-            {courses.length > 4 && (
-              <button
-                onClick={() => {
-                  const showAll = courses.length > 4;
-                  if (showAll) {
-                    router.push('/courses');
-                  }
-                }}
-                className="flex items-center gap-2 px-4 py-2 text-secondary-blue hover:text-primary-gold transition-colors font-semibold"
-              >
-                Show More
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            )}
+          {/* Quick Actions */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <h2 className="text-base font-heading font-bold text-secondary-blue mb-3">Quick Actions</h2>
+            <div className="flex flex-col gap-2">
+              <Link href="/admission">
+                <button className="w-full bg-secondary-blue hover:bg-secondary-blue-dark text-white font-semibold text-sm py-2.5 rounded-lg transition-colors">
+                  Apply for Courses
+                </button>
+              </Link>
+              <Link href="/courses">
+                <button className="w-full border border-secondary-blue text-secondary-blue hover:bg-secondary-blue hover:text-white font-semibold text-sm py-2.5 rounded-lg transition-colors">
+                  Browse Courses
+                </button>
+              </Link>
+              <Link href="/events">
+                <button className="w-full border border-gray-200 text-gray-600 hover:border-secondary-blue hover:text-secondary-blue font-semibold text-sm py-2.5 rounded-lg transition-colors">
+                  Join Events
+                </button>
+              </Link>
+            </div>
           </div>
-          
-          {courses.length > 0 ? (
-            <div className="relative">
-              <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide scroll-smooth">
-                {courses.slice(0, 4).map((course: any) => (
-                  <div 
-                    key={course.id} 
-                    className="flex-shrink-0 w-80 border-l-4 border-secondary-blue rounded-lg p-4 bg-warm-white hover:shadow-lg transition-shadow"
+
+          {/* Available Courses */}
+          <div className="md:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-heading font-bold text-secondary-blue">Available Courses</h2>
+              {courses.length > 3 && (
+                <Link href="/courses" className="text-xs text-primary-gold font-semibold hover:underline">
+                  View all →
+                </Link>
+              )}
+            </div>
+
+            {courses.length > 0 ? (
+              <div className="space-y-3">
+                {courses.slice(0, 3).map((course: any) => (
+                  <div
+                    key={course.id}
+                    className="flex items-center justify-between p-3 border-l-4 border-secondary-blue rounded-lg bg-warm-white hover:shadow-sm transition-shadow"
                   >
-                    <h3 className="font-bold text-lg mb-2 text-secondary-blue">{course.name}</h3>
-                    <p className="text-sm text-gray-600 mb-3">{course.category}</p>
-                    
-                    {/* Timeline - Single Line with Words */}
-                    {(course.registration_deadline || course.start_date) && (
-                      <div className="mb-3 flex flex-col gap-2 text-xs">
-                        {course.registration_deadline && (
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-gray-600">Registration Deadline:</span>
-                            <span className="font-semibold text-red-600">
-                              {new Date(course.registration_deadline).toLocaleDateString('en-US', { 
-                                month: 'short', 
-                                day: 'numeric' 
-                              })}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-secondary-blue truncate">{course.name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{course.category}</p>
+                      {(course.registration_deadline || course.start_date) && (
+                        <div className="flex gap-3 mt-1 text-xs">
+                          {course.registration_deadline && (
+                            <span className="text-red-500 font-medium">
+                              Deadline: {new Date(course.registration_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </span>
-                          </div>
-                        )}
-                        {course.start_date && (
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-gray-600">Starts:</span>
-                            <span className="font-semibold text-success">
-                              {new Date(course.start_date).toLocaleDateString('en-US', { 
-                                month: 'short', 
-                                day: 'numeric' 
-                              })}
+                          )}
+                          {course.start_date && (
+                            <span className="text-success font-medium">
+                              Starts: {new Date(course.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    <Link href={`/courses/${course.id}`}>
-                      <Button variant="outline" size="sm" className="w-full">
-                        View Details
-                      </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <Link href={`/courses/${course.id}`} className="ml-3 shrink-0">
+                      <button className="text-xs border border-secondary-blue text-secondary-blue hover:bg-secondary-blue hover:text-white px-3 py-1.5 rounded-lg transition-colors font-semibold">
+                        View
+                      </button>
                     </Link>
                   </div>
                 ))}
               </div>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <p className="text-lg font-medium">No courses available at the moment</p>
-            </div>
-          )}
+            ) : (
+              <p className="text-sm text-gray-400 py-4 text-center">No courses available at the moment</p>
+            )}
+          </div>
+
         </div>
       </div>
     </div>

@@ -12,6 +12,7 @@ interface User {
   email: string;
   first_name: string;
   last_name: string;
+  has_application: boolean;
   profile?: {
     id: number;
     role: 'Student' | 'Instructor' | 'Alumni';
@@ -53,6 +54,7 @@ function UsersManagementContent() {
         email: profile.user_email || profile.email || profile.user?.email,
         first_name: profile.first_name || profile.user?.first_name || '',
         last_name: profile.last_name || profile.user?.last_name || '',
+        has_application: profile.has_application ?? false,
         profile: {
           id: profile.id,
           role: profile.role,
@@ -298,7 +300,8 @@ function UsersManagementContent() {
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">User</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Email</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Current Role</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Role</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Application</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Actions</th>
                 </tr>
               </thead>
@@ -326,6 +329,19 @@ function UsersManagementContent() {
                         <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getRoleBadgeColor(user.profile?.role)}`}>
                           {user.profile?.role || 'No Role'}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {user.has_application ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                            Applied
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-200">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/></svg>
+                            Not Applied
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         {user.profile ? (
@@ -396,7 +412,7 @@ function UsersManagementContent() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                       <div className="text-4xl mb-2">🔍</div>
                       <p>No users found</p>
                     </td>

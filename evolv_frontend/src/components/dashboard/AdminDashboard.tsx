@@ -144,87 +144,87 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
           <Link href="/admin/users">
-            <div className="group relative bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-500 rounded-2xl p-6 text-white hover:shadow-2xl transition-all cursor-pointer transform hover:-translate-y-2 border-2 border-amber-300 overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full -mr-12 -mt-12"></div>
+            <div className="group relative bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-500 rounded-2xl p-4 text-white hover:shadow-2xl transition-all cursor-pointer transform hover:-translate-y-2 border-2 border-amber-300 overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-white opacity-10 rounded-full -mr-8 -mt-8"></div>
               <div className="relative z-10">
-                <div className="mb-4 group-hover:scale-110 transition-transform">
-                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                <div className="mb-3 group-hover:scale-110 transition-transform">
+                  <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                 </div>
-                <h3 className="text-xl font-bold mb-2 drop-shadow-md">Manage Users</h3>
-                <p className="text-sm opacity-95">Promote students to instructors</p>
-                <div className="mt-4 flex items-center text-sm font-semibold bg-white bg-opacity-20 rounded-lg px-3 py-1 w-fit backdrop-blur-sm">
+                <h3 className="text-base font-bold mb-1 drop-shadow-md">Manage Users</h3>
+                <p className="text-xs opacity-95">Promote students to instructors</p>
+                <div className="mt-3 flex items-center text-xs font-semibold bg-white bg-opacity-20 rounded-lg px-2 py-1 w-fit backdrop-blur-sm">
                   <span>Manage Roles</span>
-                  <span className="ml-2 group-hover:ml-4 transition-all">→</span>
+                  <span className="ml-2 group-hover:ml-3 transition-all">→</span>
                 </div>
               </div>
             </div>
           </Link>
 
           <Link href="/admin/applications">
-            <div className="group relative bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-600 rounded-2xl p-6 text-white hover:shadow-2xl transition-all cursor-pointer transform hover:-translate-y-2 border-2 border-blue-300 overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full -mr-12 -mt-12"></div>
+            <div className="group relative bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-600 rounded-2xl p-4 text-white hover:shadow-2xl transition-all cursor-pointer transform hover:-translate-y-2 border-2 border-blue-300 overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-white opacity-10 rounded-full -mr-8 -mt-8"></div>
               <div className="relative z-10">
-                <div className="mb-4 group-hover:scale-110 transition-transform">
-                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                <div className="mb-3 group-hover:scale-110 transition-transform">
+                  <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
                 </div>
-                <h3 className="text-xl font-bold mb-2 drop-shadow-md">Applications</h3>
-                <p className="text-sm opacity-95">Review student applications</p>
-                <div className="mt-4 flex items-center text-sm font-semibold bg-white bg-opacity-20 rounded-lg px-3 py-1 w-fit backdrop-blur-sm">
+                <h3 className="text-base font-bold mb-1 drop-shadow-md">Applications</h3>
+                <p className="text-xs opacity-95">Review student applications</p>
+                <div className="mt-3 flex items-center text-xs font-semibold bg-white bg-opacity-20 rounded-lg px-2 py-1 w-fit backdrop-blur-sm">
                   <span>{stats.pendingApplications} Pending</span>
-                  <span className="ml-2 group-hover:ml-4 transition-all">→</span>
+                  <span className="ml-2 group-hover:ml-3 transition-all">→</span>
                 </div>
               </div>
             </div>
           </Link>
 
           <Link href="/admin/courses">
-            <div className="group relative bg-gradient-to-br from-emerald-600 via-green-600 to-teal-600 rounded-2xl p-6 text-white hover:shadow-2xl transition-all cursor-pointer transform hover:-translate-y-2 border-2 border-emerald-300 overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full -mr-12 -mt-12"></div>
+            <div className="group relative bg-gradient-to-br from-emerald-600 via-green-600 to-teal-600 rounded-2xl p-4 text-white hover:shadow-2xl transition-all cursor-pointer transform hover:-translate-y-2 border-2 border-emerald-300 overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-white opacity-10 rounded-full -mr-8 -mt-8"></div>
               <div className="relative z-10">
-                <div className="mb-4 group-hover:scale-110 transition-transform">
-                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                <div className="mb-3 group-hover:scale-110 transition-transform">
+                  <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
                 </div>
-                <h3 className="text-xl font-bold mb-2 drop-shadow-md">Courses</h3>
-                <p className="text-sm opacity-95">Manage all courses</p>
-                <div className="mt-4 flex items-center text-sm font-semibold bg-white bg-opacity-20 rounded-lg px-3 py-1 w-fit backdrop-blur-sm">
+                <h3 className="text-base font-bold mb-1 drop-shadow-md">Courses</h3>
+                <p className="text-xs opacity-95">Manage all courses</p>
+                <div className="mt-3 flex items-center text-xs font-semibold bg-white bg-opacity-20 rounded-lg px-2 py-1 w-fit backdrop-blur-sm">
                   <span>{stats.courses} Active</span>
-                  <span className="ml-2 group-hover:ml-4 transition-all">→</span>
+                  <span className="ml-2 group-hover:ml-3 transition-all">→</span>
                 </div>
               </div>
             </div>
           </Link>
 
           <Link href="/admin/events/calendar">
-            <div className="group relative bg-gradient-to-br from-purple-600 via-violet-600 to-indigo-700 rounded-2xl p-6 text-white hover:shadow-2xl transition-all cursor-pointer transform hover:-translate-y-2 border-2 border-purple-300 overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full -mr-12 -mt-12"></div>
+            <div className="group relative bg-gradient-to-br from-purple-600 via-violet-600 to-indigo-700 rounded-2xl p-4 text-white hover:shadow-2xl transition-all cursor-pointer transform hover:-translate-y-2 border-2 border-purple-300 overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-white opacity-10 rounded-full -mr-8 -mt-8"></div>
               <div className="relative z-10">
-                <div className="mb-4 group-hover:scale-110 transition-transform">
-                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <div className="mb-3 group-hover:scale-110 transition-transform">
+                  <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 </div>
-                <h3 className="text-xl font-bold mb-2 drop-shadow-md">Event Calendar</h3>
-                <p className="text-sm opacity-95">View monthly schedule</p>
-                <div className="mt-4 flex items-center text-sm font-semibold bg-white bg-opacity-20 rounded-lg px-3 py-1 w-fit backdrop-blur-sm">
+                <h3 className="text-base font-bold mb-1 drop-shadow-md">Event Calendar</h3>
+                <p className="text-xs opacity-95">View monthly schedule</p>
+                <div className="mt-3 flex items-center text-xs font-semibold bg-white bg-opacity-20 rounded-lg px-2 py-1 w-fit backdrop-blur-sm">
                   <span>{stats.events} Events</span>
-                  <span className="ml-2 group-hover:ml-4 transition-all">→</span>
+                  <span className="ml-2 group-hover:ml-3 transition-all">→</span>
                 </div>
               </div>
             </div>
           </Link>
 
           <Link href="/admin/discount-codes">
-            <div className="group relative bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 rounded-2xl p-6 text-white hover:shadow-2xl transition-all cursor-pointer transform hover:-translate-y-2 border-2 border-emerald-300 overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full -mr-12 -mt-12"></div>
+            <div className="group relative bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 rounded-2xl p-4 text-white hover:shadow-2xl transition-all cursor-pointer transform hover:-translate-y-2 border-2 border-emerald-300 overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-white opacity-10 rounded-full -mr-8 -mt-8"></div>
               <div className="relative z-10">
-                <div className="mb-4 group-hover:scale-110 transition-transform">
-                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                <div className="mb-3 group-hover:scale-110 transition-transform">
+                  <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
                 </div>
-                <h3 className="text-xl font-bold mb-2 drop-shadow-md">Discount Codes</h3>
-                <p className="text-sm opacity-95">Manage promo codes</p>
-                <div className="mt-4 flex items-center text-sm font-semibold bg-white bg-opacity-20 rounded-lg px-3 py-1 w-fit backdrop-blur-sm">
+                <h3 className="text-base font-bold mb-1 drop-shadow-md">Discount Codes</h3>
+                <p className="text-xs opacity-95">Manage promo codes</p>
+                <div className="mt-3 flex items-center text-xs font-semibold bg-white bg-opacity-20 rounded-lg px-2 py-1 w-fit backdrop-blur-sm">
                   <span>Create &amp; manage</span>
-                  <span className="ml-2 group-hover:ml-4 transition-all">→</span>
+                  <span className="ml-2 group-hover:ml-3 transition-all">→</span>
                 </div>
               </div>
             </div>

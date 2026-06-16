@@ -65,6 +65,17 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-warm-white py-8">
       <div className="container mx-auto px-4 max-w-4xl">
+        {/* Back Button */}
+        <div className="mb-6">
+          <Button
+            variant="outline"
+            onClick={() => router.push('/dashboard')}
+            className="flex items-center gap-2"
+          >
+            <span>←</span> Back to My Account
+          </Button>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -209,7 +220,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Back to My Account */}
-        <div className="text-center">
+        <div className="text-center hidden">
           <Link href="/dashboard">
             <Button variant="outline">
               ← Back to My Account
