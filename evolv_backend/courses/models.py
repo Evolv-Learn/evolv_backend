@@ -103,7 +103,9 @@ class Course(models.Model):
     )
     description = models.TextField()
     software_tools = models.TextField(
-        help_text="List of software and languages covered"
+        help_text="List of software and languages covered",
+        blank=True,
+        default='',
     )
     topics_covered = models.TextField(
         help_text="Topics/content covered in this course",
@@ -358,17 +360,17 @@ class Student(models.Model):
     last_name = models.CharField(max_length=50)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     birth_date = models.DateField()
-    zip_code = models.CharField(max_length=20)
+    zip_code = models.CharField(max_length=20, blank=True, default='N/A')
     country_of_birth = CountryField()
-    nationality = CountryField()
+    nationality = CountryField(blank=True)
     register_number = models.CharField(max_length=50, blank=True, null=True)
     diploma_level = models.CharField(max_length=20, choices=DIPLOMA_LEVEL_CHOICES)
     job_status = models.CharField(max_length=50)
-    motivation = models.TextField()
-    future_goals = models.TextField()
-    proudest_moment = models.TextField()
+    motivation = models.TextField(blank=True, default='')
+    future_goals = models.TextField(blank=True, default='')
+    proudest_moment = models.TextField(blank=True, default='')
     english_level = models.IntegerField(choices=ENGLISH_LEVEL_CHOICES)
-    how_heard = models.CharField(max_length=100)
+    how_heard = models.CharField(max_length=100, blank=True, default='')
     referral_person = models.CharField(max_length=100, blank=True, null=True)
     has_laptop = models.BooleanField()
     courses = models.ManyToManyField("Course", related_name="students")

@@ -239,13 +239,15 @@ class CourseListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         # Check if this is a public view request
         public_view = self.request.query_params.get('public', '').lower() == 'true'
-        
-        # For public view or non-admin users, only show courses with active categories
+
+        qs = Course.objects.select_related("instructor", "parent").prefetch_related("locations", "partners")
+
+        # For public view or non-admin users, show all courses (category is a plain CharField)
         if public_view or not (self.request.user.is_staff or self.request.user.is_superuser):
-            return Course.objects.select_related("instructor", "parent", "category").prefetch_related("locations", "partners").filter(category__is_active=True)
-        
+            return qs.all()
+
         # For admin/instructor users in admin view, show all courses
-        return Course.objects.select_related("instructor", "parent", "category").prefetch_related("locations", "partners").all()
+        return qs.all()
 
     def get_serializer_class(self):
         return (

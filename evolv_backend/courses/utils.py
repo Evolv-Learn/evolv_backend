@@ -1,9 +1,12 @@
 """
 Utility functions for the courses app
 """
+import logging
 from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
+
+logger = logging.getLogger(__name__)
 
 
 def send_welcome_email(user):
@@ -310,6 +313,10 @@ def send_verification_email(user):
     )
     email.content_subtype = "html"
     email.body = html_message
-    email.send(fail_silently=True)
-    
+    try:
+        email.send(fail_silently=False)
+        logger.info("Verification email sent to %s", user.email)
+    except Exception as exc:
+        logger.error("Failed to send verification email to %s: %s", user.email, exc)
+
     return token

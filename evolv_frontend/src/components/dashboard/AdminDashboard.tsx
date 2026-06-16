@@ -42,32 +42,38 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const [studentsRes, coursesRes, eventsRes, profilesRes, enrollmentsRes] = await Promise.all([
-        apiClient.get('/students/'),
-        apiClient.get('/courses/'),
-        apiClient.get('/events/'),
-        apiClient.get('/admin/profiles/'),
-        apiClient.get('/enrollments/'),
+      // Fetch each independently so one failure doesn't zero out everything
+      const safe = async (fn: () => Promise<any>, fallback: any = []) => {
+        try { return await fn(); } catch { return fallback; }
+      };
+
+      const [students, courses, events, profiles, enrollments] = await Promise.all([
+        safe(() => apiClient.get('/students/').then(r => r.data.results ?? r.data)),
+        safe(() => apiClient.get('/courses/').then(r => r.data.results ?? r.data)),
+        safe(() => apiClient.get('/events/').then(r => r.data.results ?? r.data)),
+        safe(() => apiClient.get('/admin/profiles/').then(r => r.data.results ?? r.data)),
+        safe(() => apiClient.get('/admin/enrollments/').then(r => r.data.results ?? r.data)),
       ]);
-      
-      const students = studentsRes.data.results || studentsRes.data;
-      const courses = coursesRes.data.results || coursesRes.data;
-      const events = eventsRes.data.results || eventsRes.data;
-      const profiles = profilesRes.data.results || profilesRes.data;
-      const enrollments = enrollmentsRes.data.results || enrollmentsRes.data;
-      
-      const instructorCount = profiles.filter((p: any) => p.role === 'Instructor').length;
-      const pendingCount = enrollments.filter((e: any) => e.status === 'Pending').length;
-      
+
+      const instructorCount = profiles.filter((p: any) =>
+        p.role === 'Instructor' || p.role === 'instructor'
+      ).length;
+      const studentCount = profiles.filter((p: any) =>
+        p.role === 'Student' || p.role === 'student'
+      ).length;
+      const pendingCount = enrollments.filter((e: any) =>
+        e.status === 'Pending' || e.status === 'Under Review'
+      ).length;
+
       setStats({
-        students: students.length,
+        students: studentCount,
         courses: courses.length,
         events: events.length,
         instructors: instructorCount,
         pendingApplications: pendingCount,
         totalEnrollments: enrollments.length,
       });
-      
+
       // Build recent activities
       const activities: RecentActivity[] = [];
       enrollments.slice(0, 5).forEach((e: any) => {
@@ -75,11 +81,11 @@ export default function AdminDashboard() {
           id: e.id,
           type: 'enrollment',
           title: 'New Enrollment',
-          description: `${e.student?.first_name} applied for ${e.course?.name}`,
+          description: `${e.student?.first_name ?? 'A student'} applied for ${e.course?.name ?? 'a course'}`,
           timestamp: e.applied_at,
         });
       });
-      
+
       setRecentActivities(activities);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);

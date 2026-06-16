@@ -156,31 +156,30 @@ export default function CoursesPage() {
               {filteredCourses.map((course) => (
                 <div
                   key={course.id}
-                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow group"
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow group flex flex-col"
                 >
                   {/* Course Image */}
-                  <div className="h-48 relative overflow-hidden">
+                  <div className="h-32 relative overflow-hidden">
                     <img
                       src={getCategoryImage(course.category)}
                       alt={course.category}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-secondary-blue/20 group-hover:bg-secondary-blue/10 transition-colors duration-300" />
-                    <div className="absolute top-4 right-4">
-                      <span className={`px-3 py-1 text-white rounded-full text-xs font-semibold ${getCategoryColor(course.category)}`}>
-                        {course.category}
-                      </span>
-                    </div>
                   </div>
 
                   {/* Course Content */}
-                  <div className="p-6">
-                    <h3 className="text-xl font-heading font-bold text-secondary-blue mb-2 group-hover:text-primary-gold transition-colors">
-                      {course.name}
-                    </h3>
+                  <div className="p-6 flex flex-col flex-1">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h3 className="text-xl font-heading font-bold text-secondary-blue group-hover:text-primary-gold transition-colors">
+                        {course.name}
+                      </h3>
+                      <span className={`shrink-0 px-2 py-1 text-white rounded-full text-xs font-semibold ${getCategoryColor(course.category)}`}>
+                        {course.category}
+                      </span>
+                    </div>
                     
-                    <p className="text-gray-600 mb-4 line-clamp-3">
-                      {course.description}
+                    <p className="text-gray-600 mb-4 line-clamp-3">                      {course.description}
                     </p>
 
                     {/* Instructor */}
@@ -277,7 +276,7 @@ export default function CoursesPage() {
                       </div>
                     )}
 
-                    <div className="kente-strip mb-4"></div>
+                    <div className="kente-strip mb-4 mt-auto"></div>
 
                     <Link href={`/courses/${course.id}`}>
                       <Button variant="primary" className="w-full">

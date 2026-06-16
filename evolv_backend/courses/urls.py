@@ -69,6 +69,7 @@ from .views_extended import (
 )
 
 from .views_payment import (
+    VerifyPaymentView,
     PublicPricingListView,
     CoursePriceListView,
     CoursePriceAdminView,
@@ -180,6 +181,7 @@ urlpatterns = [
     path("payments/initiate/", InitiatePaymentView.as_view(), name="payment-initiate"),
     path("payments/validate-discount/", ValidateDiscountView.as_view(), name="payment-validate-discount"),
     path("payments/<int:pk>/", PaymentStatusView.as_view(), name="payment-status"),
+    path("payments/verify/", VerifyPaymentView.as_view(), name="payment-verify"),
     path("payments/webhook/", PaymentWebhookView.as_view(), name="payment-webhook"),
 ]
 

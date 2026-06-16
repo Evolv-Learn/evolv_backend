@@ -133,17 +133,19 @@ export default function CurriculumPage() {
       <div className="bg-gradient-to-r from-secondary-blue to-secondary-blue-dark text-white py-16 pattern-adire relative">
         <div className="kente-strip absolute top-0 left-0 right-0"></div>
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl">
-            <Link href="/courses" className="text-primary-gold hover:underline text-sm mb-4 inline-block">
-              ← Back to Programmes
-            </Link>
-            <span className="inline-block bg-primary-gold text-gray-900 text-xs font-bold px-3 py-1 rounded-full mb-4">
-              {course.category}
-            </span>
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <Link href="/courses" className="text-primary-gold hover:underline text-sm">
+                ← Back to Programmes
+              </Link>
+              <span className="bg-primary-gold text-gray-900 text-xs font-bold px-3 py-1 rounded-full">
+                {course.category}
+              </span>
+            </div>
             <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4 leading-tight">
               {course.name}
             </h1>
-            <p className="text-lg text-gray-200 max-w-2xl leading-relaxed mb-8">
+            <p className="text-lg text-gray-200 leading-relaxed mb-8">
               {course.description}
             </p>
 

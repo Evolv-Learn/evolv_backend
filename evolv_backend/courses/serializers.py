@@ -45,10 +45,14 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     role = serializers.CharField(read_only=True)
+    has_application = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = ["id", "user", "role"]
+        fields = ["id", "user", "role", "has_application"]
+
+    def get_has_application(self, obj):
+        return Student.objects.filter(user=obj.user).exists()
 
 
 class ProfileSelfSerializer(serializers.ModelSerializer):
@@ -713,11 +717,27 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
     course_name = serializers.CharField(source='course.name', read_only=True)
     course_id = serializers.IntegerField(source='course.id', read_only=True)
     course_category = serializers.CharField(source='course.category', read_only=True)
-    
+    payment_status = serializers.SerializerMethodField()
+    payment_id = serializers.SerializerMethodField()
+
     class Meta:
         model = CourseEnrollment
-        fields = ['id', 'course_id', 'course_name', 'course_category', 'status', 'applied_at', 'updated_at']
+        fields = [
+            'id', 'course_id', 'course_name', 'course_category',
+            'status', 'applied_at', 'updated_at',
+            'payment_status', 'payment_id',
+        ]
         read_only_fields = ['id', 'applied_at', 'updated_at']
+
+    def get_payment_status(self, obj):
+        if hasattr(obj, 'payment'):
+            return obj.payment.status
+        return None
+
+    def get_payment_id(self, obj):
+        if hasattr(obj, 'payment'):
+            return obj.payment.id
+        return None
 
 
 class CourseEnrollmentAdminSerializer(serializers.ModelSerializer):

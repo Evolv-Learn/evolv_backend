@@ -17,6 +17,9 @@ Wire a real processor by:
 import hmac
 import hashlib
 import logging
+import time as _time
+
+import requests as http_requests
 
 from django.db import models as django_models
 from django.utils import timezone
@@ -282,8 +285,73 @@ class InitiatePaymentView(APIView):
                     uses_count=django_models.F('uses_count') + 1
                 )
 
+        if payment.status == 'paid':
+            return Response(PaymentSerializer(payment).data, status=status.HTTP_200_OK)
+
+        # ── Paystack: initialise transaction ─────────────────────────────────
+        paystack_secret = getattr(settings, 'PAYSTACK_SECRET_KEY', '')
+        if not paystack_secret:
+            # No processor configured — return pending payment (useful for local dev)
+            return Response(
+                PaymentSerializer(payment).data,
+                status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+            )
+
+        reference = f"EVOLV-{payment.id}-{int(_time.time())}"
+        # Paystack expects amounts in the smallest currency unit (kobo for NGN, cents for USD/GBP/EUR, etc.)
+        amount_minor = int(payment.amount * 100)
+        callback_url = f"{settings.FRONTEND_URL}/payment/callback"
+
+        try:
+            ps_resp = http_requests.post(
+                'https://api.paystack.co/transaction/initialize',
+                headers={
+                    'Authorization': f'Bearer {paystack_secret}',
+                    'Content-Type': 'application/json',
+                },
+                json={
+                    'email': enrollment.student.user.email,
+                    'amount': amount_minor,
+                    'reference': reference,
+                    'currency': currency,
+                    'callback_url': callback_url,
+                    'metadata': {
+                        'payment_id': payment.id,
+                        'course_name': enrollment.course.name,
+                    },
+                },
+                timeout=15,
+            )
+        except http_requests.RequestException as exc:
+            logger.error("Paystack API request failed: %s", exc)
+            return Response(
+                {'detail': 'Payment processor unavailable. Please try again.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        if not ps_resp.ok:
+            logger.error("Paystack initialize failed: %s %s", ps_resp.status_code, ps_resp.text)
+            return Response(
+                {'detail': 'Could not create payment session. Please try again.'},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        ps_data = ps_resp.json()
+        if not ps_data.get('status'):
+            return Response(
+                {'detail': ps_data.get('message', 'Payment initialization failed.')},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Persist the reference so the webhook can match it back
+        payment.processor_reference = reference
+        payment.processor = 'paystack'
+        payment.save(update_fields=['processor_reference', 'processor'])
+
+        response_data = PaymentSerializer(payment).data
+        response_data['authorization_url'] = ps_data['data']['authorization_url']
         return Response(
-            PaymentSerializer(payment).data,
+            response_data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
 
@@ -362,8 +430,8 @@ class PaymentWebhookView(APIView):
             payment.processor = processor
             payment.metadata = request.data
             payment.save()
-            # Auto-approve enrollment on payment
-            payment.enrollment.status = 'Approved'
+            # Move enrollment to Under Review — admin reviews only paid applicants
+            payment.enrollment.status = 'Under Review'
             payment.enrollment.save()
             logger.info("Payment %s marked as paid via %s", payment.id, processor)
         elif any(kw in event_lower for kw in ('fail', 'declined', 'payment_intent.payment_failed')):
@@ -393,11 +461,11 @@ class PaymentWebhookView(APIView):
         """
 
         # ── Paystack ──────────────────────────────────────────────────────────
-        # secret = getattr(settings, 'PAYSTACK_SECRET_KEY', None)
-        # if processor == 'paystack' and secret:
-        #     sig = request.headers.get('x-paystack-signature', '')
-        #     expected = hmac.new(secret.encode(), raw_body, hashlib.sha512).hexdigest()
-        #     return hmac.compare_digest(sig, expected)
+        secret = getattr(settings, 'PAYSTACK_SECRET_KEY', None)
+        if processor == 'paystack' and secret:
+            sig = request.headers.get('x-paystack-signature', '')
+            expected = hmac.new(secret.encode(), raw_body, hashlib.sha512).hexdigest()
+            return hmac.compare_digest(sig, expected)
 
         # ── Stripe ────────────────────────────────────────────────────────────
         # import stripe
@@ -418,3 +486,74 @@ class PaymentWebhookView(APIView):
 
         # No processor configured — allow through (remove before going live)
         return True
+
+
+# ── Authenticated: verify payment directly with Paystack ─────────────────────
+
+class VerifyPaymentView(APIView):
+    """
+    POST /payments/verify/
+    Body: { "reference": "<paystack_reference>" }
+
+    Called from the frontend callback page after Paystack redirect.
+    Verifies the transaction with Paystack API directly (no webhook needed).
+    Marks the payment as paid and enrollment as Under Review if successful.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        reference = (request.data.get('reference') or '').strip()
+        if not reference:
+            return Response({'detail': 'reference is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Look up payment by reference
+        try:
+            payment = Payment.objects.select_related(
+                'enrollment__student__user', 'enrollment__course'
+            ).get(processor_reference=reference)
+        except Payment.DoesNotExist:
+            return Response({'detail': 'Payment not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Security: ensure the payment belongs to the requesting user
+        if payment.enrollment.student.user != request.user:
+            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Already paid — return current state
+        if payment.status == 'paid':
+            return Response(PaymentSerializer(payment).data)
+
+        # Verify with Paystack
+        paystack_secret = getattr(settings, 'PAYSTACK_SECRET_KEY', '')
+        if not paystack_secret:
+            return Response({'detail': 'Payment processor not configured.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        try:
+            ps_resp = http_requests.get(
+                f'https://api.paystack.co/transaction/verify/{reference}',
+                headers={'Authorization': f'Bearer {paystack_secret}'},
+                timeout=10,
+            )
+        except http_requests.RequestException as exc:
+            logger.error('Paystack verify request failed: %s', exc)
+            return Response({'detail': 'Could not reach payment processor.'}, status=status.HTTP_502_BAD_GATEWAY)
+
+        if not ps_resp.ok:
+            return Response({'detail': 'Verification failed.'}, status=status.HTTP_502_BAD_GATEWAY)
+
+        ps_data = ps_resp.json().get('data', {})
+        ps_status = ps_data.get('status', '')
+
+        if ps_status == 'success':
+            payment.status = 'paid'
+            payment.paid_at = timezone.now()
+            payment.metadata = ps_resp.json()
+            payment.save(update_fields=['status', 'paid_at', 'metadata'])
+            payment.enrollment.status = 'Under Review'
+            payment.enrollment.save(update_fields=['status'])
+            logger.info('Payment %s verified as paid via Paystack direct verify', payment.id)
+        elif ps_status in ('failed', 'abandoned'):
+            payment.status = 'failed'
+            payment.metadata = ps_resp.json()
+            payment.save(update_fields=['status', 'metadata'])
+
+        return Response(PaymentSerializer(payment).data)

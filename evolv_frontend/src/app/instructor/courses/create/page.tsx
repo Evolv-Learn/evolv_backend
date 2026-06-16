@@ -7,14 +7,20 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import apiClient from '@/lib/api/client';
 
+const CATEGORY_OPTIONS = [
+  'Quantitative Methods',
+  'Qualitative Methods',
+  'Spatial Analysis',
+  'Research Productivity',
+];
+
 export default function CreateCoursePage() {
   const router = useRouter();
   const [locations, setLocations] = useState<any[]>([]);
-  const [partners, setPartners] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const [modules, setModules] = useState<string[]>(['']);
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -25,30 +31,23 @@ export default function CreateCoursePage() {
     selection_date: '',
     start_date: '',
     end_date: '',
+    location_id: '' as string | number,
     locations: [] as number[],
     partners: [] as number[],
+    price_ngn: '',
   });
 
   useEffect(() => {
-    fetchData();
+    apiClient.get('/locations/')
+      .then((res) => setLocations(res.data.results || res.data))
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const fetchData = async () => {
-    try {
-      const [locationsRes, partnersRes, categoriesRes] = await Promise.all([
-        apiClient.get('/locations/'),
-        apiClient.get('/partners/'),
-        apiClient.get('/categories/?is_active=true'),
-      ]);
-      setLocations(locationsRes.data.results || locationsRes.data);
-      setPartners(partnersRes.data.results || partnersRes.data);
-      setCategories(categoriesRes.data.results || categoriesRes.data);
-    } catch (error) {
-      console.error('Failed to fetch data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const addModule = () => setModules([...modules, '']);
+  const removeModule = (i: number) => setModules(modules.filter((_, idx) => idx !== i));
+  const updateModule = (i: number, val: string) =>
+    setModules(modules.map((m, idx) => (idx === i ? val : m)));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,11 +61,69 @@ export default function CreateCoursePage() {
     setIsSaving(true);
 
     try {
-      await apiClient.post('/courses/', formData);
+      const payload: any = {
+        name: formData.name,
+        category: formData.category,
+        description: formData.description,
+        software_tools: formData.software_tools,
+        topics_covered: formData.topics_covered,
+        registration_deadline: formData.registration_deadline || null,
+        selection_date: formData.selection_date || null,
+        start_date: formData.start_date || null,
+        end_date: formData.end_date || null,
+        locations: formData.location_id ? [Number(formData.location_id)] : [],
+        partners: [],
+      };
+
+      const courseRes = await apiClient.post('/courses/', payload);
+      const courseId = courseRes.data.id;
+
+      // Create NGN price if provided
+      if (formData.price_ngn) {
+        try {
+          await apiClient.post('/admin/prices/', {
+            course: courseId,
+            currency: 'NGN',
+            amount: parseFloat(formData.price_ngn),
+            is_active: true,
+          });
+        } catch (priceErr) {
+          console.warn('Price creation failed:', priceErr);
+        }
+      }
+
+      // Create schedule + modules if module titles and dates are provided
+      const filledModules = modules.filter((m) => m.trim());
+      if (
+        filledModules.length > 0 &&
+        formData.start_date &&
+        formData.end_date &&
+        formData.location_id
+      ) {
+        try {
+          const scheduleRes = await apiClient.post('/schedules/', {
+            course: courseId,
+            start_date: formData.start_date,
+            end_date: formData.end_date,
+            location: Number(formData.location_id),
+          });
+          const scheduleId = scheduleRes.data.id;
+          for (let i = 0; i < filledModules.length; i++) {
+            await apiClient.post('/modules/', {
+              schedule: scheduleId,
+              title: filledModules[i],
+              order: i + 1,
+            });
+          }
+        } catch (modErr) {
+          console.warn('Module creation failed (schedule may be missing dates/location):', modErr);
+        }
+      }
+
       router.push('/dashboard?success=course-created');
     } catch (err: any) {
       console.error('Failed to create course:', err);
-      setError(err.response?.data?.detail || 'Failed to create course');
+      setError(err.response?.data?.detail || JSON.stringify(err.response?.data) || 'Failed to create course');
     } finally {
       setIsSaving(false);
     }
@@ -128,10 +185,8 @@ export default function CreateCoursePage() {
                     required
                   >
                     <option value="">Select category</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.name}>
-                        {category.name}
-                      </option>
+                    {CATEGORY_OPTIONS.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
                 </div>
@@ -186,7 +241,7 @@ export default function CreateCoursePage() {
 
             {/* Timeline */}
             <div className="pt-6 border-t">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Course Timeline</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Course Timeline &amp; Location</h2>
               <div className="grid md:grid-cols-2 gap-4">
                 <Input
                   label="Registration Deadline"
@@ -212,6 +267,87 @@ export default function CreateCoursePage() {
                   value={formData.end_date}
                   onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
                 />
+              </div>
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Location
+                </label>
+                <select
+                  value={formData.location_id}
+                  onChange={(e) => setFormData({ ...formData, location_id: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-gold"
+                >
+                  <option value="">Select location (optional)</option>
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>{loc.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Pricing */}
+            <div className="pt-6 border-t">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Pricing</h2>
+              <div className="max-w-xs">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Price (NGN ₦)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₦</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1000"
+                    value={formData.price_ngn}
+                    onChange={(e) => setFormData({ ...formData, price_ngn: e.target.value })}
+                    placeholder="e.g. 20000"
+                    className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-gold"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Leave blank if not yet decided. Additional currencies can be added later.</p>
+              </div>
+            </div>
+
+            {/* Modules */}
+            <div className="pt-6 border-t">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-800">Course Modules</h2>
+                <button
+                  type="button"
+                  onClick={addModule}
+                  className="text-sm font-medium text-primary-gold border border-primary-gold rounded-lg px-3 py-1.5 hover:bg-primary-gold hover:text-white transition-colors"
+                >
+                  + Add Module
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mb-3">
+                Requires Start Date, End Date, and Location to save modules. You can also add/edit modules later.
+              </p>
+              <div className="space-y-2">
+                {modules.map((mod, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-400 w-6 text-right shrink-0">{i + 1}.</span>
+                    <input
+                      type="text"
+                      value={mod}
+                      onChange={(e) => updateModule(i, e.target.value)}
+                      placeholder={`Module ${i + 1} title`}
+                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-gold text-sm"
+                    />
+                    {modules.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeModule(i)}
+                        className="text-gray-400 hover:text-igbo-red transition-colors shrink-0"
+                        aria-label="Remove module"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 
