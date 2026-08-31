@@ -12,20 +12,20 @@ export const Header = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const { isAuthenticated, user, logout } = useAuthStore();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchUserRole();
-    }
-  }, [isAuthenticated]);
-
-  const fetchUserRole = async () => {
+  async function fetchUserRole() {
     try {
       const response = await apiClient.get('/profile/me/');
       setUserRole(response.data.role);
     } catch (error) {
       console.error('Failed to fetch user role:', error);
     }
-  };
+  }
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUserRole();
+    }
+  }, [isAuthenticated]);
 
   const isAdmin = userRole === 'Admin' || user?.role === 'Admin';
 
@@ -64,7 +64,7 @@ export const Header = () => {
               <span className="text-2xl font-bold text-white">E</span>
             </div>
             <span className="text-2xl font-heading font-bold text-secondary-blue">
-              Evolv
+              EvolvLearn
             </span>
           </Link>
 

@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import apiClient from '@/lib/api/client';
 
+const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? 'https://api.evolvlearn.org/api/v1').replace(/\/api\/v1\/?$/, '');
+
 export default function PublicInstructorProfilePage() {
   const params = useParams();
   const instructorId = params.id;
@@ -90,7 +92,7 @@ export default function PublicInstructorProfilePage() {
                   <img 
                     src={profile.profile_picture.startsWith('http') 
                       ? profile.profile_picture 
-                      : `https://evolv-backend-e3fgbka2d2dmapcv.westeurope-01.azurewebsites.net${profile.profile_picture}`
+                      : `${API_ORIGIN}${profile.profile_picture}`
                     } 
                     alt={profile.user?.first_name || 'Instructor'}
                     className="w-full h-full object-cover"

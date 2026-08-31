@@ -6,9 +6,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import apiClient from '@/lib/api/client';
 import { useAuthStore } from '@/store/auth';
+import { useRequireAuth } from '@/lib/auth/useRequireAuth';
 
 export default function LearningMaterialsPage() {
   const router = useRouter();
+  const isAuthReady = useRequireAuth();
   const { user, isAuthenticated } = useAuthStore();
   const [materials, setMaterials] = useState<any[]>([]);
   const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
@@ -20,13 +22,14 @@ export default function LearningMaterialsPage() {
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    if (!isAuthReady) return;
     if (!isAuthenticated) {
       router.push('/login');
       return;
     }
     
     fetchMaterialsAndCourses();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isAuthReady]);
 
   const fetchMaterialsAndCourses = async () => {
     try {

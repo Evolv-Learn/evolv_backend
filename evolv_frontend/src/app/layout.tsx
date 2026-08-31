@@ -17,7 +17,7 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
-  title: 'Evolv — Research Training for African Scientists',
+  title: 'EvolvLearn — Research Training for African Scientists',
   description: 'Practical, affordable research methods training for students and researchers across Africa. Start with R for quantitative data analysis.',
 }
 

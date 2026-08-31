@@ -6,12 +6,12 @@ from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
 class RegisterRateThrottle(AnonRateThrottle):
     """Limit registration attempts"""
-    rate = '100/hour'  # raised for local testing — set back to 5/hour before production
+    rate = '5/hour'
 
 
 class LoginRateThrottle(AnonRateThrottle):
     """Limit login attempts"""
-    rate = '100/hour'  # raised for local testing — set back to 10/hour before production
+    rate = '10/hour'
 
 
 class ContactUsRateThrottle(AnonRateThrottle):

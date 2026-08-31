@@ -108,7 +108,7 @@ export default function Home() {
               {/* Step 1 */}
               <div className="group flex flex-col items-center text-center cursor-pointer">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-primary-gold shadow-md mb-4 relative flex-shrink-0 group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
-                  <Image src="/images/team/moshood-working.jpeg" alt="Apply" fill className="object-cover object-[center_30%]" />
+                  <Image src="/images/team/moshood-working.jpeg" alt="Apply" fill sizes="96px" className="object-cover object-[center_30%]" />
                   <div className="absolute inset-0 bg-secondary-blue/30 group-hover:bg-secondary-blue/10 transition-colors duration-300" />
                   <span className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-primary-gold text-gray-900 text-xs font-bold flex items-center justify-center">01</span>
                 </div>
@@ -119,7 +119,7 @@ export default function Home() {
               {/* Step 2 */}
               <div className="group flex flex-col items-center text-center cursor-pointer">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-igbo-red shadow-md mb-4 relative flex-shrink-0 group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
-                  <Image src="/images/programmes/get-accepted.png" alt="Get Accepted" fill className="object-cover object-center" />
+                  <Image src="/images/programmes/get-accepted.png" alt="Get Accepted" fill sizes="96px" className="object-cover object-center" />
                   <div className="absolute inset-0 bg-igbo-red/20 group-hover:bg-igbo-red/5 transition-colors duration-300" />
                   <span className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-igbo-red text-white text-xs font-bold flex items-center justify-center">02</span>
                 </div>
@@ -130,7 +130,7 @@ export default function Home() {
               {/* Step 3 */}
               <div className="group flex flex-col items-center text-center cursor-pointer">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-success shadow-md mb-4 relative flex-shrink-0 group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
-                  <Image src="/images/programmes/learn.png" alt="Learn Live" fill className="object-cover object-[center_20%]" />
+                  <Image src="/images/programmes/learn.png" alt="Learn Live" fill sizes="96px" className="object-cover object-[center_20%]" />
                   <div className="absolute inset-0 bg-success/20 group-hover:bg-success/5 transition-colors duration-300" />
                   <span className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-success text-white text-xs font-bold flex items-center justify-center">03</span>
                 </div>
@@ -141,7 +141,7 @@ export default function Home() {
               {/* Step 4 */}
               <div className="group flex flex-col items-center text-center cursor-pointer">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-hausa-indigo shadow-md mb-4 relative bg-white flex-shrink-0 group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
-                  <Image src="/images/programmes/apply_to_research.png" alt="Apply It" fill className="object-contain p-2" />
+                  <Image src="/images/programmes/apply_to_research.png" alt="Apply It" fill sizes="96px" className="object-contain p-2" />
                   <span className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-hausa-indigo text-white text-xs font-bold flex items-center justify-center">04</span>
                 </div>
                 <h3 className="text-lg font-heading font-bold text-secondary-blue mb-2">Apply It to Your Research</h3>
@@ -175,11 +175,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Researchers Choose Evolv */}
+      {/* Why Researchers Choose EvolvLearn */}
       <section className="py-20 bg-gradient-to-br from-secondary-blue to-secondary-blue-dark text-white pattern-adire">
         <div className="container mx-auto px-4">
           <div className="mb-12 text-center">
-            <p className="text-primary-gold font-bold uppercase tracking-widest text-xl mb-4">Why Evolv</p>
+            <p className="text-primary-gold font-bold uppercase tracking-widest text-xl mb-4">Why EvolvLearn</p>
             <h2 className="text-4xl md:text-5xl font-heading font-bold mb-6 leading-tight">
               Built for people serious about their research
             </h2>
@@ -203,7 +203,7 @@ export default function Home() {
               Learn from people who do the work
             </h2>
             <p className="text-gray-600 text-lg text-center mb-14 max-w-2xl mx-auto">
-              Every tutor at Evolv is an active researcher or practitioner — not a career teacher. You learn from people who use these tools in the field every day.
+              Every tutor at EvolvLearn is an active researcher or practitioner — not a career teacher. You learn from people who use these tools in the field every day.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
@@ -230,7 +230,7 @@ export default function Home() {
                     </span>
                   </div>
                   <p className="text-gray-600 leading-relaxed text-sm md:opacity-0 md:translate-y-2 md:max-h-0 md:overflow-hidden group-hover:opacity-100 group-hover:translate-y-0 group-hover:max-h-40 transition-all duration-500 ease-out">
-                    Nigerian researcher based in Europe. He started Evolv after watching brilliant researchers stall because no one had taught them to handle their data. Every cohort he teaches personally — live, every session, every question answered.
+                    Nigerian researcher based in Europe. He started EvolvLearn after watching brilliant researchers stall because no one had taught them to handle their data. Every cohort he teaches personally — live, every session, every question answered.
                   </p>
                 </div>
               </div>
@@ -264,7 +264,7 @@ export default function Home() {
             <div className="text-center mt-10">
               <Link href="/about">
                 <Button variant="outline" size="md">
-                  Read more about Evolv →
+                  Read more about EvolvLearn →
                 </Button>
               </Link>
             </div>
@@ -303,7 +303,7 @@ export default function Home() {
               </div>
               {/* Quote */}
               <p className="text-gray-200 leading-relaxed flex-1 italic text-center text-sm">
-                "Working with R used to feel like reading a foreign language. After two months with Evolv, I analysed my entire dissertation dataset myself — no statistician needed."
+                "Working with R used to feel like reading a foreign language. After two months with EvolvLearn, I analysed my entire dissertation dataset myself — no statistician needed."
               </p>
               {/* Attribution */}
               <div className="flex flex-col items-center gap-1 pt-3 border-t border-white/10 w-full">
@@ -346,7 +346,7 @@ export default function Home() {
                 />
               </div>
               <p className="text-gray-200 leading-relaxed flex-1 italic text-center text-sm">
-                "I had tried YouTube tutorials before and nothing stuck. Evolv's structure — the assignments, the feedback, the follow-through — that is what made it work for me this time."
+                "I had tried YouTube tutorials before and nothing stuck. EvolvLearn's structure — the assignments, the feedback, the follow-through — that is what made it work for me this time."
               </p>
               <div className="flex flex-col items-center gap-1 pt-3 border-t border-white/10 w-full">
                 <p className="text-white font-semibold text-sm">Emeka Okafor</p>

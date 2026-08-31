@@ -1,8 +1,8 @@
 # Production Database Population Guide
 
-## Categories & Courses Data for Evolv Platform
+## Categories & Courses Data for EvolvLearn Platform
 
-This document provides structured data to populate the production database with realistic categories and courses based on Evolv's educational focus areas.
+This document provides structured data to populate the production database with realistic categories and courses based on EvolvLearn's educational focus areas.
 
 ---
 

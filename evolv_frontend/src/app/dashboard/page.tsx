@@ -8,21 +8,24 @@ import StudentDashboard from '@/components/dashboard/StudentDashboard';
 import InstructorDashboard from '@/components/dashboard/InstructorDashboard';
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
+import { useRequireAuth } from '@/lib/auth/useRequireAuth';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const isAuthReady = useRequireAuth();
   const { user, isAuthenticated } = useAuthStore();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!isAuthReady) return;
     if (!isAuthenticated) {
       router.push('/login');
       return;
     }
 
     fetchUserProfile();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isAuthReady]);
 
   const fetchUserProfile = async () => {
     try {

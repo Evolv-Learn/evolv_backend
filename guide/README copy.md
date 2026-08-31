@@ -1,10 +1,10 @@
-# Evolv Learning Platform
+# EvolvLearn Learning Platform
 
 A comprehensive learning management platform that enables public visitors to explore courses, register as students, and access learning materials including GitHub repositories, Discord community, and video content.
 
 ## 🎯 Project Overview
 
-Evolv is an interactive learning website where:
+EvolvLearn is an interactive learning website where:
 - **Public visitors** can browse courses, events, alumni stories, and company information
 - **Registered users** can apply to become students
 - **Approved students** get access to exclusive learning materials (GitHub, Discord, videos)

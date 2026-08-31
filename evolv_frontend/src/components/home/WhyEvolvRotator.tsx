@@ -46,7 +46,6 @@ export default function WhyEvolvRotator() {
   // Progress bar tick
   useEffect(() => {
     if (paused) return;
-    setProgress(0);
     progressRef.current = setInterval(() => {
       setProgress(p => {
         if (p >= 100) return 100;

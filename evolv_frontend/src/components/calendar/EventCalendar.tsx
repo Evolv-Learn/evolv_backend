@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useRequireAuth } from '@/lib/auth/useRequireAuth';
 
 interface Event {
   id: number;
@@ -27,6 +28,7 @@ interface EventCalendarProps {
 
 export default function EventCalendar({ userRole = 'admin', compact = false }: EventCalendarProps) {
   const router = useRouter();
+  const isAuthReady = useRequireAuth();
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,8 +45,9 @@ export default function EventCalendar({ userRole = 'admin', compact = false }: E
   const [courses, setCourses] = useState<string[]>([]);
 
   useEffect(() => {
+    if (!isAuthReady) return;
     fetchEvents();
-  }, [currentDate]);
+  }, [currentDate, isAuthReady]);
 
   useEffect(() => {
     applyFilters();
@@ -53,6 +56,7 @@ export default function EventCalendar({ userRole = 'admin', compact = false }: E
   const fetchEvents = async () => {
     try {
       const token = localStorage.getItem('access_token');
+      if (!token) return;
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
       

@@ -5,15 +5,18 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import apiClient from '@/lib/api/client';
 import { useAuthStore } from '@/store/auth';
+import { useRequireAuth } from '@/lib/auth/useRequireAuth';
 
 export default function InstructorProfilePage() {
+  const isAuthReady = useRequireAuth();
   const { user } = useAuthStore();
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!isAuthReady) return;
     fetchProfile();
-  }, []);
+  }, [isAuthReady]);
 
   const fetchProfile = async () => {
     try {

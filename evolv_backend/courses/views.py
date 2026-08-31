@@ -292,15 +292,19 @@ class SelectionProcedureDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class StudentSelectionListCreateView(generics.ListCreateAPIView):
-    queryset = StudentSelection.objects.all()
     serializer_class = StudentSelectionSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return StudentSelection.objects.select_related("student", "step").all()
 
 
 class StudentSelectionDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = StudentSelection.objects.all()
     serializer_class = StudentSelectionSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return StudentSelection.objects.select_related("student", "step").all()
 
 
 class ContactUsCreateView(generics.CreateAPIView):
@@ -374,15 +378,19 @@ class ContactUsCreateView(generics.CreateAPIView):
 
 
 class EventAttendanceListCreateView(generics.ListCreateAPIView):
-    queryset = EventAttendance.objects.all()
     serializer_class = EventAttendanceSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return EventAttendance.objects.select_related("event", "student").all()
 
 
 class EventAttendanceDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = EventAttendance.objects.all()
     serializer_class = EventAttendanceSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return EventAttendance.objects.select_related("event", "student").all()
 
 
 class AlumniListCreateView(generics.ListCreateAPIView):
@@ -701,8 +709,18 @@ class StudentListCreateView(generics.ListCreateAPIView):
 
 
 class StudentDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Student.objects.prefetch_related("courses", "schedules").all()
-    permission_classes = [AuthenticatedCreateReadAdminModify]
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Student.objects.prefetch_related("courses", "schedules")
+        if self.request.user.is_staff:
+            return queryset.all()
+        return queryset.filter(user=self.request.user)
+
+    def get_permissions(self):
+        if self.request.method in ("PUT", "PATCH", "DELETE"):
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
 
     def get_serializer_class(self):
         # Admin updates use write serializer; GET uses read one
@@ -892,7 +910,7 @@ class PublicInstructorProfileView(generics.RetrieveAPIView):
 class CourseEnrollmentListView(generics.ListAPIView):
     """List all course enrollments (for admin)"""
     serializer_class = CourseEnrollmentSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminUser]
     queryset = CourseEnrollment.objects.all().select_related('student', 'course').order_by('-applied_at')
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['status', 'course']
@@ -903,7 +921,7 @@ class CourseEnrollmentListView(generics.ListAPIView):
 class CourseEnrollmentDetailView(generics.RetrieveUpdateAPIView):
     """Retrieve or update a course enrollment"""
     serializer_class = CourseEnrollmentSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminUser]
     queryset = CourseEnrollment.objects.all()
 
 

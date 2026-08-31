@@ -179,12 +179,12 @@ def send_application_status_email(student, status, message_text=""):
 
 def generate_student_register_number(student):
     """Generate unique registration number for student"""
-    # Format: EVOLV-YYYY-XXXX (e.g., EVOLV-2024-0001)
+    # Format: EVOLVLEARN-YYYY-XXXX (e.g., EVOLVLEARN-2024-0001)
     from datetime import datetime
     from django.db import transaction
 
     year = datetime.now().year
-    prefix = f"EVOLV-{year}"
+    prefix = f"EVOLVLEARN-{year}"
 
     # select_for_update locks matched rows so concurrent requests
     # cannot read the same count and produce duplicate register numbers.

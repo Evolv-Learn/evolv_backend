@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import apiClient from '@/lib/api/client';
+import { useRequireAuth } from '@/lib/auth/useRequireAuth';
 
 interface Event {
   id: number;
@@ -27,6 +28,7 @@ interface Attendance {
 
 export default function EventAttendancePage() {
   const router = useRouter();
+  const isAuthReady = useRequireAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<number | null>(null);
   const [attendances, setAttendances] = useState<Attendance[]>([]);
@@ -35,14 +37,15 @@ export default function EventAttendancePage() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
+    if (!isAuthReady) return;
     fetchEvents();
-  }, []);
+  }, [isAuthReady]);
 
   useEffect(() => {
-    if (selectedEvent) {
+    if (isAuthReady && selectedEvent) {
       fetchAttendance();
     }
-  }, [selectedEvent]);
+  }, [selectedEvent, isAuthReady]);
 
   const fetchEvents = async () => {
     try {

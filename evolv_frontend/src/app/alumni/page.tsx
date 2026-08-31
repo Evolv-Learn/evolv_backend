@@ -10,10 +10,10 @@ export default function AlumniPage() {
       <div className="bg-gradient-to-r from-secondary-blue to-secondary-blue-dark text-white py-16 pattern-adire relative">
         <div className="kente-strip absolute top-0 left-0 right-0"></div>
         <div className="container mx-auto px-4 text-center">
-          <p className="text-primary-gold font-semibold uppercase tracking-wider text-sm mb-3">Evolv Network</p>
+          <p className="text-primary-gold font-semibold uppercase tracking-wider text-sm mb-3">EvolvLearn Network</p>
           <h1 className="text-5xl font-heading font-bold mb-4">Alumni</h1>
           <p className="text-xl text-gray-200 max-w-2xl mx-auto">
-            Researchers who completed an Evolv programme and are now doing better science
+            Researchers who completed an EvolvLearn programme and are now doing better science
           </p>
         </div>
       </div>
@@ -33,10 +33,10 @@ export default function AlumniPage() {
             Alumni profiles coming soon
           </h2>
           <p className="text-gray-600 text-lg leading-relaxed mb-4">
-            We are building a directory of researchers who have completed Evolv programmes — their work, institutions, and what they did differently after training.
+            We are building a directory of researchers who have completed EvolvLearn programmes — their work, institutions, and what they did differently after training.
           </p>
           <p className="text-gray-500 text-base leading-relaxed mb-10">
-            If you are an Evolv graduate and want to be featured, reach out to us directly.
+            If you are an EvolvLearn graduate and want to be featured, reach out to us directly.
           </p>
 
           <div className="kente-strip mb-10 max-w-xs mx-auto"></div>

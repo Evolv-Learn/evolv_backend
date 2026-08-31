@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import apiClient from '@/lib/api/client';
+import { useRequireAuth } from '@/lib/auth/useRequireAuth';
 
 interface Course {
   id: number;
@@ -21,9 +22,9 @@ interface Course {
 
 export default function AdminCoursesPage() {
   const router = useRouter();
+  const isAuthReady = useRequireAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [instructors, setInstructors] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -31,10 +32,10 @@ export default function AdminCoursesPage() {
   const [changingInstructorId, setChangingInstructorId] = useState<number | null>(null);
 
   useEffect(() => {
+    if (!isAuthReady) return;
     fetchCourses();
     fetchInstructors();
-    fetchCategories();
-  }, []);
+  }, [isAuthReady]);
 
   const fetchCourses = async () => {
     try {
@@ -57,14 +58,7 @@ export default function AdminCoursesPage() {
     }
   };
 
-  const fetchCategories = async () => {
-    try {
-      const response = await apiClient.get('/categories/?is_active=true');
-      setCategories(response.data.results || response.data);
-    } catch (error) {
-      console.error('Failed to fetch categories:', error);
-    }
-  };
+  const categories = Array.from(new Set(courses.map((course) => course.category))).filter(Boolean);
 
   const handleChangeInstructor = async (courseId: number, courseName: string, currentInstructorId: number | null) => {
     const instructorOptions = instructors.map(i => 
@@ -173,11 +167,11 @@ export default function AdminCoursesPage() {
           {categories.slice(0, 3).map((category, index) => {
             const colors = ['text-secondary-blue', 'text-success', 'text-hausa-indigo'];
             return (
-              <div key={category.id} className="bg-white rounded-xl p-6 shadow-lg">
+              <div key={category} className="bg-white rounded-xl p-6 shadow-lg">
                 <div className={`text-3xl font-bold mb-2 ${colors[index] || 'text-gray-700'}`}>
-                  {courses.filter(c => c.category === category.name).length}
+                  {courses.filter(c => c.category === category).length}
                 </div>
-                <div className="text-gray-600">{category.name}</div>
+                <div className="text-gray-600">{category}</div>
               </div>
             );
           })}
@@ -209,8 +203,8 @@ export default function AdminCoursesPage() {
               >
                 <option value="all">All Categories</option>
                 {categories.map((category) => (
-                  <option key={category.id} value={category.name}>
-                    {category.name}
+                  <option key={category} value={category}>
+                    {category}
                   </option>
                 ))}
               </select>

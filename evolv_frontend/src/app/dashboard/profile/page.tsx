@@ -7,21 +7,24 @@ import { useAuthStore } from '@/store/auth';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import apiClient from '@/lib/api/client';
+import { useRequireAuth } from '@/lib/auth/useRequireAuth';
 
 export default function ProfilePage() {
   const router = useRouter();
+  const isAuthReady = useRequireAuth();
   const { isAuthenticated, user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
   const [studentProfile, setStudentProfile] = useState<any>(null);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
+    if (!isAuthReady) return;
     if (!isAuthenticated) {
       router.push('/login');
     } else {
       fetchStudentProfile();
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isAuthReady, router]);
 
   const fetchStudentProfile = async () => {
     try {

@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import apiClient from '@/lib/api/client';
+import { useRequireAuth } from '@/lib/auth/useRequireAuth';
 
 interface User {
   id: number;
@@ -23,6 +24,7 @@ interface User {
 
 function UsersManagementContent() {
   const router = useRouter();
+  const isAuthReady = useRequireAuth();
   const searchParams = useSearchParams();
   const filter = searchParams?.get('filter') || 'all';
   
@@ -34,8 +36,9 @@ function UsersManagementContent() {
   const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
 
   useEffect(() => {
+    if (!isAuthReady) return;
     fetchUsers();
-  }, []);
+  }, [isAuthReady]);
 
   useEffect(() => {
     filterUsers();

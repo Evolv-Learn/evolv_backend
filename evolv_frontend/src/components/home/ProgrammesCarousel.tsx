@@ -107,7 +107,7 @@ export default function ProgrammesCarousel() {
             <div className={`${prog.imageBg} flex-shrink-0`}>
               <ScreenFrame style={prog.frameStyle as 'terminal' | 'browser'} />
               <div className="relative h-44 w-full overflow-hidden">
-                <Image src={prog.image} alt={prog.title} fill className={prog.imageClass} />
+                <Image src={prog.image} alt={prog.title} fill sizes="(max-width: 768px) 100vw, 33vw" className={prog.imageClass} />
                 <span className={`absolute top-2 right-2 text-xs font-bold px-2.5 py-1 rounded-full ${prog.badgeColor}`}>
                   {prog.badge}
                 </span>

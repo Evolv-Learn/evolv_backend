@@ -297,7 +297,7 @@ class InitiatePaymentView(APIView):
                 status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
             )
 
-        reference = f"EVOLV-{payment.id}-{int(_time.time())}"
+        reference = f"EVOLVLEARN-{payment.id}-{int(_time.time())}"
         # Paystack expects amounts in the smallest currency unit (kobo for NGN, cents for USD/GBP/EUR, etc.)
         amount_minor = int(payment.amount * 100)
         callback_url = f"{settings.FRONTEND_URL}/payment/callback"

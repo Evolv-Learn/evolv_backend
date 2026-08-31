@@ -88,7 +88,7 @@ export default function RegisterPage() {
           <div className="w-10 h-10 bg-primary-gold rounded-full flex items-center justify-center">
             <span className="text-white font-heading font-bold text-lg">E</span>
           </div>
-          <span className="text-white font-heading font-bold text-2xl">Evolv</span>
+          <span className="text-white font-heading font-bold text-2xl">EvolvLearn</span>
         </div>
 
         {/* Centre message */}
@@ -136,13 +136,13 @@ export default function RegisterPage() {
             <div className="w-9 h-9 bg-primary-gold rounded-full flex items-center justify-center">
               <span className="text-white font-heading font-bold">E</span>
             </div>
-            <span className="font-heading font-bold text-secondary-blue text-xl">Evolv</span>
+            <span className="font-heading font-bold text-secondary-blue text-xl">EvolvLearn</span>
           </div>
 
           <div className="kente-strip rounded-full mb-8" />
 
           <h1 className="text-3xl font-heading font-bold text-secondary-blue mb-1">Create Account</h1>
-          <p className="text-gray-500 text-sm mb-8">Join Evolv and start your research journey</p>
+          <p className="text-gray-500 text-sm mb-8">Join EvolvLearn and start your research journey</p>
 
           {error && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-xl mb-6 flex items-start gap-3">

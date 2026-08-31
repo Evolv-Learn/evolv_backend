@@ -456,7 +456,15 @@ class LiveSessionDetailView(generics.RetrieveUpdateDestroyAPIView):
         return [IsAdminUser()]
 
     def get_queryset(self):
-        return LiveSession.objects.all()
+        queryset = LiveSession.objects.select_related("schedule", "module")
+        user = self.request.user
+        if user.is_staff:
+            return queryset.all()
+        try:
+            enrolled_ids = user.student.schedules.values_list("id", flat=True)
+            return queryset.filter(schedule_id__in=enrolled_ids)
+        except Exception:
+            return queryset.none()
 
 
 # ── Phase 2: Assignments ───────────────────────────────────────────────────────

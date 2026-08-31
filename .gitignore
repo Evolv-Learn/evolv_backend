@@ -286,3 +286,5 @@ tmp/
 temp/
 *.tmp
 *.temp
+.neon
+SMOKE_TEST_GUIDE.md

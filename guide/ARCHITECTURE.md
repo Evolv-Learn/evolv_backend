@@ -1,4 +1,4 @@
-# System Architecture - Evolv Learning Platform
+# System Architecture - EvolvLearn Learning Platform
 
 ## 🏗️ High-Level Architecture
 

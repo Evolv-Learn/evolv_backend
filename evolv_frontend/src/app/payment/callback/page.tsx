@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import apiClient from '@/lib/api/client';
@@ -10,6 +10,32 @@ type PaymentStatus = 'loading' | 'paid' | 'pending' | 'failed' | 'unknown';
 const PAYMENT_STATUS_MAX_TRIES = 8;
 
 export default function PaymentCallbackPage() {
+  return (
+    <Suspense fallback={<PaymentCallbackFallback />}>
+      <PaymentCallbackContent />
+    </Suspense>
+  );
+}
+
+function PaymentCallbackFallback() {
+  return (
+    <div className="min-h-screen bg-warm-white flex items-center justify-center px-4">
+      <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full text-center">
+        <div className="flex justify-center mb-6">
+          <div className="animate-spin rounded-full h-14 w-14 border-b-4 border-primary-gold" />
+        </div>
+        <h1 className="font-heading text-2xl font-bold text-secondary-blue-dark mb-2">
+          Confirming your payment...
+        </h1>
+        <p className="text-gray-500 text-sm">
+          Please wait while we confirm with Paystack.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function PaymentCallbackContent() {
   const searchParams = useSearchParams();
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('loading');
   const [courseName, setCourseName] = useState<string | null>(null);
@@ -20,8 +46,9 @@ export default function PaymentCallbackPage() {
     const paymentId = sessionStorage.getItem('evolv_payment_id');
 
     if (!paymentId) {
-      setPaymentStatus(reference ? 'pending' : 'unknown');
-      return;
+      const status = reference ? 'pending' : 'unknown';
+      const timeout = setTimeout(() => setPaymentStatus(status), 0);
+      return () => clearTimeout(timeout);
     }
 
     let tries = 0;

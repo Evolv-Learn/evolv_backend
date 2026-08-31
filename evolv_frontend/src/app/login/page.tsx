@@ -111,7 +111,7 @@ export default function LoginPage() {
           <div className="w-10 h-10 bg-primary-gold rounded-full flex items-center justify-center">
             <span className="text-white font-heading font-bold text-lg">E</span>
           </div>
-          <span className="text-white font-heading font-bold text-2xl">Evolv</span>
+          <span className="text-white font-heading font-bold text-2xl">EvolvLearn</span>
         </div>
 
         {/* Centre message */}
@@ -147,7 +147,7 @@ export default function LoginPage() {
             <div className="w-9 h-9 bg-primary-gold rounded-full flex items-center justify-center">
               <span className="text-white font-heading font-bold">E</span>
             </div>
-            <span className="font-heading font-bold text-secondary-blue text-xl">Evolv</span>
+            <span className="font-heading font-bold text-secondary-blue text-xl">EvolvLearn</span>
           </div>
 
           <div className="kente-strip rounded-full mb-8" />

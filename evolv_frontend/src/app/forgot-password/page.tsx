@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
             <div className="text-center">
               <h1 className="text-2xl font-heading font-bold text-secondary-blue mb-3">Check Your Inbox</h1>
               <p className="text-gray-600 mb-6 text-sm leading-relaxed">
-                If <span className="font-semibold text-gray-800">{email}</span> is registered with Evolv, you will receive a password reset link shortly. Check your spam folder if you don't see it.
+                If <span className="font-semibold text-gray-800">{email}</span> is registered with EvolvLearn, you will receive a password reset link shortly. Check your spam folder if you don't see it.
               </p>
               <Link href="/login">
                 <Button variant="outline" size="md" className="w-full">

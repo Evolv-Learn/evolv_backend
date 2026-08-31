@@ -37,7 +37,7 @@ function CheckEmailContent() {
             <div className="bg-gray-50 rounded-xl p-5 mb-6 text-left space-y-3">
               {[
                 'Open your email inbox',
-                'Find the email from Evolv',
+                'Find the email from EvolvLearn',
                 'Click the verification link',
                 'Return here to login',
               ].map((step, i) => (

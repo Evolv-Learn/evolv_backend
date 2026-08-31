@@ -7,6 +7,8 @@ import apiClient from '@/lib/api/client';
 import { useAuthStore } from '@/store/auth';
 import EventCalendar from '@/components/calendar/EventCalendar';
 
+const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? 'https://api.evolvlearn.org/api/v1').replace(/\/api\/v1\/?$/, '');
+
 export default function InstructorDashboard() {
   const { user } = useAuthStore();
   const [profile, setProfile] = useState<any>(null);
@@ -97,7 +99,7 @@ export default function InstructorDashboard() {
                   <img 
                     src={profile.profile_picture.startsWith('http') 
                       ? profile.profile_picture 
-                      : `https://evolv-backend-e3fgbka2d2dmapcv.westeurope-01.azurewebsites.net${profile.profile_picture}`
+                      : `${API_ORIGIN}${profile.profile_picture}`
                     } 
                     alt={user?.first_name || user?.username}
                     className="w-full h-full object-cover"

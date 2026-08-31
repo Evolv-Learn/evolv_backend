@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import apiClient from '@/lib/api/client';
 import { useAuthStore } from '@/store/auth';
+import { useRequireAuth } from '@/lib/auth/useRequireAuth';
 
 const CURRENCIES = [
   { code: 'USD', label: 'USD — US Dollar' },
@@ -55,14 +56,16 @@ function getPaymentStatusStyle(status: string | null) {
 
 export default function MyCoursesPage() {
   const router = useRouter();
+  const isAuthReady = useRequireAuth();
   const { user } = useAuthStore();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [payPanel, setPayPanel] = useState<PayPanelState | null>(null);
 
   useEffect(() => {
+    if (!isAuthReady) return;
     fetchData();
-  }, []);
+  }, [isAuthReady]);
 
   const fetchData = async () => {
     try {

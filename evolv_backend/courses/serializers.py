@@ -1058,7 +1058,7 @@ class DiscountCodeSerializer(serializers.ModelSerializer):
         import string
         chars = string.ascii_uppercase + string.digits
         for _ in range(20):  # 20 attempts is more than enough
-            code = 'EVOLV-' + ''.join(secrets.choice(chars) for _ in range(6))
+            code = 'EVOLVLEARN-' + ''.join(secrets.choice(chars) for _ in range(6))
             if not DiscountCode.objects.filter(code=code).exists():
                 return code
         raise serializers.ValidationError("Could not generate a unique code. Please try again.")

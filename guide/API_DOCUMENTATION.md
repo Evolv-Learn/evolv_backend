@@ -1,4 +1,4 @@
-# Evolv Learning Platform - API Documentation
+# EvolvLearn Learning Platform - API Documentation
 
 Base URL: `http://localhost:8000/api/v1/`
 

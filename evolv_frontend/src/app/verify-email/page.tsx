@@ -1,17 +1,28 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import apiClient from '@/lib/api/client';
 
 function VerifyEmailContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
+
+  async function verifyEmail(token: string) {
+    try {
+      const response = await apiClient.post('/verify-email/', { token });
+      setStatus('success');
+      setMessage(response.data.message);
+      setEmail(response.data.email);
+    } catch (error: any) {
+      setStatus('error');
+      setMessage(error.response?.data?.error || 'Verification failed');
+    }
+  }
 
   useEffect(() => {
     const token = searchParams.get('token');
@@ -22,18 +33,6 @@ function VerifyEmailContent() {
       setMessage('No verification token provided');
     }
   }, [searchParams]);
-
-  const verifyEmail = async (token: string) => {
-    try {
-      const response = await apiClient.post('/verify-email/', { token });
-      setStatus('success');
-      setMessage(response.data.message);
-      setEmail(response.data.email);
-    } catch (error: any) {
-      setStatus('error');
-      setMessage(error.response?.data?.error || 'Verification failed');
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-warm-white pattern-adire py-12 px-4">

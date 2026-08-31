@@ -1,0 +1,464 @@
+
+> evolv-frontend@0.1.0 lint
+> eslint . --ext .js,.jsx,.ts,.tsx
+
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\about\impacts\page.tsx
+  43:19  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  80:46  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  95:19  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\about\page.tsx
+  187:19  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\admin\applications\page.tsx
+   42:11  warning  'user' is assigned a value but never used                                                                  @typescript-eslint/no-unused-vars
+   57:6   warning  React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  100:11  warning  'reason' is assigned a value but never used                                                                @typescript-eslint/no-unused-vars
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\admin\courses\approvals\page.tsx
+   42:13  warning  'token' is assigned a value but never used                       @typescript-eslint/no-unused-vars
+   49:58  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  304:53  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  304:75  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\admin\courses\page.tsx
+  27:50  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  63:79  warning  'currentInstructorId' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\admin\discount-codes\page.tsx
+   66:6   warning  React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  207:42  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                            react/no-unescaped-entities
+  207:51  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                            react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\admin\events\[id]\edit\page.tsx
+   42:6   warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array                                                                                                                                                                             react-hooks/exhaustive-deps
+  239:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\admin\events\attendance\page.tsx
+  48:6  warning  React Hook useEffect has a missing dependency: 'fetchAttendance'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\admin\events\page.tsx
+  161:23  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\admin\users\[id]\edit\page.tsx
+   37:6   warning  React Hook useEffect has a missing dependency: 'fetchUserProfile'. Either include it or remove the dependency array                                                                                                                                                                      react-hooks/exhaustive-deps
+   97:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  171:19  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  183:19  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\admin\users\create-admin\page.tsx
+  46:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\admin\users\page.tsx
+   45:6   warning  React Hook useEffect has a missing dependency: 'filterUsers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   54:52  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+  114:63  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+  132:72  warning  'email' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\admission\page.tsx
+   65:42  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  108:43  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  108:91  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  115:41  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  157:24  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  162:51  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  162:99  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  165:19  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  181:45  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  198:19  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  345:46  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  346:42  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  408:83  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\check-email\page.tsx
+  56:21  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\companies\sponsorship\page.tsx
+  80:63  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\companies\train-staff\page.tsx
+  23:78  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  43:53  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  53:34  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\contact\page.tsx
+  26:14  warning  'error' is defined but never used                                @typescript-eslint/no-unused-vars
+  43:31  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\courses\[id]\enroll\page.tsx
+  17:40  error    Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  39:6   warning  React Hook useEffect has missing dependencies: 'fetchCourseAndUserData' and 'router'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  62:19  error    Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  77:13  warning  'response' is assigned a value but never used                                                                                             @typescript-eslint/no-unused-vars
+  87:19  error    Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\courses\[id]\page.tsx
+  68:6   warning  React Hook useEffect has a missing dependency: 'fetchCurriculum'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  77:19  error    Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+  88:7   warning  Expected an assignment or function call and instead saw an expression                                               @typescript-eslint/no-unused-expressions
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\courses\page.tsx
+  163:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\dashboard\assignments\page.tsx
+   7:26  warning  'liveSessionsApi' is defined but never used                                                                @typescript-eslint/no-unused-vars
+  52:6   warning  React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  93:19  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\dashboard\courses\page.tsx
+   60:11  warning  'user' is assigned a value but never used                        @typescript-eslint/no-unused-vars
+  168:56  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  290:59  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\dashboard\page.tsx
+  28:6   warning  React Hook useEffect has missing dependencies: 'fetchUserProfile' and 'router'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  47:14  warning  'error' is defined but never used                                                                                                   @typescript-eslint/no-unused-vars
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\dashboard\profile\page.tsx
+    8:10  warning  'Input' is defined but never used                                @typescript-eslint/no-unused-vars
+   15:28  warning  'user' is assigned a value but never used                        @typescript-eslint/no-unused-vars
+   17:56  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   18:19  warning  'setMessage' is assigned a value but never used                  @typescript-eslint/no-unused-vars
+   58:22  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  200:52  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\events\page.tsx
+  163:23  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\forgot-password\page.tsx
+  48:188  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\instructor\[id]\profile\page.tsx
+  13:42  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  14:42  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  22:6   warning  React Hook useEffect has a missing dependency: 'fetchProfile'. Either include it or remove the dependency array                                                                                                                                                                          react-hooks/exhaustive-deps
+  36:18  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  39:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  90:19  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\instructor\courses\[id]\edit-topics\page.tsx
+  17:40  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+  24:6   warning  React Hook useEffect has a missing dependency: 'fetchCourse'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  31:21  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+  51:19  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\instructor\courses\[id]\materials\page.tsx
+   11:9   warning  'router' is assigned a value but never used                                                                   @typescript-eslint/no-unused-vars
+   19:40  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   20:46  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   39:6   warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   55:21  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   77:19  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  120:19  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  137:14  warning  'err' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+  137:19  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\instructor\courses\create\page.tsx
+   19:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   64:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  124:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\instructor\lessons\[id]\edit\page.tsx
+  31:6   warning  React Hook useEffect has a missing dependency: 'fetchLesson'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  45:21  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+  67:19  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\instructor\materials\page.tsx
+   12:42  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+   13:52  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+   23:6   warning  React Hook useEffect has a missing dependency: 'fetchCourses'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   33:20  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+   37:64  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+   44:52  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+   55:36  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+   57:43  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+   73:33  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  103:14  warning  'err' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+  103:19  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\instructor\modules\[id]\edit\page.tsx
+  29:6   warning  React Hook useEffect has a missing dependency: 'fetchModule'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  34:7   error    Do not assign to the variable `module`. See: https://nextjs.org/docs/messages/no-assign-module-variable         @next/next/no-assign-module-variable
+  41:21  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+  67:19  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+  83:19  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\instructor\modules\[id]\lessons\create\page.tsx
+  42:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\instructor\modules\[id]\page.tsx
+   10:9   warning  'router' is assigned a value but never used                                                                            @typescript-eslint/no-unused-vars
+   14:40  error    Unexpected any. Specify a different type                                                                               @typescript-eslint/no-explicit-any
+   22:6   warning  React Hook useEffect has a missing dependency: 'fetchModuleDetails'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   28:21  error    Unexpected any. Specify a different type                                                                               @typescript-eslint/no-explicit-any
+   44:21  error    Unexpected any. Specify a different type                                                                               @typescript-eslint/no-explicit-any
+  137:44  error    Unexpected any. Specify a different type                                                                               @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\instructor\profile\edit\page.tsx
+   13:11  warning  'user' is assigned a value but never used                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   76:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  187:19  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  199:19  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\instructor\profile\page.tsx
+  13:42  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  60:19  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\instructor\schedules\[id]\edit\page.tsx
+  15:42  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  16:46  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  31:6   warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  79:19  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  95:19  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\instructor\schedules\[id]\page.tsx
+   10:9   warning  'router' is assigned a value but never used                                                                              @typescript-eslint/no-unused-vars
+   14:44  error    Unexpected any. Specify a different type                                                                                 @typescript-eslint/no-explicit-any
+   15:10  warning  'course' is assigned a value but never used                                                                              @typescript-eslint/no-unused-vars
+   15:40  error    Unexpected any. Specify a different type                                                                                 @typescript-eslint/no-explicit-any
+   16:42  error    Unexpected any. Specify a different type                                                                                 @typescript-eslint/no-explicit-any
+   24:6   warning  React Hook useEffect has a missing dependency: 'fetchScheduleDetails'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   40:21  error    Unexpected any. Specify a different type                                                                                 @typescript-eslint/no-explicit-any
+  163:34  error    Unexpected any. Specify a different type                                                                                 @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\instructor\schedules\create\page.tsx
+   12:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   13:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   23:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   65:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  185:68  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  210:76  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\login\page.tsx
+   67:19   error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  129:15   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  129:107  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\materials\page.tsx
+   14:11  warning  'user' is assigned a value but never used                                                                  @typescript-eslint/no-unused-vars
+   15:46  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+   16:58  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+   17:56  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+   32:6   warning  React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   56:25  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+   57:22  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+   62:19  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+   83:59  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+   83:74  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+   93:22  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+  253:51  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+  322:57  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+  403:21  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                            react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\page.tsx
+  214:19   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  241:19   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  298:17   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  306:17   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+  306:182  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+  321:17   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  328:17   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+  328:208  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+  342:17   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  349:17   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+  349:79   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+  349:189  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\payment\callback\page.tsx
+   49:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\payment\callback\page.tsx:49:7
+  47 |
+  48 |     if (!paymentId) {
+> 49 |       setPaymentStatus(reference ? 'pending' : 'unknown');
+     |       ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  50 |       return;
+  51 |     }
+  52 |  react-hooks/set-state-in-effect
+  172:56  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  221:24  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\pricing\page.tsx
+  75:26  warning  'courseId' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\register\page.tsx
+  63:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\resend-verification\page.tsx
+  25:21  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  45:46  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\reset-password\page.tsx
+  12:9   warning  'router' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  49:19  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\verify-email\page.tsx
+  10:9   warning  'router' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+  19:7   error    Error: Cannot access variable before it is declared
+
+`verifyEmail` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\verify-email\page.tsx:19:7
+  17 |     const token = searchParams.get('token');
+  18 |     if (token) {
+> 19 |       verifyEmail(token);
+     |       ^^^^^^^^^^^ `verifyEmail` accessed before it is declared
+  20 |     } else {
+  21 |       setStatus('error');
+  22 |       setMessage('No verification token provided');
+
+C:\Repos\evolv_backend\evolv_frontend\src\app\verify-email\page.tsx:26:3
+  24 |   }, [searchParams]);
+  25 |
+> 26 |   const verifyEmail = async (token: string) => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 27 |     try {
+     | ^^^^^^^^^
+> 28 |       const response = await apiClient.post('/verify-email/', { token });
+     …
+     | ^^^^^^^^^
+> 35 |     }
+     | ^^^^^^^^^
+> 36 |   };
+     | ^^^^^ `verifyEmail` is declared here
+  37 |
+  38 |   return (
+  39 |     <div className="min-h-screen flex items-center justify-center bg-warm-white pattern-adire py-12 px-4">  react-hooks/immutability
+  32:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\components\calendar\EventCalendar.tsx
+  50:6  warning  React Hook useEffect has a missing dependency: 'fetchEvents'. Either include it or remove the dependency array   react-hooks/exhaustive-deps
+  54:6  warning  React Hook useEffect has a missing dependency: 'applyFilters'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Repos\evolv_backend\evolv_frontend\src\components\dashboard\AdminDashboard.tsx
+  46:45  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  46:61  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  50:14  warning  'students' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  58:51  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  61:48  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  64:51  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  79:43  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\components\dashboard\InstructorDashboard.tsx
+   12:42  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   13:46  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   14:10  warning  'courses' is assigned a value but never used                                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+   14:42  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   19:6   warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array                                                                                                                                                                             react-hooks/exhaustive-deps
+   36:20  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   43:42  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   97:19  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  237:44  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+
+C:\Repos\evolv_backend\evolv_frontend\src\components\dashboard\StudentDashboard.tsx
+   13:42   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   14:10   warning  'events' is assigned a value but never used                      @typescript-eslint/no-unused-vars
+   14:40   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   15:56   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   17:10   warning  'isLoading' is assigned a value but never used                   @typescript-eslint/no-unused-vars
+   48:24   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   56:16   warning  'error' is defined but never used                                @typescript-eslint/no-unused-vars
+  143:89   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  187:101  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  255:64   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  378:51   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\components\home\FeaturedCourses.tsx
+  143:23  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Repos\evolv_backend\evolv_frontend\src\components\home\FeaturedInstructors.tsx
+  145:23  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Repos\evolv_backend\evolv_frontend\src\components\home\WhyEvolvRotator.tsx
+  49:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Repos\evolv_backend\evolv_frontend\src\components\home\WhyEvolvRotator.tsx:49:5
+  47 |   useEffect(() => {
+  48 |     if (paused) return;
+> 49 |     setProgress(0);
+     |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  50 |     progressRef.current = setInterval(() => {
+  51 |       setProgress(p => {
+  52 |         if (p >= 100) return 100;  react-hooks/set-state-in-effect
+
+C:\Repos\evolv_backend\evolv_frontend\src\components\layout\Header.tsx
+  17:7  error  Error: Cannot access variable before it is declared
+
+`fetchUserRole` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Repos\evolv_backend\evolv_frontend\src\components\layout\Header.tsx:17:7
+  15 |   useEffect(() => {
+  16 |     if (isAuthenticated) {
+> 17 |       fetchUserRole();
+     |       ^^^^^^^^^^^^^ `fetchUserRole` accessed before it is declared
+  18 |     }
+  19 |   }, [isAuthenticated]);
+  20 |
+
+C:\Repos\evolv_backend\evolv_frontend\src\components\layout\Header.tsx:21:3
+  19 |   }, [isAuthenticated]);
+  20 |
+> 21 |   const fetchUserRole = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 22 |     try {
+     | ^^^^^^^^^
+> 23 |       const response = await apiClient.get('/profile/me/');
+     | ^^^^^^^^^
+> 24 |       setUserRole(response.data.role);
+     | ^^^^^^^^^
+> 25 |     } catch (error) {
+     | ^^^^^^^^^
+> 26 |       console.error('Failed to fetch user role:', error);
+     | ^^^^^^^^^
+> 27 |     }
+     | ^^^^^^^^^
+> 28 |   };
+     | ^^^^^ `fetchUserRole` is declared here
+  29 |
+  30 |   const isAdmin = userRole === 'Admin' || user?.role === 'Admin';
+  31 |  react-hooks/immutability
+
+C:\Repos\evolv_backend\evolv_frontend\src\lib\api\client.ts
+  64:11  warning  Do not use `window.location.href` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination  @next/next/no-location-assign-relative-destination
+
+C:\Repos\evolv_backend\evolv_frontend\src\lib\api\courses.ts
+   4:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  33:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Repos\evolv_backend\evolv_frontend\src\lib\auth\useRequireAuth.ts
+  18:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Repos\evolv_backend\evolv_frontend\src\lib\auth\useRequireAuth.ts:18:5
+  16 |     }
+  17 |
+> 18 |     setIsAuthReady(true);
+     |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  19 |   }, [redirectTo, router]);
+  20 |
+  21 |   return isAuthReady;  react-hooks/set-state-in-effect
+
+C:\Repos\evolv_backend\evolv_frontend\src\store\auth.ts
+  32:11  warning  Do not use `window.location.href` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination  @next/next/no-location-assign-relative-destination
+
+✖ 227 problems (153 errors, 74 warnings)
+

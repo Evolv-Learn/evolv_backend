@@ -76,7 +76,7 @@ export default function AboutPage() {
       name: 'Moshood Owolabi', 
       role: 'Founder & R / Statistics Instructor', 
       image: '/images/team/moshood-working.jpeg',
-      bio: 'A Nigerian researcher based in Europe, Moshood started Evolv because he saw how many talented African scientists were held back not by intelligence, but by access to proper research methods training. He teaches every cohort himself and is committed to keeping the quality personal.',
+      bio: 'A Nigerian researcher based in Europe, Moshood started EvolvLearn because he saw how many talented African scientists were held back not by intelligence, but by access to proper research methods training. He teaches every cohort himself and is committed to keeping the quality personal.',
     },
     {
       name: 'Ridwan Alade',
@@ -101,7 +101,7 @@ export default function AboutPage() {
         <div className="kente-strip absolute top-0 left-0 right-0"></div>
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-5xl font-heading font-bold mb-4">
-            {aboutData?.title || 'About Evolv'}
+            {aboutData?.title || 'About EvolvLearn'}
           </h1>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto">
             {aboutData?.description || 'Research methods training built from honest experience'}
@@ -142,7 +142,7 @@ export default function AboutPage() {
               Our Core Values
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              These principles guide everything we do at Evolv
+              These principles guide everything we do at EvolvLearn
             </p>
           </div>
 
@@ -173,7 +173,7 @@ export default function AboutPage() {
               The Teaching Team
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Every tutor at Evolv is an active researcher or practitioner who teaches because they care — not because it is their job title
+              Every tutor at EvolvLearn is an active researcher or practitioner who teaches because they care — not because it is their job title
             </p>
           </div>
 

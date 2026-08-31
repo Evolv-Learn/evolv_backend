@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import apiClient from '@/lib/api/client';
 import { Button } from '@/components/ui/Button';
+import { useRequireAuth } from '@/lib/auth/useRequireAuth';
 
 interface DiscountCode {
   id: number;
@@ -34,7 +35,7 @@ const EMPTY_FORM = {
 function generateCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   const rand = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  return `EVOLV-${rand}`;
+  return `EVOLVLEARN-${rand}`;
 }
 
 function formatDate(d: string | null) {
@@ -44,6 +45,7 @@ function formatDate(d: string | null) {
 
 export default function DiscountCodesPage() {
   const router = useRouter();
+  const isAuthReady = useRequireAuth();
   const { user, isAuthenticated } = useAuthStore();
   const [codes, setCodes] = useState<DiscountCode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,12 +57,13 @@ export default function DiscountCodesPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
   useEffect(() => {
+    if (!isAuthReady) return;
     if (!isAuthenticated || (!user?.is_staff && !user?.is_superuser)) {
       router.replace('/dashboard');
       return;
     }
     load();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, isAuthReady, user]);
 
   const load = async () => {
     setIsLoading(true);
@@ -326,7 +329,7 @@ export default function DiscountCodesPage() {
                   </button>
                 </div>
                 {!form.code && (
-                  <p className="text-xs text-gray-400 mt-1">A code like <span className="font-mono">EVOLV-X8K2MN</span> will be created automatically.</p>
+                  <p className="text-xs text-gray-400 mt-1">A code like <span className="font-mono">EVOLVLEARN-X8K2MN</span> will be created automatically.</p>
                 )}
               </div>
 

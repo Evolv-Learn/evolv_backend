@@ -1,6 +1,7 @@
 from pathlib import Path
 from datetime import timedelta
 import os
+import dj_database_url
 from dotenv import load_dotenv
 
 
@@ -81,25 +82,35 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "evolv_backend.wsgi.application"
 
-# Database Configuration - PostgreSQL for production
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME"),
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": os.getenv("DB_HOST", "localhost"),
-        "PORT": os.getenv("DB_PORT", "5432"),
-        "CONN_MAX_AGE": 0 if DEBUG else 600,  # Fresh connection per request in dev, pooling in prod
-        "OPTIONS": {
-            "connect_timeout": 10,
-        },
-    }
-}
+# Database Configuration - DATABASE_URL for hosted PostgreSQL providers such as Neon
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Validate database configuration
-if not all([os.getenv("DB_NAME"), os.getenv("DB_USER"), os.getenv("DB_PASSWORD")]):
-    raise ValueError("Database credentials (DB_NAME, DB_USER, DB_PASSWORD) must be set")
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=0 if DEBUG else 600,
+            ssl_require=not DEBUG,
+        )
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DB_NAME"),
+            "USER": os.getenv("DB_USER"),
+            "PASSWORD": os.getenv("DB_PASSWORD"),
+            "HOST": os.getenv("DB_HOST", "localhost"),
+            "PORT": os.getenv("DB_PORT", "5432"),
+            "CONN_MAX_AGE": 0 if DEBUG else 600,
+            "OPTIONS": {
+                "connect_timeout": 10,
+            },
+        }
+    }
+
+    if not all([os.getenv("DB_NAME"), os.getenv("DB_USER"), os.getenv("DB_PASSWORD")]):
+        raise ValueError("Set DATABASE_URL or database credentials (DB_NAME, DB_USER, DB_PASSWORD)")
 
 AUTH_USER_MODEL = "courses.CustomUser"
 
@@ -221,8 +232,8 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Evolv API",
-    "DESCRIPTION": "Backend for Evolv learning platform",
+    "TITLE": "EvolvLearn API",
+    "DESCRIPTION": "Backend for the EvolvLearn learning platform",
     "VERSION": "1.0.0",
 }
 
