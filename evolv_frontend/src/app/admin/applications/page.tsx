@@ -111,8 +111,6 @@ export default function AdminApplicationsPage() {
       
       setActionMessage('✅ Application rejected.');
       
-      console.log(`Rejected enrollment ID: ${enrollmentId}, Reason: ${reason || 'Not provided'}`);
-      
       // Close modal after 2 seconds
       setTimeout(() => {
         setSelectedEnrollment(null);

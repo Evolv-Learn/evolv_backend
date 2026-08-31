@@ -59,12 +59,6 @@ export default function CourseEnrollmentPage() {
         motivation: '',
       });
       
-      console.log('User data populated:', {
-        first_name: user?.first_name,
-        last_name: user?.last_name,
-        email: user?.email,
-        profileEmail: profileData?.user?.email || profileData?.email
-      });
     } catch (err: any) {
       console.error('Failed to fetch data:', err);
       setError('Failed to load course information');

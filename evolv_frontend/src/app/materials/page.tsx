@@ -32,7 +32,6 @@ export default function LearningMaterialsPage() {
     try {
       // Fetch student's learning materials (only for approved courses)
       const materialsRes = await apiClient.get('/students/me/learning-materials/');
-      console.log('Learning materials response:', materialsRes.data);
       
       // Check if access is granted
       if (!materialsRes.data.access_granted) {

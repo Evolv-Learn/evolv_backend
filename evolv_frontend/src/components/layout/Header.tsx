@@ -29,7 +29,13 @@ export const Header = () => {
 
   const isAdmin = userRole === 'Admin' || user?.role === 'Admin';
 
-  const navigation = [
+  type NavItem = {
+    name: string;
+    href: string;
+    dropdown?: { name: string; href: string }[];
+  };
+
+  const navigation: NavItem[] = [
     { name: 'Home', href: '/' },
     { name: 'About', href: '/about' },
     { name: 'Programmes', href: '/courses' },

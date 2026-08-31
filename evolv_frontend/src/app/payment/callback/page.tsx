@@ -7,6 +7,8 @@ import apiClient from '@/lib/api/client';
 
 type PaymentStatus = 'loading' | 'paid' | 'pending' | 'failed' | 'unknown';
 
+const PAYMENT_STATUS_MAX_TRIES = 8;
+
 export default function PaymentCallbackPage() {
   const searchParams = useSearchParams();
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('loading');
@@ -23,8 +25,6 @@ export default function PaymentCallbackPage() {
     }
 
     let tries = 0;
-    const MAX_TRIES = 8; // 8 × 5 s = 40 s max
-
     const poll = async () => {
       tries += 1;
       setAttempts(tries);
@@ -43,13 +43,13 @@ export default function PaymentCallbackPage() {
           setPaymentStatus('failed');
           return;
         }
-        if (tries < MAX_TRIES) {
+        if (tries < PAYMENT_STATUS_MAX_TRIES) {
           setTimeout(poll, 5000);
         } else {
           setPaymentStatus('pending');
         }
       } catch {
-        if (tries < MAX_TRIES) {
+        if (tries < PAYMENT_STATUS_MAX_TRIES) {
           setTimeout(poll, 5000);
         } else {
           setPaymentStatus('unknown');
@@ -99,7 +99,7 @@ export default function PaymentCallbackPage() {
             </h1>
             <p className="text-gray-500 text-sm">
               Please wait while we confirm with Paystack.
-              {attempts > 0 && ` (check ${attempts} of 12)`}
+              {attempts > 0 && ` (check ${attempts} of ${PAYMENT_STATUS_MAX_TRIES})`}
             </p>
           </>
         )}

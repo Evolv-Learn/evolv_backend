@@ -137,18 +137,6 @@ export default function EventCalendar({ userRole = 'admin', compact = false }: E
         eventYear === currentYear
       );
       
-      // Debug logging
-      console.log(`Checking event "${event.title}" for day ${day}:`, {
-        eventDate: event.date,
-        eventDay,
-        eventMonth,
-        eventYear,
-        targetDay: day,
-        targetMonth: currentMonth,
-        targetYear: currentYear,
-        matches
-      });
-      
       return matches;
     });
     return filtered;

@@ -102,7 +102,6 @@ export default function InstructorDashboard() {
                     alt={user?.first_name || user?.username}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      console.log('Image failed to load:', profile.profile_picture);
                       e.currentTarget.style.display = 'none';
                     }}
                   />
