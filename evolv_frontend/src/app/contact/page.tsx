@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import apiClient from '@/lib/api/client';
+import Link from 'next/link';
 
 export default function ContactPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -194,9 +195,11 @@ export default function ContactPage() {
               <p className="text-gray-700 mb-4">
                 Check out our frequently asked questions
               </p>
-              <Button variant="outline" className="bg-white hover:bg-gray-100">
-                View FAQ
-              </Button>
+              <Link href="/faq">
+                <Button variant="outline" className="bg-white hover:bg-gray-100">
+                  View FAQ
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

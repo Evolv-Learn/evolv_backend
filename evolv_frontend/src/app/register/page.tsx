@@ -229,9 +229,9 @@ export default function RegisterPage() {
               <input type="checkbox" className="mt-1 accent-primary-gold" required />
               <span className="text-sm text-gray-600">
                 I agree to the{' '}
-                <Link href="/terms" className="text-primary-gold hover:underline">Terms of Service</Link>
+                <Link href="/terms-of-service" className="text-primary-gold hover:underline">Terms of Service</Link>
                 {' '}and{' '}
-                <Link href="/privacy" className="text-primary-gold hover:underline">Privacy Policy</Link>
+                <Link href="/privacy-policy" className="text-primary-gold hover:underline">Privacy Policy</Link>
               </span>
             </div>
 
