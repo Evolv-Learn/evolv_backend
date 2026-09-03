@@ -1,11 +1,11 @@
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .utils import send_welcome_email
+from .utils import send_transactional_email
 from .throttles import RegisterRateThrottle, ContactUsRateThrottle
 
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
@@ -319,7 +319,6 @@ class ContactUsCreateView(generics.CreateAPIView):
     
     def send_contact_notification(self, contact):
         """Send email notification when contact form is submitted"""
-        from django.core.mail import EmailMessage
         from django.conf import settings
         
         subject = f"New Contact Form Submission from {contact.name}"
@@ -337,14 +336,11 @@ class ContactUsCreateView(generics.CreateAPIView):
         Reply to: {contact.email}
         """
         
-        admin_email = EmailMessage(
+        send_transactional_email(
             subject=subject,
-            body=admin_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[settings.ADMIN_EMAIL],
-            reply_to=[contact.email],
+            text_message=admin_message,
+            recipient_list=[settings.ADMIN_EMAIL],
         )
-        admin_email.send(fail_silently=True)
         
         # Confirmation email to user
         user_subject = "We received your message - EvolvLearn"
@@ -366,14 +362,11 @@ class ContactUsCreateView(generics.CreateAPIView):
         {settings.ADMIN_EMAIL}
         """
         
-        user_email = EmailMessage(
+        send_transactional_email(
             subject=user_subject,
-            body=user_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[contact.email],
-            reply_to=[settings.ADMIN_EMAIL],
+            text_message=user_message,
+            recipient_list=[contact.email],
         )
-        user_email.send(fail_silently=True)
     throttle_classes = [ContactUsRateThrottle] 
 
 
@@ -973,10 +966,8 @@ class CourseEnrollmentUpdateStatusView(generics.UpdateAPIView):
                 "We encourage you to apply again for future cohorts.\n\n"
                 "Best regards,\nThe EvolvLearn Team"
             )
-        send_mail(
+        send_transactional_email(
             subject=subject,
-            message=body,
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            text_message=body,
             recipient_list=[student.email],
-            fail_silently=True,
         )

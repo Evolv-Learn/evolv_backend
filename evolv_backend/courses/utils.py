@@ -4,16 +4,68 @@ Utility functions for the courses app
 import logging
 from django.core.mail import send_mail
 from django.conf import settings
-from django.template.loader import render_to_string
+import requests
 
 logger = logging.getLogger(__name__)
 
 
+def send_transactional_email(subject, text_message, recipient_list, html_message=None, fail_silently=True):
+    """Send transactional email through ZeptoMail API when configured, otherwise Django email."""
+    zepto_token = getattr(settings, 'ZEPTOMAIL_API_TOKEN', '')
+    zepto_from_email = getattr(settings, 'ZEPTOMAIL_FROM_EMAIL', '')
+
+    if zepto_token and zepto_from_email:
+        payload = {
+            'from': {
+                'address': zepto_from_email,
+                'name': getattr(settings, 'ZEPTOMAIL_FROM_NAME', 'EvolvLearn'),
+            },
+            'to': [
+                {
+                    'email_address': {
+                        'address': recipient,
+                    }
+                }
+                for recipient in recipient_list
+            ],
+            'subject': subject,
+            'textbody': text_message,
+        }
+        if html_message:
+            payload['htmlbody'] = html_message
+
+        try:
+            response = requests.post(
+                getattr(settings, 'ZEPTOMAIL_API_URL', 'https://api.zeptomail.com/v1.1/email'),
+                json=payload,
+                headers={
+                    'Authorization': f'Zoho-enczapikey {zepto_token}',
+                    'Content-Type': 'application/json',
+                },
+                timeout=getattr(settings, 'EMAIL_TIMEOUT', 10),
+            )
+            response.raise_for_status()
+            logger.info("ZeptoMail sent '%s' to %s", subject, ', '.join(recipient_list))
+            return True
+        except Exception as exc:
+            logger.error("ZeptoMail failed to send '%s' to %s: %s", subject, ', '.join(recipient_list), exc)
+            if not fail_silently:
+                raise
+            return False
+
+    sent = send_mail(
+        subject,
+        text_message,
+        settings.DEFAULT_FROM_EMAIL,
+        recipient_list,
+        html_message=html_message,
+        fail_silently=fail_silently,
+    )
+    return sent > 0
+
+
 def send_welcome_email(user):
     """Send welcome email to newly registered user"""
-    from django.core.mail import EmailMessage
-    from django.template.loader import render_to_string
-    
     subject = "Welcome to EvolvLearn!"
     
     # Get frontend URL from settings
@@ -89,16 +141,7 @@ def send_welcome_email(user):
     The EvolvLearn Team
     """
     
-    email = EmailMessage(
-        subject=subject,
-        body=text_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[user.email],
-        reply_to=[settings.ADMIN_EMAIL],
-    )
-    email.content_subtype = "html"
-    email.body = html_message
-    email.send(fail_silently=True)
+    send_transactional_email(subject, text_message, [user.email], html_message=html_message)
 
 
 def send_application_received_email(student):
@@ -123,13 +166,7 @@ def send_application_received_email(student):
     The EvolvLearn Team
     """
     
-    send_mail(
-        subject,
-        message,
-        settings.DEFAULT_FROM_EMAIL,
-        [student.email],
-        fail_silently=True,
-    )
+    send_transactional_email(subject, message, [student.email])
 
 
 def send_application_status_email(student, status, message_text=""):
@@ -168,13 +205,7 @@ def send_application_status_email(student, status, message_text=""):
         The EvolvLearn Team
         """
     
-    send_mail(
-        subject,
-        message,
-        settings.DEFAULT_FROM_EMAIL,
-        [student.email],
-        fail_silently=True,
-    )
+    send_transactional_email(subject, message, [student.email])
 
 
 def generate_student_register_number(student):
@@ -209,7 +240,6 @@ def generate_verification_token():
 def send_verification_email(user):
     """Send email verification link to user"""
     from django.utils import timezone
-    from django.core.mail import EmailMessage
     
     # Generate token
     token = generate_verification_token()
@@ -304,17 +334,8 @@ def send_verification_email(user):
     {settings.ADMIN_EMAIL}
     """
     
-    email = EmailMessage(
-        subject=subject,
-        body=text_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[user.email],
-        reply_to=[settings.ADMIN_EMAIL],
-    )
-    email.content_subtype = "html"
-    email.body = html_message
     try:
-        email.send(fail_silently=False)
+        send_transactional_email(subject, text_message, [user.email], html_message=html_message, fail_silently=False)
         logger.info("Verification email sent to %s", user.email)
     except Exception as exc:
         logger.error("Failed to send verification email to %s: %s", user.email, exc)

@@ -1,6 +1,5 @@
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
@@ -13,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from courses.throttles import LoginRateThrottle
+from courses.utils import send_transactional_email
 
 User = get_user_model()
 
@@ -89,17 +89,15 @@ class PasswordResetRequestView(APIView):
             token = default_token_generator.make_token(user)
             frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000")
             reset_link = f"{frontend_url}/reset-password?uid={uid}&token={token}"
-            send_mail(
-                subject="Reset Your Password – EvolvLearn",
-                message=(
+            send_transactional_email(
+                subject="Reset Your Password - EvolvLearn",
+                text_message=(
                     f"Hi {user.username},\n\n"
                     f"Click the link below to reset your password:\n{reset_link}\n\n"
                     "This link expires in 24 hours. If you did not request a reset, "
                     "you can safely ignore this email."
                 ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
-                fail_silently=True,
             )
         except User.DoesNotExist:
             pass
