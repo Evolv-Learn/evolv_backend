@@ -1,7 +1,11 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from datetime import date
-from courses.models import Course, Location, LearningSchedule, Module, Lesson
+import os
+
+from django.db import transaction
+
+from courses.models import Course, CoursePrice, Location, LearningSchedule, Module, Lesson, Profile
 
 User = get_user_model()
 
@@ -153,98 +157,121 @@ MODULES = [
 
 
 class Command(BaseCommand):
-    help = "Seed the database with the R for Quantitative Research course and full curriculum"
+    help = "Seed the database with the R for Quantitative Research November 2026 cohort"
 
     def handle(self, *args, **options):
-        # ── Instructor ────────────────────────────────────────────────────────
-        instructor = User.objects.filter(is_superuser=True).first()
-        if not instructor:
-            self.stdout.write(self.style.ERROR("No superuser found. Create one first with: python manage.py createsuperuser"))
+        instructor_email = os.getenv("COURSE_INSTRUCTOR_EMAIL", os.getenv("ADMIN_EMAIL", "")).strip().lower()
+        instructor = User.objects.filter(email__iexact=instructor_email).first() if instructor_email else None
+        if instructor is None:
+            instructor = User.objects.filter(is_superuser=True).first()
+        if instructor is None:
+            self.stdout.write(self.style.ERROR("No instructor found. Run ensure_admin_user first or set COURSE_INSTRUCTOR_EMAIL."))
             return
 
-        # ── Location ─────────────────────────────────────────────────────────
-        location, _ = Location.objects.get_or_create(
-            name="Online — Discord",
-            defaults={
-                "location_type": "Online",
-                "online_region": "Nigeria",
-            },
-        )
-        self.stdout.write(f"  Location: {location}")
+        with transaction.atomic():
+            Profile.objects.update_or_create(user=instructor, defaults={"role": "Instructor"})
 
-        # ── Course ────────────────────────────────────────────────────────────
-        course, created = Course.objects.get_or_create(
-            name="R for Quantitative Research",
-            defaults={
+            # ── Location ─────────────────────────────────────────────────────
+            location, _ = Location.objects.update_or_create(
+                name="Online",
+                defaults={
+                    "location_type": "Online",
+                    "online_region": "Nigeria",
+                    "country": None,
+                    "state": None,
+                },
+            )
+            self.stdout.write(f"  Location: {location}")
+
+            # ── Course ───────────────────────────────────────────────────────
+            course, created = Course.objects.update_or_create(
+                name="R for Quantitative Research - November 2026 Cohort",
+                defaults={
                 "category": "Quantitative Methods",
                 "description": (
-                    "A structured, hands-on training programme for researchers, students, and scientists "
-                    "who work with quantitative data. Covers R programming from the ground up through to "
-                    "advanced experimental designs used in agricultural, biological, and environmental sciences. "
-                    "Every session is taught live on Discord by Moshood Owolabi."
+                    "R for Quantitative Research is a practical, beginner-friendly course designed for students, "
+                    "researchers, and professionals who want to use R for data analysis, statistics, experimental "
+                    "design, and reproducible research. The course takes learners from the foundations of R and "
+                    "RStudio through data import, cleaning, visualisation, statistical analysis, and research "
+                    "reporting. It is especially useful for researchers in agriculture, plant science, engineering, "
+                    "social science, and related fields who need a structured path from raw data to credible, "
+                    "reproducible results."
                 ),
                 "software_tools": "R, RStudio, tidyverse (dplyr, ggplot2, readr), agricolae, lme4, R Markdown, Quarto, Git, GitHub",
                 "topics_covered": (
-                    "Version control with Git\n"
+                    "Version control with Git and GitHub\n"
                     "R programming fundamentals\n"
-                    "Data import and cleaning\n"
+                    "RStudio project workflows\n"
+                    "Data import and inspection\n"
+                    "Data cleaning and transformation\n"
                     "Data wrangling with dplyr\n"
                     "Data visualisation with ggplot2\n"
-                    "Descriptive and inferential statistics\n"
+                    "Descriptive statistics\n"
+                    "Inferential statistics\n"
                     "ANOVA and post-hoc tests\n"
-                    "CRD and RCBD experimental designs\n"
-                    "Split-plot and mixed models\n"
-                    "Audience-specific applications (Agronomy, Plant Breeding, Engineering)\n"
+                    "Completely Randomised Design (CRD)\n"
+                    "Randomised Complete Block Design (RCBD)\n"
+                    "Split-plot designs\n"
+                    "Mixed models with lme4\n"
+                    "Audience-specific applications in Agronomy, Plant Breeding, and Engineering\n"
                     "Reproducible research with R Markdown and Quarto"
                 ),
                 "instructor": instructor,
-                "registration_deadline": date(2026, 7, 15),
-                "selection_date": date(2026, 7, 22),
-                "start_date": date(2026, 8, 4),
-                "end_date": date(2026, 11, 4),
-            },
-        )
-        course.locations.add(location)
-        action = "Created" if created else "Already exists"
-        self.stdout.write(f"  Course: {action} — {course}")
-
-        # ── Learning Schedule (Cohort 3) ───────────────────────────────────────
-        schedule, _ = LearningSchedule.objects.get_or_create(
-            course=course,
-            location=location,
-            start_date=date(2026, 8, 4),
-            defaults={
-                "end_date": date(2026, 11, 4),
-                "instructor": instructor,
-            },
-        )
-        self.stdout.write(f"  Schedule: {schedule}")
-
-        # ── Modules and Lessons ───────────────────────────────────────────────
-        for mod_data in MODULES:
-            module, mod_created = Module.objects.get_or_create(
-                schedule=schedule,
-                order=mod_data["order"],
-                defaults={
-                    "title": mod_data["title"],
-                    "description": mod_data["description"],
+                "registration_deadline": date(2026, 10, 18),
+                "selection_date": date(2026, 10, 25),
+                "start_date": date(2026, 11, 1),
+                "end_date": date(2027, 1, 31),
                 },
             )
-            mod_action = "+" if mod_created else "~"
-            self.stdout.write(f"    {mod_action} {module.title}")
+            course.locations.set([location])
+            action = "Created" if created else "Updated"
+            self.stdout.write(f"  Course: {action} — {course}")
 
-            for i, (title, description) in enumerate(mod_data["lessons"], start=1):
-                lesson, les_created = Lesson.objects.get_or_create(
-                    module=module,
-                    order=i,
-                    defaults={"title": title, "description": description},
+            price, price_created = CoursePrice.objects.update_or_create(
+                course=course,
+                currency="NGN",
+                defaults={"amount": "20000.00", "is_active": True},
+            )
+            price_action = "Created" if price_created else "Updated"
+            self.stdout.write(f"  Price: {price_action} — {price.currency} {price.amount}")
+
+            # ── Learning Schedule ────────────────────────────────────────────
+            schedule, _ = LearningSchedule.objects.update_or_create(
+                course=course,
+                location=location,
+                start_date=date(2026, 11, 1),
+                defaults={
+                    "end_date": date(2027, 1, 31),
+                    "instructor": instructor,
+                },
+            )
+            self.stdout.write(f"  Schedule: {schedule}")
+
+            # ── Modules and Lessons ─────────────────────────────────────────
+            for mod_data in MODULES:
+                module, mod_created = Module.objects.update_or_create(
+                    schedule=schedule,
+                    order=mod_data["order"],
+                    defaults={
+                        "title": mod_data["title"],
+                        "description": mod_data["description"],
+                    },
                 )
-                if les_created:
-                    self.stdout.write(f"        + Lesson {i}: {title}")
+                mod_action = "+" if mod_created else "~"
+                self.stdout.write(f"    {mod_action} {module.title}")
+
+                for i, (title, description) in enumerate(mod_data["lessons"], start=1):
+                    lesson, les_created = Lesson.objects.update_or_create(
+                        module=module,
+                        order=i,
+                        defaults={"title": title, "description": description},
+                    )
+                    if les_created:
+                        self.stdout.write(f"        + Lesson {i}: {title}")
 
         self.stdout.write(self.style.SUCCESS(
             "\nDone. R for Quantitative Research course is ready.\n"
             f"  Course ID : {course.pk}\n"
-            f"  Curriculum: http://127.0.0.1:3000/courses/{course.pk}/\n"
-            f"  Admin     : http://127.0.0.1:8000/admin/courses/course/{course.pk}/change/\n"
+            f"  Course    : https://www.evolvlearn.org/courses/{course.pk}\n"
+            f"  Pricing   : https://www.evolvlearn.org/pricing\n"
         ))
