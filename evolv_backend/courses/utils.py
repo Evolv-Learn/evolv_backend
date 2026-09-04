@@ -35,11 +35,15 @@ def send_transactional_email(subject, text_message, recipient_list, html_message
             payload['htmlbody'] = html_message
 
         try:
+            authorization = zepto_token
+            if not authorization.lower().startswith('zoho-enczapikey '):
+                authorization = f'Zoho-enczapikey {authorization}'
+
             response = requests.post(
                 getattr(settings, 'ZEPTOMAIL_API_URL', 'https://api.zeptomail.com/v1.1/email'),
                 json=payload,
                 headers={
-                    'Authorization': f'Zoho-enczapikey {zepto_token}',
+                    'Authorization': authorization,
                     'Content-Type': 'application/json',
                 },
                 timeout=getattr(settings, 'EMAIL_TIMEOUT', 10),
@@ -47,6 +51,18 @@ def send_transactional_email(subject, text_message, recipient_list, html_message
             response.raise_for_status()
             logger.info("ZeptoMail sent '%s' to %s", subject, ', '.join(recipient_list))
             return True
+        except requests.HTTPError as exc:
+            response_text = exc.response.text if exc.response is not None else ''
+            logger.error(
+                "ZeptoMail failed to send '%s' to %s: %s - %s",
+                subject,
+                ', '.join(recipient_list),
+                exc,
+                response_text[:500],
+            )
+            if not fail_silently:
+                raise
+            return False
         except Exception as exc:
             logger.error("ZeptoMail failed to send '%s' to %s: %s", subject, ', '.join(recipient_list), exc)
             if not fail_silently:
