@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import axios from 'axios';
 import apiClient from '@/lib/api/client';
 import { useAuthStore } from '@/store/auth';
 
@@ -56,6 +57,8 @@ const STEPS = [
 
 const ENGLISH_LABELS: Record<number, string> = { 1: 'Beginner', 2: 'Elementary', 3: 'Intermediate', 4: 'Upper-Intermediate', 5: 'Fluent / Native' };
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const Field = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
   <div>
     <label className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</label>
@@ -104,9 +107,16 @@ export default function AdmissionPage() {
   };
 
   const checkExistingApplication = async () => {
+    if (!isAuthenticated || !API_BASE_URL) return;
+
     try {
+      const token = localStorage.getItem('access_token');
+      if (!token) return;
+
       const [studentRes, coursesRes] = await Promise.all([
-        apiClient.get('/students/me/'),
+        axios.get(`${API_BASE_URL}/students/me/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
         apiClient.get('/courses/'),
       ]);
       if (studentRes.data) {
