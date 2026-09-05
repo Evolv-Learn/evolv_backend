@@ -24,17 +24,14 @@ const DURATION = 5000; // ms per card
 
 export default function WhyEvolvRotator() {
   const [active, setActive] = useState(0);
-  const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
   const [fading, setFading] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const progressRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const goTo = useCallback((index: number) => {
     setFading(true);
     setTimeout(() => {
       setActive(index);
-      setProgress(0);
       setFading(false);
     }, 300);
   }, []);
@@ -42,18 +39,6 @@ export default function WhyEvolvRotator() {
   const next = useCallback(() => {
     goTo((active + 1) % cards.length);
   }, [active, goTo]);
-
-  // Progress bar tick
-  useEffect(() => {
-    if (paused) return;
-    progressRef.current = setInterval(() => {
-      setProgress(p => {
-        if (p >= 100) return 100;
-        return p + (100 / (DURATION / 50));
-      });
-    }, 50);
-    return () => { if (progressRef.current) clearInterval(progressRef.current); };
-  }, [active, paused]);
 
   // Auto-advance
   useEffect(() => {
@@ -70,7 +55,7 @@ export default function WhyEvolvRotator() {
     >
       {/* Card */}
       <div
-        className={`rounded-2xl p-10 md:p-14 bg-white bg-opacity-10 backdrop-blur-sm border border-white border-opacity-10 transition-opacity duration-300 min-h-[200px] ${fading ? 'opacity-0' : 'opacity-100'}`}
+        className={`rounded-2xl p-10 md:p-14 bg-white bg-opacity-10 backdrop-blur-sm border border-white border-opacity-10 transition-opacity duration-300 min-h-[300px] md:min-h-[250px] ${fading ? 'opacity-0' : 'opacity-100'}`}
       >
         <div className="flex items-center gap-4 mb-4">
           <div className={`flex-shrink-0 w-10 h-1 ${cards[active].accent} rounded-full`} />
@@ -100,8 +85,9 @@ export default function WhyEvolvRotator() {
         {/* Progress bar */}
         <div className="flex-1 h-0.5 bg-white bg-opacity-20 rounded-full overflow-hidden">
           <div
-            className="h-full bg-primary-gold rounded-full transition-none"
-            style={{ width: `${paused ? progress : progress}%`, transition: paused ? 'none' : 'width 50ms linear' }}
+            key={active}
+            className="h-full bg-primary-gold rounded-full origin-left motion-safe:animate-[why-progress_5s_linear_forwards]"
+            style={{ animationPlayState: paused ? 'paused' : 'running' }}
           />
         </div>
 
