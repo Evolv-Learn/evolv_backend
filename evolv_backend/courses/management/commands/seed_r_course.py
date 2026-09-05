@@ -230,7 +230,7 @@ class Command(BaseCommand):
             price, price_created = CoursePrice.objects.update_or_create(
                 course=course,
                 currency="NGN",
-                defaults={"amount": "20000.00", "is_active": True},
+                defaults={"amount": "50000.00", "is_active": True},
             )
             price_action = "Created" if price_created else "Updated"
             self.stdout.write(f"  Price: {price_action} — {price.currency} {price.amount}")
