@@ -14,7 +14,7 @@ export const Header = () => {
 
   async function fetchUserRole() {
     try {
-      const response = await apiClient.get('/profile/me/');
+      const response = await apiClient.get('/profile/');
       setUserRole(response.data.role);
     } catch (error) {
       console.error('Failed to fetch user role:', error);
