@@ -4,7 +4,6 @@ from django.conf import settings
 
 from django.contrib.auth import get_user_model
 from django_countries.fields import CountryField
-from dateutil.relativedelta import relativedelta
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from datetime import date
@@ -306,8 +305,7 @@ class LearningSchedule(models.Model):
 
     def save(self, *args, **kwargs):
         if self.start_date and self.end_date:
-            delta = relativedelta(self.end_date, self.start_date)
-            self.duration = (delta.years * 12) + delta.months
+            self.duration = ((self.end_date.year - self.start_date.year) * 12) + (self.end_date.month - self.start_date.month) + 1
         else:
             self.duration = None
         super().save(*args, **kwargs)

@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
+from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -19,6 +20,28 @@ from .models import (
 
 
 User = get_user_model()
+
+
+class LearningScheduleDurationTests(TestCase):
+	def test_duration_counts_inclusive_calendar_months(self):
+		user = User.objects.create_user(username="instructor", email="instructor@example.com")
+		location = Location.objects.create(name="Online", location_type="Online")
+		course = Course.objects.create(
+			name="R for Quantitative Research",
+			category="Quantitative Methods",
+			description="Applied research training",
+			instructor=user,
+		)
+
+		schedule = LearningSchedule.objects.create(
+			course=course,
+			location=location,
+			instructor=user,
+			start_date=date(2026, 11, 1),
+			end_date=date(2027, 1, 31),
+		)
+
+		self.assertEqual(schedule.duration, 3)
 
 
 class UserScopedEndpointPermissionTests(APITestCase):
