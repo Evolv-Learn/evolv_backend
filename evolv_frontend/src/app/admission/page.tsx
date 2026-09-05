@@ -56,6 +56,14 @@ const STEPS = [
 
 const ENGLISH_LABELS: Record<number, string> = { 1: 'Beginner', 2: 'Elementary', 3: 'Intermediate', 4: 'Upper-Intermediate', 5: 'Fluent / Native' };
 
+const Field = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
+  <div>
+    <label className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</label>
+    {children}
+    {hint && <p className="text-xs text-gray-400 mt-1">{hint}</p>}
+  </div>
+);
+
 export default function AdmissionPage() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
@@ -254,15 +262,6 @@ export default function AdmissionPage() {
           )}
         </div>
       ))}
-    </div>
-  );
-
-  // ─── Field helpers ────────────────────────────────────────────────────────
-  const Field = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
-    <div>
-      <label className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</label>
-      {children}
-      {hint && <p className="text-xs text-gray-400 mt-1">{hint}</p>}
     </div>
   );
 
