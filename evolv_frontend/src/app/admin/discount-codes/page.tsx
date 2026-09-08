@@ -43,6 +43,15 @@ function formatDate(d: string | null) {
   return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function getStatus(code: DiscountCode) {
+  const now = new Date();
+  if (!code.is_active) return { label: 'Inactive', className: 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200', dot: 'bg-gray-400' };
+  if (code.max_uses != null && code.uses_count >= code.max_uses) return { label: 'Used up', className: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100', dot: 'bg-red-500' };
+  if (code.valid_from && now < new Date(code.valid_from)) return { label: 'Starts later', className: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100', dot: 'bg-amber-500' };
+  if (code.valid_until && now > new Date(code.valid_until)) return { label: 'Expired', className: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100', dot: 'bg-red-500' };
+  return { label: 'Valid now', className: 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100', dot: 'bg-green-500' };
+}
+
 export default function DiscountCodesPage() {
   const router = useRouter();
   const isAuthReady = useRequireAuth();
@@ -220,7 +229,9 @@ export default function DiscountCodesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {codes.map((code) => (
+                {codes.map((code) => {
+                  const status = getStatus(code);
+                  return (
                   <tr key={code.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-5 py-4">
                       <span className="font-mono font-bold text-secondary-blue tracking-wider">
@@ -238,14 +249,10 @@ export default function DiscountCodesPage() {
                     <td className="px-5 py-4">
                       <button
                         onClick={() => toggleActive(code)}
-                        className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors ${
-                          code.is_active
-                            ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
-                            : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
-                        }`}
+                        className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors ${status.className}`}
                       >
-                        <span className={`w-1.5 h-1.5 rounded-full ${code.is_active ? 'bg-green-500' : 'bg-gray-400'}`} />
-                        {code.is_active ? 'Active' : 'Inactive'}
+                        <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                        {status.label}
                       </button>
                     </td>
                     <td className="px-5 py-4">
@@ -282,7 +289,8 @@ export default function DiscountCodesPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -384,6 +392,7 @@ export default function DiscountCodesPage() {
                     onChange={(e) => setForm({ ...form, valid_from: e.target.value })}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-gold"
                   />
+                  <p className="mt-1 text-xs text-gray-400">Leave blank to make the code usable immediately.</p>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1">Expires</label>
