@@ -226,7 +226,7 @@ export default function Home() {
                       Moshood Owolabi
                     </h3>
                     <span className="inline-block bg-secondary-blue text-white text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full">
-                      Founder · Data Engineer · R &amp; Statistics
+                      Founder · R &amp; Statistics
                     </span>
                   </div>
                   <p className="text-gray-600 leading-relaxed text-sm md:opacity-0 md:translate-y-2 md:max-h-0 md:overflow-hidden group-hover:opacity-100 group-hover:translate-y-0 group-hover:max-h-40 transition-all duration-500 ease-out">

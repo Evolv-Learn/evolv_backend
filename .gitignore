@@ -288,3 +288,5 @@ temp/
 *.temp
 .neon
 SMOKE_TEST_GUIDE.md
+
+docs/
