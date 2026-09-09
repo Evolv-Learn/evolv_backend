@@ -27,11 +27,13 @@ class Command(BaseCommand):
         parser.add_argument("--start-time", default=os.getenv("EVENT_START_TIME", DEFAULT_START_TIME.strftime("%H:%M")))
         parser.add_argument("--duration-hours", type=int, default=int(os.getenv("EVENT_DURATION_HOURS", DEFAULT_DURATION_HOURS)))
         parser.add_argument("--timezone", default=os.getenv("EVENT_TIMEZONE", "Africa/Lagos"))
+        parser.add_argument("--meeting-link", default=os.getenv("EVENT_MEETING_LINK", ""))
 
     def handle(self, *args, **options):
         course_name = options["course_name"]
         title = options["title"]
         duration_hours = options["duration_hours"]
+        meeting_link = options["meeting_link"].strip() or None
 
         start_date = parse_date(options["start_date"])
         start_time = parse_time(options["start_time"])
@@ -72,6 +74,7 @@ class Command(BaseCommand):
                     defaults={
                         "description": f"{description}\n\nSession time: {starts_at.strftime('%H:%M')} - {ends_at.strftime('%H:%M')} {options['timezone']}.",
                         "date": starts_at,
+                        "meeting_link": meeting_link,
                         "course": course,
                         "is_virtual": True,
                         "location": None,

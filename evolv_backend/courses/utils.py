@@ -4,6 +4,7 @@ Utility functions for the courses app
 import logging
 from django.core.mail import send_mail
 from django.conf import settings
+from django.utils import timezone
 import requests
 
 logger = logging.getLogger(__name__)
@@ -158,6 +159,52 @@ def send_welcome_email(user):
     """
     
     send_transactional_email(subject, text_message, [user.email], html_message=html_message)
+
+
+def _format_event_datetime(event):
+    return timezone.localtime(event.date).strftime('%A, %d %B %Y at %I:%M %p')
+
+
+def send_event_registration_email(registration):
+    event = registration.event
+    subject = f"You're registered: {event.title}"
+    text_message = f"""
+Congratulations {registration.full_name},
+
+You are registered for {event.title}.
+
+Event details:
+- Date and time: {_format_event_datetime(event)}
+- Format: {'Virtual' if event.is_virtual else 'In person'}
+
+{event.description}
+
+We will send the meeting link two days before the event.
+
+Best regards,
+The EvolvLearn Team
+"""
+    return send_transactional_email(subject, text_message, [registration.email])
+
+
+def send_event_reminder_email(registration):
+    event = registration.event
+    subject = f"Event reminder: {event.title}"
+    meeting_line = f"Meeting link: {event.meeting_link}" if event.meeting_link else "Meeting link: We will share the link before the session starts."
+    text_message = f"""
+Hello {registration.full_name},
+
+This is a reminder that {event.title} is coming up soon.
+
+Date and time: {_format_event_datetime(event)}
+{meeting_line}
+
+Please keep this email handy and join a few minutes before the session starts.
+
+Best regards,
+The EvolvLearn Team
+"""
+    return send_transactional_email(subject, text_message, [registration.email])
 
 
 def send_application_received_email(student):

@@ -16,6 +16,7 @@ from .models import (
     StudentSelection,
     ContactUs,
     EventAttendance,
+    EventRegistration,
     Alumni,
     Event,
     AboutUs,
@@ -371,6 +372,37 @@ class EventAttendanceSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class EventRegistrationSerializer(serializers.ModelSerializer):
+    event_title = serializers.CharField(source="event.title", read_only=True)
+    event_date = serializers.DateTimeField(source="event.date", read_only=True)
+
+    class Meta:
+        model = EventRegistration
+        fields = [
+            "id",
+            "event",
+            "event_title",
+            "event_date",
+            "full_name",
+            "email",
+            "phone",
+            "organization",
+            "how_heard",
+            "created_at",
+        ]
+        read_only_fields = ["id", "event_title", "event_date", "created_at"]
+
+    def validate_email(self, value):
+        return value.strip().lower()
+
+    def validate(self, attrs):
+        event = attrs.get("event")
+        email = attrs.get("email")
+        if event and email and EventRegistration.objects.filter(event=event, email__iexact=email).exists():
+            raise serializers.ValidationError({"email": "This email is already registered for this event."})
+        return attrs
+
+
 class AlumniReadSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     course = serializers.StringRelatedField()
@@ -460,6 +492,7 @@ class EventWriteSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "date",
+            "meeting_link",
             "is_virtual",
             "location",
             "course",

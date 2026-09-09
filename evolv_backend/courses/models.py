@@ -190,6 +190,7 @@ class Event(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     date = models.DateTimeField(db_index=True)
+    meeting_link = models.URLField(blank=True, null=True)
     location = models.ForeignKey(
         "Location",
         on_delete=models.SET_NULL,
@@ -211,6 +212,26 @@ class Event(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class EventRegistration(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="registrations")
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField()
+    phone = models.CharField(max_length=50, blank=True)
+    organization = models.CharField(max_length=255, blank=True)
+    how_heard = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    reminder_sent_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["event", "email"], name="unique_event_registration_email")
+        ]
+
+    def __str__(self):
+        return f"{self.full_name} - {self.event.title}"
 
 
 class AboutUs(models.Model):

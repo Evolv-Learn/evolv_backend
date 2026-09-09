@@ -26,6 +26,7 @@ from .views import (
     ContactUsCreateView,
     EventAttendanceListCreateView,
     EventAttendanceDetailView,
+    EventRegistrationCreateView,
     AlumniListCreateView,
     AlumniDetailView,
     EventListCreateView,
@@ -118,6 +119,7 @@ urlpatterns = [
 
     path("events/", EventListCreateView.as_view(), name="event-list"),
     path("events/<int:pk>/", EventDetailView.as_view(), name="event-detail"),
+    path("events/register/", EventRegistrationCreateView.as_view(), name="event-register"),
     path("events/calendar/", event_calendar, name="event-calendar"),
 
     path("about-us/", AboutUsDetailView.as_view(), name="about-us"),

@@ -42,6 +42,10 @@ export default function EventsPage() {
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
   const [typeFilter, setTypeFilter] = useState<'all' | 'virtual' | 'physical'>('all');
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [registration, setRegistration] = useState({ full_name: '', email: '', phone: '', organization: '', how_heard: '' });
+  const [registrationStatus, setRegistrationStatus] = useState<'idle' | 'saving' | 'success'>('idle');
+  const [registrationError, setRegistrationError] = useState('');
 
   useEffect(() => {
     apiClient
@@ -64,6 +68,42 @@ export default function EventsPage() {
       (typeFilter === 'physical' && !e.is_virtual);
     return timeOk && typeOk;
   });
+
+  const openEvent = (event: Event) => {
+    setSelectedEvent(event);
+    setRegistration({ full_name: '', email: '', phone: '', organization: '', how_heard: '' });
+    setRegistrationStatus('idle');
+    setRegistrationError('');
+  };
+
+  const submitRegistration = async () => {
+    if (!selectedEvent) return;
+    if (!registration.full_name.trim() || !registration.email.trim()) {
+      setRegistrationError('Name and email are required.');
+      return;
+    }
+
+    setRegistrationStatus('saving');
+    setRegistrationError('');
+    try {
+      await apiClient.post('/events/register/', {
+        event: selectedEvent.id,
+        ...registration,
+        full_name: registration.full_name.trim(),
+        email: registration.email.trim(),
+      });
+      setRegistrationStatus('success');
+    } catch (err: any) {
+      const data = err?.response?.data;
+      if (data && typeof data === 'object') {
+        const message = Object.values(data).flat().join(' ');
+        setRegistrationError(message || 'Could not complete registration.');
+      } else {
+        setRegistrationError('Could not complete registration. Please try again.');
+      }
+      setRegistrationStatus('idle');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-warm-white">
@@ -212,6 +252,15 @@ export default function EventsPage() {
                         </span>
                       )}
                     </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEvent(event)}
+                      disabled={isPast}
+                      className="w-full mt-2"
+                    >
+                      View Details & Register
+                    </Button>
                   </div>
                 </div>
               );
@@ -219,6 +268,54 @@ export default function EventsPage() {
           </div>
         )}
       </div>
+
+      {selectedEvent && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4 py-8">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-100 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-primary-gold text-xs font-bold uppercase tracking-widest mb-2">Event Registration</p>
+                <h2 className="font-heading text-2xl font-bold text-secondary-blue">{selectedEvent.title}</h2>
+                <p className="text-sm text-gray-500 mt-1">{formatDate(selectedEvent.date).full} &middot; {formatDate(selectedEvent.date).time}</p>
+              </div>
+              <button onClick={() => setSelectedEvent(null)} className="text-gray-400 hover:text-gray-700 text-2xl leading-none" aria-label="Close">&times;</button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <p className="text-gray-600 leading-relaxed whitespace-pre-line">{selectedEvent.description}</p>
+              <div className="bg-warm-white rounded-xl p-4 text-sm text-gray-600">
+                Register with your name and email. You will receive a confirmation email now, and the meeting link will be sent two days before the event.
+              </div>
+
+              {registrationStatus === 'success' ? (
+                <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl p-5">
+                  <h3 className="font-heading font-bold text-lg mb-1">Registration confirmed</h3>
+                  <p className="text-sm">Please check your email for the event details. We will send the meeting link two days before the session.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <input className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-gold" placeholder="Full name *" value={registration.full_name} onChange={(e) => setRegistration({ ...registration, full_name: e.target.value })} />
+                  <input className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-gold" type="email" placeholder="Email address *" value={registration.email} onChange={(e) => setRegistration({ ...registration, email: e.target.value })} />
+                  <input className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-gold" placeholder="Phone number" value={registration.phone} onChange={(e) => setRegistration({ ...registration, phone: e.target.value })} />
+                  <input className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-gold" placeholder="Organization or school" value={registration.organization} onChange={(e) => setRegistration({ ...registration, organization: e.target.value })} />
+                  <input className="sm:col-span-2 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-gold" placeholder="How did you hear about this event?" value={registration.how_heard} onChange={(e) => setRegistration({ ...registration, how_heard: e.target.value })} />
+                </div>
+              )}
+
+              {registrationError && <p className="text-sm text-red-600">{registrationError}</p>}
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-end">
+                <Button variant="outline" onClick={() => setSelectedEvent(null)}>Close</Button>
+                {registrationStatus !== 'success' && (
+                  <Button variant="primary" onClick={submitRegistration} isLoading={registrationStatus === 'saving'}>
+                    Register for Event
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* CTA */}
       <section className="py-14 bg-white border-t border-gray-100">

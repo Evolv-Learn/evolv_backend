@@ -21,6 +21,7 @@ from .models import (
     StudentSelection,
     Profile,
     EventAttendance,
+    EventRegistration,
     LessonProgress,
     LiveSession,
     Assignment,
@@ -69,7 +70,6 @@ class CourseEnrollmentAdmin(admin.ModelAdmin):
 
 admin.site.register(Location)
 admin.site.register(Alumni)
-admin.site.register(Event)
 admin.site.register(AboutUs)
 admin.site.register(CoreValue)
 admin.site.register(TeamMember)
@@ -77,6 +77,26 @@ admin.site.register(Review)
 admin.site.register(StudentSelection)
 admin.site.register(EventAttendance)
 admin.site.register(Profile)
+
+
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    list_display = ("title", "date", "is_virtual", "course", "registration_count")
+    list_filter = ("is_virtual", "course", "date")
+    search_fields = ("title", "description", "meeting_link")
+    filter_horizontal = ("partners",)
+
+    def registration_count(self, obj):
+        return obj.registrations.count()
+
+
+@admin.register(EventRegistration)
+class EventRegistrationAdmin(admin.ModelAdmin):
+    list_display = ("full_name", "email", "phone", "event", "created_at", "reminder_sent_at")
+    list_filter = ("event", "created_at", "reminder_sent_at")
+    search_fields = ("full_name", "email", "phone", "organization")
+    readonly_fields = ("created_at", "reminder_sent_at")
+    ordering = ("-created_at",)
 
 
 @admin.register(Course)

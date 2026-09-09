@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .utils import send_welcome_email
+from .utils import send_event_registration_email, send_welcome_email
 from .utils import send_transactional_email
 from .throttles import RegisterRateThrottle, ContactUsRateThrottle
 
@@ -20,12 +20,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .permissions import IsAdmin, IsAdminOrReadOnly, AllowAnyCreateReadAdminModify, IsAdminOrInstructorOwner, AuthenticatedCreateReadAdminModify, IsAdminOrInstructor
 
 from .models import (
-    Profile, Location, Partner, Course, Student, CourseEnrollment, SelectionProcedure, StudentSelection, ContactUs, EventAttendance,
+    Profile, Location, Partner, Course, Student, CourseEnrollment, SelectionProcedure, StudentSelection, ContactUs, EventAttendance, EventRegistration,
     Alumni, Event, AboutUs, TeamMember, CoreValue, Review, LearningSchedule, Module, Lesson,)
 
 from .serializers import (
     ProfileSerializer, LocationSerializer, PartnerSerializer, ProfileSelfSerializer, CourseReadSerializer, CourseWriteSerializer,
-    SelectionProcedureSerializer, StudentSelectionSerializer, ContactUsSerializer, EventAttendanceSerializer, AlumniReadSerializer, AlumniWriteSerializer,
+    SelectionProcedureSerializer, StudentSelectionSerializer, ContactUsSerializer, EventAttendanceSerializer, EventRegistrationSerializer, AlumniReadSerializer, AlumniWriteSerializer,
     EventWriteSerializer, EventReadSerializer, AboutUsSerializer, TeamMemberReadSerializer, TeamMemberWriteSerializer, CoreValueSerializer, ReviewSerializer,
     LearningScheduleSerializer, LessonReadSerializer, LessonWriteSerializer, UserProfileCreateSerializer, RegisterUserSerializer, AdminProfileUpdateSerializer,
     ModuleReadSerializer, ModuleWriteSerializer, StudentReadSerializer, StudentWriteSerializer,
@@ -384,6 +384,16 @@ class EventAttendanceDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return EventAttendance.objects.select_related("event", "student").all()
+
+
+class EventRegistrationCreateView(generics.CreateAPIView):
+    serializer_class = EventRegistrationSerializer
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ContactUsRateThrottle]
+
+    def perform_create(self, serializer):
+        registration = serializer.save()
+        send_event_registration_email(registration)
 
 
 class AlumniListCreateView(generics.ListCreateAPIView):
