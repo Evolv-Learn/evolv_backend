@@ -206,13 +206,13 @@ export default function Home() {
               Every tutor at EvolvLearn is an active researcher or practitioner — not a career teacher. You learn from people who use these tools in the field every day.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
 
               {/* Moshood */}
               <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-gray-100 group">
                 <div className="aspect-[4/3] overflow-hidden relative">
                   <img
-                    src="/images/team/moshood-working.jpeg"
+                    src="/images/team/moshood.jpeg"
                     alt="Moshood Owolabi teaching"
                     className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                   />
@@ -226,11 +226,35 @@ export default function Home() {
                       Moshood Owolabi
                     </h3>
                     <span className="inline-block bg-secondary-blue text-white text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full">
-                      Founder · R &amp; Statistics
+                      Founder · Data Engineer · R &amp; Statistics
                     </span>
                   </div>
                   <p className="text-gray-600 leading-relaxed text-sm md:opacity-0 md:translate-y-2 md:max-h-0 md:overflow-hidden group-hover:opacity-100 group-hover:translate-y-0 group-hover:max-h-40 transition-all duration-500 ease-out">
-                    Nigerian researcher based in Europe. He started EvolvLearn after watching brilliant researchers stall because no one had taught them to handle their data. Every cohort he teaches personally — live, every session, every question answered.
+                    Nigerian researcher, Erasmus Mundus Scholar, and professional Data Engineer based in Europe. He started EvolvLearn after watching brilliant researchers stall because no one had taught them to handle their data. Every cohort he teaches personally — live, every session, every question answered.
+                  </p>
+                </div>
+              </div>
+
+              {/* Adamu */}
+              <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-gray-100 group">
+                <div className="aspect-[4/3] overflow-hidden">
+                  <img
+                    src="/images/team/masari.jpeg"
+                    alt="Adamu Masari"
+                    className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="flex flex-wrap items-center gap-3 mb-3">
+                    <h3 className="text-2xl font-heading font-bold text-secondary-blue">
+                      Adamu Masari
+                    </h3>
+                    <span className="inline-block bg-success text-white text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full">
+                      Plant Breeder · R &amp; Statistics
+                    </span>
+                  </div>
+                  <p className="text-gray-600 leading-relaxed text-sm md:opacity-0 md:translate-y-2 md:max-h-0 md:overflow-hidden group-hover:opacity-100 group-hover:translate-y-0 group-hover:max-h-40 transition-all duration-500 ease-out">
+                    Early-career plant breeder with strong experience in agricultural research. Skilled in R-based statistical analysis and data visualization, with several articles published in peer-reviewed open access journals.
                   </p>
                 </div>
               </div>
@@ -240,21 +264,21 @@ export default function Home() {
                 <div className="aspect-[4/3] overflow-hidden">
                   <img
                     src="/images/team/ridwan.jpeg"
-                    alt="Ridwan Alade"
+                    alt="Rildwan Ishola"
                     className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
                 <div className="p-6">
                   <div className="flex flex-wrap items-center gap-3 mb-3">
                     <h3 className="text-2xl font-heading font-bold text-secondary-blue">
-                      Ridwan Alade
+                      Rildwan Ishola
                     </h3>
                     <span className="inline-block bg-hausa-indigo text-white text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full">
                       QGIS · Spatial Analysis
                     </span>
                   </div>
                   <p className="text-gray-600 leading-relaxed text-sm md:opacity-0 md:translate-y-2 md:max-h-0 md:overflow-hidden group-hover:opacity-100 group-hover:translate-y-0 group-hover:max-h-40 transition-all duration-500 ease-out">
-                    Based in Nigeria, Ridwan is a videographer with deep expertise in QGIS and spatial analysis. He brings visual storytelling and technical precision to every lesson — making spatial data feel intuitive and practical.
+                    Based in Nigeria, Rildwan is a videographer with deep expertise in QGIS and spatial analysis. He brings visual storytelling and technical precision to every lesson — making spatial data feel intuitive and practical.
                   </p>
                 </div>
               </div>
