@@ -31,7 +31,7 @@ export default function Home() {
           <div className="max-w-5xl mx-auto text-center">
             {/* Main Headline */}
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold mb-8 leading-tight text-white drop-shadow-2xl">
-              Equipping Researchers with the Tools Their Science Demands
+              Equipping Researchers and Studentswith the Tools Their Science Demands
             </h1>
             
             {/* Subtitle/Description */}
