@@ -40,7 +40,7 @@ export default function CompanyEventsPage() {
             
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <h3 className="text-2xl font-heading font-bold text-secondary-blue mb-3">
-                🏆 Hackathons & Competitions
+                  Hackathons & Competitions
               </h3>
               <p className="text-gray-600 mb-4">
                 Sponsor or host hackathons to discover top talent and innovative solutions.

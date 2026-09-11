@@ -35,7 +35,7 @@ export default function AboutPage() {
   const coreValues = [
     {
       title: 'Rigour',
-      description: 'We train researchers to ask the right questions and use the right methods — not just to produce results, but to produce results that hold up.',
+      description: 'We train researchers to ask the right questions and use the right methods, not just to produce results, but to produce results that hold up.',
       color: 'border-primary-gold',
       accent: 'text-primary-gold',
       icon: (
@@ -119,7 +119,7 @@ export default function AboutPage() {
             </h2>
             <div className="kente-strip mb-4"></div>
             <p className="text-gray-700 text-lg leading-relaxed">
-              {aboutData?.mission || 'To make high-quality, practical research methods training accessible to students and scientists across Africa — starting with the tools most needed for quantitative research and growing from there.'}
+              {aboutData?.mission || 'To make high-quality, practical research methods training accessible to students and scientists across Africa, starting with the tools most needed for quantitative research and growing from there.'}
             </p>
           </div>
 
@@ -130,7 +130,7 @@ export default function AboutPage() {
             </h2>
             <div className="kente-strip mb-4"></div>
             <p className="text-gray-700 text-lg leading-relaxed">
-              {aboutData?.vision || 'A future where every researcher in Africa has access to the methodological training they need to produce rigorous, credible, and world-class science — regardless of where they study or how much they earn.'}
+              {aboutData?.vision || 'A future where every researcher in Africa has access to the methodological training they need to produce rigorous, credible, and world-class science, regardless of where they study or how much they earn.'}
             </p>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function AboutPage() {
               The Teaching Team
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Every tutor at EvolvLearn is an active researcher or practitioner who teaches because they care — not because it is their job title
+              Every tutor at EvolvLearn is an active researcher or practitioner who teaches because they care, not because it is their job title
             </p>
           </div>
 

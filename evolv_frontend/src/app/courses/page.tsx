@@ -80,7 +80,7 @@ export default function CoursesPage() {
             Our Programmes
           </h1>
           <p className="text-xl text-gray-200 max-w-2xl mx-auto">
-            Research methods training designed for scientists who take their work seriously
+            Research methods training designed for students andscientists who take their work seriously
           </p>
         </div>
       </div>

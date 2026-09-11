@@ -36,7 +36,7 @@ export default function Home() {
             
             {/* Subtitle/Description */}
             <p className="text-base md:text-lg lg:text-xl mb-10 text-gray-100 max-w-4xl mx-auto leading-relaxed">
-              Practical, affordable research methods training — starting with R for quantitative data analysis. Built by a researcher, for researchers.
+              Practical, affordable research methods training, starting with R for quantitative data analysis. Built by a researcher, for researchers.
             </p>
 
             {/* CTA Buttons */}
@@ -95,7 +95,7 @@ export default function Home() {
               How It Works
             </h2>
             <p className="text-xl text-gray-600">
-              From application to your first published analysis — here is what to expect
+              From application to your first published analysis, here is what to expect
             </p>
           </div>
 
@@ -203,7 +203,7 @@ export default function Home() {
               Learn from people who do the work
             </h2>
             <p className="text-gray-600 text-lg text-center mb-14 max-w-2xl mx-auto">
-              Every tutor at EvolvLearn is an active researcher or practitioner — not a career teacher. You learn from people who use these tools in the field every day.
+              Every tutor at EvolvLearn is an active researcher or practitioner, not a career teacher. You learn from people who use these tools in the field every day.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
@@ -230,7 +230,7 @@ export default function Home() {
                     </span>
                   </div>
                   <p className="text-gray-600 leading-relaxed text-sm md:opacity-0 md:translate-y-2 md:max-h-0 md:overflow-hidden group-hover:opacity-100 group-hover:translate-y-0 group-hover:max-h-40 transition-all duration-500 ease-out">
-                    Nigerian researcher, Erasmus Mundus Scholar, and professional Data Engineer based in Europe. He started EvolvLearn after watching brilliant researchers stall because no one had taught them to handle their data. Every cohort he teaches personally — live, every session, every question answered.
+                    Nigerian researcher, Erasmus Mundus Scholar, and professional Data Engineer based in Europe. He started EvolvLearn after watching brilliant researchers stall because no one had taught them to handle their data. Every cohort he teaches personally benefits from his hands-on guidance.
                   </p>
                 </div>
               </div>
@@ -278,7 +278,7 @@ export default function Home() {
                     </span>
                   </div>
                   <p className="text-gray-600 leading-relaxed text-sm md:opacity-0 md:translate-y-2 md:max-h-0 md:overflow-hidden group-hover:opacity-100 group-hover:translate-y-0 group-hover:max-h-40 transition-all duration-500 ease-out">
-                    Based in Nigeria, Rildwan is a videographer with deep expertise in QGIS and spatial analysis. He brings visual storytelling and technical precision to every lesson — making spatial data feel intuitive and practical.
+                    Based in Nigeria, Rildwan is a videographer with deep expertise in QGIS and spatial analysis. He brings visual storytelling and technical precision to every lesson, making spatial data feel intuitive and practical.
                   </p>
                 </div>
               </div>
@@ -327,7 +327,7 @@ export default function Home() {
               </div>
               {/* Quote */}
               <p className="text-gray-200 leading-relaxed flex-1 italic text-center text-sm">
-                "Working with R used to feel like reading a foreign language. After two months with EvolvLearn, I analysed my entire dissertation dataset myself — no statistician needed."
+                "Working with R used to feel like reading a foreign language. After two months with EvolvLearn, I analysed my entire dissertation dataset myself, no statistician needed."
               </p>
               {/* Attribution */}
               <div className="flex flex-col items-center gap-1 pt-3 border-t border-white/10 w-full">
@@ -370,7 +370,7 @@ export default function Home() {
                 />
               </div>
               <p className="text-gray-200 leading-relaxed flex-1 italic text-center text-sm">
-                "I had tried YouTube tutorials before and nothing stuck. EvolvLearn's structure — the assignments, the feedback, the follow-through — that is what made it work for me this time."
+                "I had tried YouTube tutorials before and nothing stuck. EvolvLearn's structure; the assignments, the feedback, the follow-through, that is what made it work for me this time."
               </p>
               <div className="flex flex-col items-center gap-1 pt-3 border-t border-white/10 w-full">
                 <p className="text-white font-semibold text-sm">Emeka Okafor</p>
@@ -393,7 +393,7 @@ export default function Home() {
               The Next Cohort Is Coming
             </h2>
             <p className="text-xl text-gray-800 mb-8 max-w-2xl mx-auto">
-              Spots are limited and go quickly. If you are a student, researcher, or scientist ready to level up your data analysis skills — apply today.
+              Spots are limited and go quickly. If you are a student, researcher, or scientist ready to level up your data analysis skills. Apply today!.
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Link href="/admission">

@@ -33,7 +33,7 @@ export default function AlumniPage() {
             Alumni profiles coming soon
           </h2>
           <p className="text-gray-600 text-lg leading-relaxed mb-4">
-            We are building a directory of researchers who have completed EvolvLearn programmes — their work, institutions, and what they did differently after training.
+            We are building a directory of researchers who have completed EvolvLearn programmes; their work, institutions, and what they did differently after training.
           </p>
           <p className="text-gray-500 text-base leading-relaxed mb-10">
             If you are an EvolvLearn graduate and want to be featured, reach out to us directly.
