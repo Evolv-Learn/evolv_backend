@@ -82,7 +82,7 @@ export default function AboutPage() {
       name: 'Ridwan Ishola',
       role: 'QGIS & Spatial Analysis Tutor',
       image: '/images/team/ridwan.jpeg',
-      bio: 'Based in Nigeria, Ridwan is a videographer with deep expertise in QGIS and spatial analysis. He brings both technical precision and visual storytelling to every lesson — making maps and spatial thinking accessible and practical for field researchers.',
+      bio: 'Based in Nigeria, Ridwan is a videographer with deep expertise in QGIS and spatial analysis. He brings both technical precision and visual storytelling to every lesson, making maps and spatial thinking accessible and practical for field researchers.',
     },
   ];
 
