@@ -79,6 +79,12 @@ export default function AboutPage() {
       bio: 'A Nigerian researcher based in Europe, Moshood started EvolvLearn because he saw how many talented African scientists were held back not by intelligence, but by access to proper research methods training. He teaches every cohort himself and is committed to keeping the quality personal.',
     },
     {
+      name: 'Adamu Masari',
+      role: 'Plant Breeder & R / Statistics Instructor',
+      image: '/images/team/masari.jpeg',
+      bio: 'Early-career plant breeder with strong experience in agricultural research. Skilled in R-based statistical analysis and data visualization, with several articles published in peer-reviewed open access journals.',
+    },
+    {
       name: 'Ridwan Ishola',
       role: 'QGIS & Spatial Analysis Tutor',
       image: '/images/team/ridwan.jpeg',
