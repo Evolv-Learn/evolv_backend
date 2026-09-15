@@ -75,11 +75,11 @@ export default function AboutPage() {
     { 
       name: 'Moshood Owolabi', 
       role: 'Founder & R / Statistics Instructor', 
-      image: '/images/team/moshood-working.jpeg',
+      image: '/images/team/moshood.jpeg',
       bio: 'A Nigerian researcher based in Europe, Moshood started EvolvLearn because he saw how many talented African scientists were held back not by intelligence, but by access to proper research methods training. He teaches every cohort himself and is committed to keeping the quality personal.',
     },
     {
-      name: 'Ridwan Alade',
+      name: 'Ridwan Ishola',
       role: 'QGIS & Spatial Analysis Tutor',
       image: '/images/team/ridwan.jpeg',
       bio: 'Based in Nigeria, Ridwan is a videographer with deep expertise in QGIS and spatial analysis. He brings both technical precision and visual storytelling to every lesson — making maps and spatial thinking accessible and practical for field researchers.',
