@@ -322,7 +322,7 @@ export default function AdminApplicationsPage() {
                       >
                         View Full Application →
                       </Button>
-                      {enrollment.status === 'Pending' && (
+                      {(enrollment.status === 'Pending' || enrollment.status === 'Under Review') && (
                         <>
                           <Button
                             variant="primary"
@@ -455,7 +455,7 @@ export default function AdminApplicationsPage() {
 
                 {/* Action Buttons */}
                 <div className="flex gap-4 pt-4 border-t">
-                  {selectedEnrollment.status === 'Pending' && (
+                  {(selectedEnrollment.status === 'Pending' || selectedEnrollment.status === 'Under Review') && (
                     <>
                       <Button 
                         type="button"
