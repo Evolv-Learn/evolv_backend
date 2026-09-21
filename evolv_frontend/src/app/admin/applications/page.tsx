@@ -59,7 +59,7 @@ export default function AdminApplicationsPage() {
   const fetchEnrollments = async () => {
     try {
       setIsLoading(true);
-      const response = await apiClient.get('/enrollments/');
+      const response = await apiClient.get('/admin/enrollments/');
       setEnrollments(response.data.results || response.data);
     } catch (error) {
       console.error('Failed to fetch enrollments:', error);
@@ -77,7 +77,7 @@ export default function AdminApplicationsPage() {
     setActionMessage('');
 
     try {
-      await apiClient.patch(`/enrollments/${enrollmentId}/`, { status: 'Approved' });
+      await apiClient.patch(`/admin/enrollments/${enrollmentId}/status/`, { status: 'Approved' });
       
       setActionMessage('✅ Application approved successfully!');
       
@@ -107,7 +107,7 @@ export default function AdminApplicationsPage() {
     setActionMessage('');
 
     try {
-      await apiClient.patch(`/enrollments/${enrollmentId}/`, { status: 'Rejected' });
+      await apiClient.patch(`/admin/enrollments/${enrollmentId}/status/`, { status: 'Rejected' });
       
       setActionMessage('✅ Application rejected.');
       
