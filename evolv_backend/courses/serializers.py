@@ -773,8 +773,31 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
         return None
 
 
+class EnrollmentStudentSerializer(serializers.ModelSerializer):
+    """Nested student details for admin enrollment view."""
+    class Meta:
+        model = Student
+        fields = [
+            'id', 'first_name', 'last_name', 'email', 'phone',
+            'gender', 'birth_date', 'country_of_birth', 'nationality',
+            'diploma_level', 'job_status', 'english_level',
+            'motivation', 'future_goals', 'proudest_moment',
+            'how_heard', 'has_laptop',
+        ]
+
+
+class EnrollmentCourseSerializer(serializers.ModelSerializer):
+    """Nested course details for admin enrollment view."""
+    class Meta:
+        model = Course
+        fields = ['id', 'name', 'category']
+
+
 class CourseEnrollmentAdminSerializer(serializers.ModelSerializer):
-    """Admin-facing serializer: includes student details; only status is writable."""
+    """Admin-facing serializer: includes nested student and course details; only status is writable."""
+    student = EnrollmentStudentSerializer(read_only=True)
+    course = EnrollmentCourseSerializer(read_only=True)
+    # Keep flat fields for backwards compatibility
     course_name = serializers.CharField(source='course.name', read_only=True)
     student_first_name = serializers.CharField(source='student.first_name', read_only=True)
     student_last_name = serializers.CharField(source='student.last_name', read_only=True)
