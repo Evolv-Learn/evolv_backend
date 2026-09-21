@@ -14,6 +14,7 @@ from .models import (
     Student, StudentSelection, Course, Event,
     LearningSchedule, Alumni, Review,
     LessonProgress, LiveSession, Assignment, Module, Lesson,
+    CourseEnrollment,
 )
 from .serializers import (
     StudentReadSerializer, StudentSelectionSerializer,
@@ -39,17 +40,20 @@ class StudentDashboardView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Get application status
-        selection_steps = StudentSelection.objects.filter(student=student)
-        total_steps = selection_steps.count()
-        completed_steps = selection_steps.filter(status="Completed").count()
-        
-        application_status = "pending"
-        if total_steps > 0:
-            if completed_steps == total_steps:
-                application_status = "approved"
-            elif completed_steps > 0:
-                application_status = "in_progress"
+        # Determine application status from CourseEnrollment
+        enrollments = CourseEnrollment.objects.filter(student=student)
+        has_approved = enrollments.filter(status='Approved').exists()
+        has_rejected = enrollments.filter(status='Rejected').exists()
+        has_pending   = enrollments.filter(status__in=['Pending', 'Under Review']).exists()
+
+        if has_approved:
+            application_status = "approved"
+        elif has_rejected and not has_pending:
+            application_status = "rejected"
+        elif has_pending:
+            application_status = "pending"
+        else:
+            application_status = "pending"
 
         # Get enrolled schedules
         enrolled_schedules = student.schedules.select_related('course', 'location').all()
@@ -62,11 +66,6 @@ class StudentDashboardView(APIView):
         data = {
             "profile": StudentReadSerializer(student, context={'request': request}).data,
             "application_status": application_status,
-            "selection_progress": {
-                "total_steps": total_steps,
-                "completed_steps": completed_steps,
-                "steps": StudentSelectionSerializer(selection_steps, many=True).data
-            },
             "enrolled_schedules": [
                 {
                     "id": schedule.id,
@@ -89,7 +88,7 @@ class StudentDashboardView(APIView):
             "learning_materials": {
                 "github": "https://github.com/your-org/learning-materials" if application_status == "approved" else None,
                 "discord": "https://discord.gg/your-invite" if application_status == "approved" else None,
-                "message": "Complete your application to access learning materials" if application_status != "approved" else "Access granted"
+                "message": "Your application needs to be approved to access learning materials" if application_status != "approved" else "Access granted"
             }
         }
 
@@ -229,14 +228,15 @@ class EnrollScheduleView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Check if application is approved
-        selection_steps = StudentSelection.objects.filter(student=student)
-        total_steps = selection_steps.count()
-        completed_steps = selection_steps.filter(status="Completed").count()
-        
-        if total_steps > 0 and completed_steps < total_steps:
+        # Check if application is approved via CourseEnrollment
+        has_approved = CourseEnrollment.objects.filter(
+            student=student,
+            status='Approved'
+        ).exists()
+
+        if not has_approved:
             return Response(
-                {"detail": "Your application must be approved before enrolling in courses."},
+                {"detail": "Your application must be approved before enrolling in a schedule."},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -287,15 +287,16 @@ class LearningMaterialsView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Check if application is approved
-        selection_steps = StudentSelection.objects.filter(student=student)
-        total_steps = selection_steps.count()
-        completed_steps = selection_steps.filter(status="Completed").count()
+        # Check if student has at least one approved course enrollment
+        has_approved = CourseEnrollment.objects.filter(
+            student=student,
+            status='Approved'
+        ).exists()
 
-        if total_steps == 0 or completed_steps < total_steps:
+        if not has_approved:
             return Response({
                 "access_granted": False,
-                "message": "Complete your application to access learning materials.",
+                "message": "Your application must be approved before you can access learning materials.",
                 "materials": None
             })
 

@@ -952,29 +952,44 @@ class CourseEnrollmentUpdateStatusView(generics.UpdateAPIView):
     http_method_names = ['patch', 'options', 'head']
 
     def perform_update(self, serializer):
+        rejection_reason = self.request.data.get('rejection_reason', '')
         enrollment = serializer.save()
         if enrollment.status in ('Approved', 'Rejected'):
-            self._notify_student(enrollment)
+            self._notify_student(enrollment, rejection_reason=rejection_reason)
 
-    def _notify_student(self, enrollment):
+    def _notify_student(self, enrollment, rejection_reason=''):
         student = enrollment.student
         course_name = enrollment.course.name
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+
         if enrollment.status == 'Approved':
-            subject = f"Application Approved \u2013 {course_name}"
+            subject = f"Congratulations! Your Application is Approved – {course_name}"
             body = (
                 f"Dear {student.first_name},\n\n"
-                f"We are pleased to inform you that your application for {course_name} has been approved.\n\n"
-                "Please log in to your dashboard to view next steps.\n\n"
-                "Best regards,\nThe EvolvLearn Team"
+                f"We are delighted to inform you that your application for {course_name} "
+                f"has been approved. Welcome to EvolvLearn!\n\n"
+                f"You can now log in to your dashboard to access your learning materials, "
+                f"Discord community, and course schedule:\n"
+                f"{frontend_url}/dashboard\n\n"
+                f"We look forward to seeing you in class.\n\n"
+                f"Best regards,\nThe EvolvLearn Team"
             )
         else:
-            subject = f"Application Update \u2013 {course_name}"
+            reason_line = (
+                f"\nReason: {rejection_reason}\n"
+                if rejection_reason and rejection_reason.strip()
+                else "\n"
+            )
+            subject = f"Application Update – {course_name}"
             body = (
                 f"Dear {student.first_name},\n\n"
-                f"Thank you for applying for {course_name}. After careful review, "
-                "your application was not successful for this cohort.\n\n"
-                "We encourage you to apply again for future cohorts.\n\n"
-                "Best regards,\nThe EvolvLearn Team"
+                f"Thank you for your interest in {course_name} at EvolvLearn. "
+                f"After careful review of your application, we are unable to offer "
+                f"you a place in this cohort.\n"
+                f"{reason_line}"
+                f"We encourage you to apply again when the next cohort opens. "
+                f"If you have any questions, please reply to this email.\n\n"
+                f"Best regards,\nThe EvolvLearn Team"
             )
         send_transactional_email(
             subject=subject,

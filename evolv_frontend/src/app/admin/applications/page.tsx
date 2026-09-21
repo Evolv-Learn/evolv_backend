@@ -107,7 +107,10 @@ export default function AdminApplicationsPage() {
     setActionMessage('');
 
     try {
-      await apiClient.patch(`/admin/enrollments/${enrollmentId}/status/`, { status: 'Rejected' });
+      await apiClient.patch(`/admin/enrollments/${enrollmentId}/status/`, {
+        status: 'Rejected',
+        rejection_reason: reason || '',
+      });
       
       setActionMessage('✅ Application rejected.');
       
