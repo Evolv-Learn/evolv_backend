@@ -359,6 +359,18 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </Link>
+
+              <Link href="/admin/cta">
+                <div className="border rounded-xl p-5 hover:bg-warm-white transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <svg className="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" /></svg>
+                    <div>
+                      <h3 className="font-bold text-lg">CTA Analytics</h3>
+                      <p className="text-sm text-gray-600">Button clicks &amp; visitor behaviour</p>
+                    </div>
+                  </div>
+                </div>
+              </Link>
             </div>
           </div>
 
