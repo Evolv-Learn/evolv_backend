@@ -34,6 +34,8 @@ export default function AdminDashboard() {
     totalEnrollments: 0,
   });
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [ctaStats, setCtaStats] = useState<{ cta_name: string; count: number }[]>([]);
+  const [ctaTotal, setCtaTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -47,12 +49,13 @@ export default function AdminDashboard() {
         try { return await fn(); } catch { return fallback; }
       };
 
-      const [students, courses, events, profiles, enrollments] = await Promise.all([
+      const [students, courses, events, profiles, enrollments, cta] = await Promise.all([
         safe(() => apiClient.get('/students/').then(r => r.data.results ?? r.data)),
         safe(() => apiClient.get('/courses/').then(r => r.data.results ?? r.data)),
         safe(() => apiClient.get('/events/').then(r => r.data.results ?? r.data)),
         safe(() => apiClient.get('/admin/profiles/').then(r => r.data.results ?? r.data)),
         safe(() => apiClient.get('/admin/enrollments/').then(r => r.data.results ?? r.data)),
+        safe(() => apiClient.get('/admin/cta/stats/?days=30').then(r => r.data), {}),
       ]);
 
       const instructorCount = profiles.filter((p: any) =>
@@ -87,6 +90,8 @@ export default function AdminDashboard() {
       });
 
       setRecentActivities(activities);
+      setCtaStats(cta.by_button ?? []);
+      setCtaTotal(cta.total_clicks ?? 0);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
@@ -459,6 +464,46 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
+        {/* CTA Click Stats */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mt-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-heading font-bold text-secondary-blue flex items-center gap-2">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" />
+              </svg>
+              CTA Clicks — Last 30 Days
+            </h2>
+            <div className="text-2xl font-bold text-primary-gold">{ctaTotal} total</div>
+          </div>
+
+          {ctaStats.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              <p>No CTA clicks recorded yet. Clicks will appear here as visitors interact with the website.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {ctaStats.map((item) => {
+                const pct = ctaTotal > 0 ? Math.round((item.count / ctaTotal) * 100) : 0;
+                const label = item.cta_name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                return (
+                  <div key={item.cta_name}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-medium text-gray-700">{label}</span>
+                      <span className="text-gray-500">{item.count} clicks ({pct}%)</span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-2">
+                      <div
+                        className="bg-primary-gold h-2 rounded-full transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );

@@ -50,6 +50,8 @@ from .views import (
     AdminUserProfileDetailView, MyStudentView, health_check,
     CourseEnrollmentAdminListView, CourseEnrollmentUpdateStatusView,
     EventRegistrationsAdminView,
+    CTATrackView,
+    CTAStatsView,
 )
 
 from .views_extended import (
@@ -170,6 +172,9 @@ urlpatterns = [
 
     path("admin/events/registrations/", EventRegistrationsAdminView.as_view(), name="admin-event-registrations-all"),
     path("admin/events/<int:event_id>/registrations/", EventRegistrationsAdminView.as_view(), name="admin-event-registrations"),
+
+    path("cta/track/", CTATrackView.as_view(), name="cta-track"),
+    path("admin/cta/stats/", CTAStatsView.as_view(), name="admin-cta-stats"),
 
     path("instructors/<int:user_id>/profile/", PublicInstructorProfileView.as_view(), name="public-instructor-profile"),
 

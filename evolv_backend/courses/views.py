@@ -6,7 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from .utils import send_event_registration_email, send_welcome_email
 from .utils import send_transactional_email
-from .throttles import RegisterRateThrottle, ContactUsRateThrottle
+from .throttles import RegisterRateThrottle, ContactUsRateThrottle, CTATrackRateThrottle
 
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.views import APIView
@@ -1019,3 +1019,63 @@ class EventRegistrationsAdminView(generics.ListAPIView):
         if event_id:
             qs = qs.filter(event_id=event_id)
         return qs
+
+
+# ── CTA Tracking ──────────────────────────────────────────────────────────────
+
+from .models import CTAClick as CTAClickModel
+from .serializers import CTAClickSerializer
+
+class CTATrackView(generics.CreateAPIView):
+    """
+    Public endpoint — records a CTA button click.
+    POST /api/v1/cta/track/
+    Body: { "cta_name": "apply_hero", "page": "/", "session_id": "abc123" }
+    """
+    serializer_class = CTAClickSerializer
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [CTATrackRateThrottle]
+
+
+class CTAStatsView(APIView):
+    """
+    Admin endpoint — returns CTA click counts grouped by button name.
+    GET /api/v1/admin/cta/stats/
+    Optional query params: ?days=30 (default 30)
+    """
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        from django.db.models import Count
+        from django.utils import timezone
+        from datetime import timedelta
+
+        days = int(request.query_params.get('days', 30))
+        since = timezone.now() - timedelta(days=days)
+
+        totals = (
+            CTAClickModel.objects
+            .filter(created_at__gte=since)
+            .values('cta_name')
+            .annotate(count=Count('id'))
+            .order_by('-count')
+        )
+
+        # Daily breakdown for the last 7 days
+        daily = (
+            CTAClickModel.objects
+            .filter(created_at__gte=timezone.now() - timedelta(days=7))
+            .extra(select={'day': "DATE(created_at)"})
+            .values('day', 'cta_name')
+            .annotate(count=Count('id'))
+            .order_by('day', '-count')
+        )
+
+        total_clicks = CTAClickModel.objects.filter(created_at__gte=since).count()
+
+        return Response({
+            'period_days': days,
+            'total_clicks': total_clicks,
+            'by_button': list(totals),
+            'daily_breakdown': list(daily),
+        })

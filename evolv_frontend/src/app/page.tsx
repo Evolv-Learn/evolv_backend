@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import ProgrammesCarousel from '@/components/home/ProgrammesCarousel';
 import WhyEvolvRotator from '@/components/home/WhyEvolvRotator';
+import CTALink from '@/components/ui/CTALink';
 
 export default function Home() {
   return (
@@ -41,16 +42,16 @@ export default function Home() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/admission">
+              <CTALink href="/admission" ctaName="apply_hero">
                 <Button variant="primary" size="lg" className="shadow-2xl w-full sm:w-auto px-8 py-4 text-base font-semibold">
                   Apply for Next Cohort →
                 </Button>
-              </Link>
-              <Link href="/courses">
+              </CTALink>
+              <CTALink href="/courses" ctaName="view_programmes">
                 <Button variant="outline" size="lg" className="text-white border-2 border-white hover:bg-white hover:text-secondary-blue shadow-2xl w-full sm:w-auto px-8 py-4 text-base font-semibold backdrop-blur-sm">
                   View Programmes
                 </Button>
-              </Link>
+              </CTALink>
             </div>
           </div>
         </div>
@@ -166,11 +167,11 @@ export default function Home() {
           </div>
           <ProgrammesCarousel />
           <div className="mt-8 text-center">
-            <Link href="/courses">
+            <CTALink href="/courses" ctaName="view_all_programmes">
               <Button variant="outline" size="lg">
                 View All Programmes
               </Button>
-            </Link>
+            </CTALink>
           </div>
         </div>
       </section>
@@ -396,16 +397,16 @@ export default function Home() {
               Spots are limited and go quickly. If you are a student, researcher, or scientist ready to level up your data analysis skills. Apply today!.
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Link href="/admission">
+              <CTALink href="/admission" ctaName="apply_final_cta">
                 <Button variant="secondary" size="lg">
                   Apply for the Next Cohort
                 </Button>
-              </Link>
-              <Link href="/contact">
+              </CTALink>
+              <CTALink href="/contact" ctaName="ask_question">
                 <Button variant="outline" size="lg" className="bg-white hover:bg-gray-100">
                   Ask a Question
                 </Button>
-              </Link>
+              </CTALink>
             </div>
           </div>
         </div>

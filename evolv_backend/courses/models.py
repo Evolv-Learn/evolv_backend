@@ -646,3 +646,31 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"{self.enrollment} — {self.currency} {self.amount} ({self.status})"
+
+
+class CTAClick(models.Model):
+    """Tracks CTA button clicks across the EvolvLearn frontend."""
+    CTA_CHOICES = [
+        ('apply_hero',         'Apply — Hero Section'),
+        ('view_programmes',    'View Programmes — Hero'),
+        ('apply_final_cta',    'Apply — Final CTA Section'),
+        ('ask_question',       'Ask a Question — Final CTA'),
+        ('view_all_programmes','View All Programmes'),
+        ('register_event',     'Register for Event'),
+        ('contact_us',         'Contact Us'),
+        ('login',              'Login'),
+        ('register',           'Register / Sign Up'),
+        ('apply_course',       'Apply — Course Page'),
+        ('other',              'Other'),
+    ]
+
+    cta_name   = models.CharField(max_length=50, choices=CTA_CHOICES, db_index=True)
+    page       = models.CharField(max_length=255, help_text="Page path where click occurred")
+    session_id = models.CharField(max_length=64, blank=True, help_text="Anonymous session identifier")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.cta_name} on {self.page} at {self.created_at:%Y-%m-%d %H:%M}"

@@ -31,6 +31,7 @@ from .models import (
     CoursePrice,
     Payment,
     DiscountCode,
+    CTAClick,
 )
 
 User = get_user_model()
@@ -1145,3 +1146,12 @@ class DiscountCodeSerializer(serializers.ModelSerializer):
         if not validated_data.get('code'):
             validated_data['code'] = self._generate_unique_code()
         return super().create(validated_data)
+
+
+# ── CTA Tracking ──────────────────────────────────────────────────────────────
+
+class CTAClickSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CTAClick
+        fields = ['id', 'cta_name', 'page', 'session_id', 'created_at']
+        read_only_fields = ['id', 'created_at']
