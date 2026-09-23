@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Open_Sans, Poppins } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -29,6 +30,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${openSans.variable} ${poppins.variable}`}>
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-0FGN8L8H6H"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-0FGN8L8H6H');
+          `}
+        </Script>
         <Header />
         <ErrorBoundary>
           {children}
