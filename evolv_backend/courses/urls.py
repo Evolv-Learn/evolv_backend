@@ -49,6 +49,7 @@ from .views import (
     AdminProfileListView,
     AdminUserProfileDetailView, MyStudentView, health_check,
     CourseEnrollmentAdminListView, CourseEnrollmentUpdateStatusView,
+    EventRegistrationsAdminView,
 )
 
 from .views_extended import (
@@ -166,6 +167,9 @@ urlpatterns = [
 
     path("admin/enrollments/", CourseEnrollmentAdminListView.as_view(), name="admin-enrollment-list"),
     path("admin/enrollments/<int:pk>/status/", CourseEnrollmentUpdateStatusView.as_view(), name="admin-enrollment-update-status"),
+
+    path("admin/events/registrations/", EventRegistrationsAdminView.as_view(), name="admin-event-registrations-all"),
+    path("admin/events/<int:event_id>/registrations/", EventRegistrationsAdminView.as_view(), name="admin-event-registrations"),
 
     path("instructors/<int:user_id>/profile/", PublicInstructorProfileView.as_view(), name="public-instructor-profile"),
 

@@ -29,7 +29,8 @@ from .serializers import (
     EventWriteSerializer, EventReadSerializer, AboutUsSerializer, TeamMemberReadSerializer, TeamMemberWriteSerializer, CoreValueSerializer, ReviewSerializer,
     LearningScheduleSerializer, LessonReadSerializer, LessonWriteSerializer, UserProfileCreateSerializer, RegisterUserSerializer, AdminProfileUpdateSerializer,
     ModuleReadSerializer, ModuleWriteSerializer, StudentReadSerializer, StudentWriteSerializer,
-    CourseEnrollmentSerializer, CourseEnrollmentAdminSerializer)
+    CourseEnrollmentSerializer, CourseEnrollmentAdminSerializer,
+    EventRegistrationAdminSerializer)
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -996,3 +997,25 @@ class CourseEnrollmentUpdateStatusView(generics.UpdateAPIView):
             text_message=body,
             recipient_list=[student.email],
         )
+
+
+class EventRegistrationsAdminView(generics.ListAPIView):
+    """
+    Admin: list all registrations for a specific event.
+    GET /api/v1/admin/events/<event_id>/registrations/
+    Optional query param: ?event=<id> to filter (handled automatically via queryset)
+    """
+    serializer_class = EventRegistrationAdminSerializer
+    permission_classes = [IsAdminUser]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['event']
+    search_fields = ['full_name', 'email', 'organization', 'phone']
+    ordering_fields = ['created_at', 'full_name']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        event_id = self.kwargs.get('event_id')
+        qs = EventRegistration.objects.select_related('event')
+        if event_id:
+            qs = qs.filter(event_id=event_id)
+        return qs

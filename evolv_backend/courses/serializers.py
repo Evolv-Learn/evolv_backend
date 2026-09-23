@@ -403,6 +403,28 @@ class EventRegistrationSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class EventRegistrationAdminSerializer(serializers.ModelSerializer):
+    """Admin-facing serializer for listing event registrations."""
+    event_title = serializers.CharField(source="event.title", read_only=True)
+    event_date  = serializers.DateTimeField(source="event.date", read_only=True)
+
+    class Meta:
+        model = EventRegistration
+        fields = [
+            "id",
+            "event",
+            "event_title",
+            "event_date",
+            "full_name",
+            "email",
+            "phone",
+            "organization",
+            "how_heard",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+
 class AlumniReadSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     course = serializers.StringRelatedField()
