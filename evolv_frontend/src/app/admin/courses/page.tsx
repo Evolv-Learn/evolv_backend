@@ -265,7 +265,7 @@ export default function AdminCoursesPage() {
                       <Button
                         variant="primary"
                         size="sm"
-                        onClick={() => router.push(`/instructor/courses/${course.id}/edit-topics`)}
+                        onClick={() => router.push(`/admin/courses/${course.id}/edit`)}
                       >
                         ✏️ Edit
                       </Button>
