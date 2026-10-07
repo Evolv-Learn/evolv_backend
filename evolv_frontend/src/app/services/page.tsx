@@ -90,31 +90,36 @@ export default function ServicesPage() {
       {/* Example work */}
       <section className="py-16 bg-warm-white border-t border-gray-100">
         <div className="container mx-auto px-4 max-w-5xl">
-          <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-8 text-center">
-            Example engagements
+          <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-2 text-center">
+            What we build
           </h2>
+          <p className="text-center text-gray-500 mb-10 text-sm">
+            Real systems. Every tool we recommend, we have built ourselves.
+          </p>
           <div className="grid md:grid-cols-2 gap-6">
 
             <div className="bg-white p-7 border-l-4 border-primary-gold">
-              <p className="text-xs font-bold text-primary-gold uppercase tracking-wide mb-3">Agricultural Research Institute</p>
-              <h3 className="text-lg font-bold text-secondary-blue mb-2">
-                Multi-site field trial data — from 5 Excel files to one clean database
-              </h3>
-              <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                A research team was manually merging field trial data from 5 locations every month before analysis. We replaced that with a single automated pipeline: KoboToolbox → PostgreSQL → R analysis-ready export. Monthly data prep dropped from 3 days to under 2 hours.
+              <p className="text-xs font-bold text-primary-gold uppercase tracking-wide mb-3">
+                EvolvLearn Platform — Built by our team
               </p>
-              <p className="text-xs text-gray-400 italic">Illustrative example · details changed</p>
+              <h3 className="text-lg font-bold text-secondary-blue mb-2">
+                Full-stack learning platform with PostgreSQL, REST API, and live deployment
+              </h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                We designed and built the EvolvLearn platform from scratch — a Django REST Framework backend, Next.js frontend, PostgreSQL database, JWT authentication, multi-currency payment integration, email automation, and production deployment on Render and Vercel. Every system we recommend to clients, we have engineered ourselves.
+              </p>
             </div>
 
             <div className="bg-white p-7 border-l-4 border-secondary-blue">
-              <p className="text-xs font-bold text-secondary-blue uppercase tracking-wide mb-3">NGO — Development Programme</p>
-              <h3 className="text-lg font-bold text-secondary-blue mb-2">
-                Donor reporting dashboard built from 3 years of survey data
-              </h3>
-              <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                A development NGO had 3 years of beneficiary survey data in separate files with no consistent structure. We standardised the data, built a PostgreSQL database, and delivered a Power BI dashboard their programme director could use directly with funders.
+              <p className="text-xs font-bold text-secondary-blue uppercase tracking-wide mb-3">
+                What a typical research engagement looks like
               </p>
-              <p className="text-xs text-gray-400 italic">Illustrative example · details changed</p>
+              <h3 className="text-lg font-bold text-secondary-blue mb-2">
+                Multi-site field trial data — from manual Excel merges to an automated pipeline
+              </h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                A plant breeding team running trials across 5 locations was manually merging spreadsheets every month before analysis — 3 days of work before the science could begin. The solution: structured data collection via KoboToolbox, an automated cleaning script, PostgreSQL storage, and a direct R export ready for ANOVA. Data prep now takes under 2 hours.
+              </p>
             </div>
 
           </div>
