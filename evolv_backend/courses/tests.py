@@ -13,10 +13,14 @@ from .models import (
 	EventAttendance,
 	LearningSchedule,
 	Location,
+	CourseEnrollment,
+	Payment,
+	Profile,
 	SelectionProcedure,
 	Student,
 	StudentSelection,
 )
+from .serializers import ProfileSerializer
 
 
 User = get_user_model()
@@ -135,6 +139,33 @@ class UserScopedEndpointPermissionTests(APITestCase):
 
 		self.assertEqual(list_response.status_code, status.HTTP_403_FORBIDDEN)
 		self.assertEqual(detail_response.status_code, status.HTTP_403_FORBIDDEN)
+
+	def test_only_paid_enrollments_count_as_applications(self):
+		profile = Profile.objects.create(user=self.user, role="Student")
+		enrollment = CourseEnrollment.objects.create(
+			student=self.student,
+			course=self.course,
+		)
+		payment = Payment.objects.create(
+			enrollment=enrollment,
+			amount="20000.00",
+			currency="NGN",
+			status="pending",
+		)
+
+		self.assertFalse(ProfileSerializer().get_has_application(profile))
+		self.client.force_authenticate(user=self.admin)
+		response = self.client.get("/api/v1/admin/enrollments/")
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		results = response.data.get("results", response.data)
+		self.assertNotIn(enrollment.id, [item["id"] for item in results])
+
+		payment.status = "paid"
+		payment.save(update_fields=["status"])
+		self.assertTrue(ProfileSerializer().get_has_application(profile))
+		response = self.client.get("/api/v1/admin/enrollments/")
+		results = response.data.get("results", response.data)
+		self.assertIn(enrollment.id, [item["id"] for item in results])
 
 	def test_live_session_detail_is_limited_to_enrolled_student_or_admin(self):
 		schedule = LearningSchedule.objects.create(

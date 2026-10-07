@@ -933,7 +933,9 @@ class CourseEnrollmentAdminListView(generics.ListAPIView):
     """Admin: list all enrollments with student details."""
     serializer_class = CourseEnrollmentAdminSerializer
     permission_classes = [IsAdminUser]
-    queryset = CourseEnrollment.objects.select_related('student', 'course').order_by('-applied_at')
+    queryset = CourseEnrollment.objects.filter(
+        payment__status='paid'
+    ).select_related('student', 'course').order_by('-applied_at')
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['status', 'course']
     search_fields = ['student__first_name', 'student__last_name', 'student__email', 'course__name']

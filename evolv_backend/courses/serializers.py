@@ -54,7 +54,10 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ["id", "user", "role", "has_application"]
 
     def get_has_application(self, obj):
-        return Student.objects.filter(user=obj.user).exists()
+        return Student.objects.filter(
+            user=obj.user,
+            enrollments__payment__status='paid',
+        ).exists()
 
 
 class ProfileSelfSerializer(serializers.ModelSerializer):
