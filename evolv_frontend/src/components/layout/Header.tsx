@@ -39,6 +39,7 @@ export const Header = () => {
     { name: 'Home', href: '/' },
     { name: 'About', href: '/about' },
     { name: 'Programmes', href: '/courses' },
+    { name: 'Services', href: '/services' },
     { name: 'Pricing', href: '/pricing' },
     { name: 'Events', href: '/events' },
     { name: 'Alumni', href: '/alumni' },
