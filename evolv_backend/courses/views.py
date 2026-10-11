@@ -981,15 +981,15 @@ class CourseEnrollmentUpdateStatusView(generics.UpdateAPIView):
                 f"We will move to Discord on the start date.\n\n"
                 f"3. WHAT TO EXPECT\n"
                 f"   - Course start: 1 December 2026\n"
-                f"   - Sessions: 3x per week, 2 hours each — live on Discord\n"
-                f"   - No preparation needed — we start from scratch\n\n"
+                f"   - Sessions: 3x per week, 2 hours each. live on Discord\n"
+                f"   - No preparation needed, we start from scratch\n\n"
                 f"If you have any questions before the course starts, reply to this email "
                 f"or message us on WhatsApp.\n\n"
                 f"We look forward to seeing you in class.\n\n"
                 f"Best regards,\n"
                 f"Moshood Owolabi\n"
                 f"Founder, EvolvLearn\n"
-                f"evolvngo@gmail.com | evolvlearn.com"
+                f"evolvngo@gmail.com | evolvlearn.org"
             )
         else:
             reason_line = (
