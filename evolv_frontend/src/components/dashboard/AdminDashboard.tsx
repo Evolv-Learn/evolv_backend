@@ -49,21 +49,17 @@ export default function AdminDashboard() {
         try { return await fn(); } catch { return fallback; }
       };
 
-      const [students, courses, events, profiles, enrollments, cta] = await Promise.all([
-        safe(() => apiClient.get('/students/').then(r => r.data.results ?? r.data)),
+      const [studentResponse, courses, events, instructorProfiles, enrollments, cta] = await Promise.all([
+        safe(() => apiClient.get('/students/').then(r => r.data), { count: 0, results: [] }),
         safe(() => apiClient.get('/courses/').then(r => r.data.results ?? r.data)),
         safe(() => apiClient.get('/events/').then(r => r.data.results ?? r.data)),
-        safe(() => apiClient.get('/admin/profiles/').then(r => r.data.results ?? r.data)),
+        safe(() => apiClient.get('/admin/profiles/?role=Instructor').then(r => r.data), { count: 0, results: [] }),
         safe(() => apiClient.get('/admin/enrollments/').then(r => r.data.results ?? r.data)),
         safe(() => apiClient.get('/admin/cta/stats/?days=30').then(r => r.data), {}),
       ]);
 
-      const instructorCount = profiles.filter((p: any) =>
-        p.role === 'Instructor' || p.role === 'instructor'
-      ).length;
-      const studentCount = profiles.filter((p: any) =>
-        p.role === 'Student' || p.role === 'student'
-      ).length;
+      const studentCount = studentResponse.count ?? studentResponse.results?.length ?? 0;
+      const instructorCount = instructorProfiles.count ?? instructorProfiles.results?.length ?? 0;
       const pendingCount = enrollments.filter((e: any) =>
         e.status === 'Pending' || e.status === 'Under Review'
       ).length;
