@@ -46,9 +46,17 @@ function UsersManagementContent() {
 
   const fetchUsers = async () => {
     try {
-      // Fetch profiles which include user data
-      const profilesRes = await apiClient.get('/admin/profiles/');
-      const profilesData = profilesRes.data.results || profilesRes.data;
+      const profilesData: any[] = [];
+      let page = 1;
+      let hasNextPage = true;
+
+      while (hasNextPage) {
+        const profilesRes = await apiClient.get(`/admin/profiles/?page=${page}`);
+        const responseData = profilesRes.data;
+        profilesData.push(...(responseData.results ?? responseData));
+        hasNextPage = Array.isArray(responseData) ? false : Boolean(responseData.next);
+        page += 1;
+      }
       
       // Transform profiles to match the User interface
       const usersData = profilesData.map((profile: any) => ({
