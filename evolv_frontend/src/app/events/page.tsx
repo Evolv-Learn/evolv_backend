@@ -43,6 +43,7 @@ export default function EventsPage() {
   const [filter, setFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
   const [typeFilter, setTypeFilter] = useState<'all' | 'virtual' | 'physical'>('all');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [showFullDescription, setShowFullDescription] = useState(false);
   const [registration, setRegistration] = useState({ full_name: '', email: '', phone: '', organization: '', how_heard: '' });
   const [registrationStatus, setRegistrationStatus] = useState<'idle' | 'saving' | 'success'>('idle');
   const [registrationError, setRegistrationError] = useState('');
@@ -71,6 +72,7 @@ export default function EventsPage() {
 
   const openEvent = (event: Event) => {
     setSelectedEvent(event);
+    setShowFullDescription(false);
     setRegistration({ full_name: '', email: '', phone: '', organization: '', how_heard: '' });
     setRegistrationStatus('idle');
     setRegistrationError('');
@@ -282,9 +284,30 @@ export default function EventsPage() {
             </div>
 
             <div className="p-6 space-y-5">
-              <p className="text-gray-600 leading-relaxed whitespace-pre-line">{selectedEvent.description}</p>
-              <div className="bg-warm-white rounded-xl p-4 text-sm text-gray-600">
-                Register with your name and email. You will receive a confirmation email now, and the meeting link will be sent two days before the event.
+              <section className="rounded-xl border border-gray-100 bg-gray-50 p-4 sm:p-5">
+                <p className="text-xs font-bold uppercase tracking-widest text-secondary-blue mb-2">
+                  About this event
+                </p>
+                <p className={`text-gray-600 leading-relaxed whitespace-pre-line ${showFullDescription ? '' : 'line-clamp-3'}`}>
+                  {selectedEvent.description}
+                </p>
+                {selectedEvent.description.length > 180 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowFullDescription((isExpanded) => !isExpanded)}
+                    className="mt-2 text-sm font-semibold text-secondary-blue hover:text-primary-gold"
+                    aria-expanded={showFullDescription}
+                  >
+                    {showFullDescription ? 'Show less' : 'Read full description'}
+                  </button>
+                )}
+              </section>
+              <div className="border-l-4 border-primary-gold bg-warm-white rounded-r-xl p-4 text-sm text-gray-600">
+                <p className="font-semibold text-gray-800 mb-1">Registration details</p>
+                <p>A confirmation email will be sent after registration.</p>
+                {selectedEvent.is_virtual && (
+                  <p className="mt-1">The meeting link will arrive by email two days before the event.</p>
+                )}
               </div>
 
               {registrationStatus === 'success' ? (
