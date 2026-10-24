@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '@/store/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -32,12 +33,23 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const requestUrl = originalRequest?.url ?? '';
+    const isLoginRequest = /\/auth\/login\/?$/.test(requestUrl);
+    const isRefreshRequest = /\/auth\/token\/refresh\/?$/.test(requestUrl);
+    const hasSession = typeof window !== 'undefined' && (
+      Boolean(localStorage.getItem('access_token')) ||
+      Boolean(localStorage.getItem('refresh_token')) ||
+      useAuthStore.getState().isAuthenticated
+    );
 
-    // Only attempt refresh once, and not for the refresh endpoint itself
+    // Login failures are credential errors, not expired-session errors.
     if (
       error.response?.status === 401 &&
+      hasSession &&
+      originalRequest &&
       !originalRequest._retry &&
-      originalRequest.url !== '/auth/token/refresh/'
+      !isLoginRequest &&
+      !isRefreshRequest
     ) {
       originalRequest._retry = true;
 
@@ -57,11 +69,14 @@ apiClient.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${data.access}`;
         return apiClient(originalRequest);
       } catch {
-        // Refresh failed — clear session and redirect to login
         if (typeof window !== 'undefined') {
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
-          window.location.href = '/login';
+          useAuthStore.getState().setUser(null);
+
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
         }
       }
     }
