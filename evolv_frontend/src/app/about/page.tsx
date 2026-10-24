@@ -84,6 +84,12 @@ export default function AboutPage() {
       image: '/images/team/ridwan.jpeg',
       bio: 'Based in Nigeria, Ridwan is a videographer with deep expertise in QGIS and spatial analysis. He brings both technical precision and visual storytelling to every lesson, making maps and spatial thinking accessible and practical for field researchers.',
     },
+    {
+      name: 'Adamu Masari',
+      role: 'Plant Breeder · R & Statistics',
+      image: '/images/team/masari.jpeg',
+      bio: 'Early-career plant breeder with strong experience in agricultural research. Skilled in R-based statistical analysis and data visualization, with several articles published in peer-reviewed open access journals.',
+    },
   ];
 
   if (isLoading) {
@@ -177,7 +183,7 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {teamMembers.map((member, index) => (
               <div
                 key={index}
