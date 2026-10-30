@@ -4,7 +4,12 @@ from django.conf import settings
 from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .utils import send_event_registration_email, send_welcome_email
+from .utils import (
+    get_event_reminder_status,
+    send_event_registration_email,
+    send_event_reminders,
+    send_welcome_email,
+)
 from .utils import send_transactional_email
 from .throttles import RegisterRateThrottle, ContactUsRateThrottle, CTATrackRateThrottle
 
@@ -1035,6 +1040,31 @@ class EventRegistrationsAdminView(generics.ListAPIView):
         if event_id:
             qs = qs.filter(event_id=event_id)
         return qs
+
+
+class EventReminderAdminView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, event_id):
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            raise NotFound("Event not found.")
+
+        return Response(get_event_reminder_status(event))
+
+    def post(self, request, event_id):
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist:
+            raise NotFound("Event not found.")
+
+        try:
+            result = send_event_reminders(event)
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(result, status=status.HTTP_200_OK)
 
 
 # ── CTA Tracking ──────────────────────────────────────────────────────────────

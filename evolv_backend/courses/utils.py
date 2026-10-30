@@ -4,8 +4,11 @@ Utility functions for the courses app
 import logging
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db import transaction
 from django.utils import timezone
 import requests
+
+from .models import EventRegistration
 
 logger = logging.getLogger(__name__)
 
@@ -204,7 +207,75 @@ Please keep this email handy and join a few minutes before the session starts.
 Best regards,
 The EvolvLearn Team
 """
-    return send_transactional_email(subject, text_message, [registration.email])
+    return send_transactional_email(
+        subject,
+        text_message,
+        [registration.email],
+        fail_silently=False,
+    )
+
+
+def get_event_reminder_status(event):
+    registrations = EventRegistration.objects.filter(event=event)
+    total_count = registrations.count()
+    already_sent_count = registrations.filter(
+        reminder_sent_at__isnull=False
+    ).count()
+
+    return {
+        "total_registrations": total_count,
+        "already_sent": already_sent_count,
+        "pending": total_count - already_sent_count,
+        "has_meeting_link": bool(event.meeting_link),
+    }
+
+
+def send_event_reminders(event):
+    if not event.meeting_link:
+        raise ValueError("A meeting link must be saved before sending reminders.")
+
+    registrations = EventRegistration.objects.filter(event=event)
+    status_before_sending = get_event_reminder_status(event)
+    registration_ids = registrations.filter(
+        reminder_sent_at__isnull=True
+    ).values_list("id", flat=True)
+
+    sent_count = 0
+    failed_count = 0
+
+    for registration_id in registration_ids.iterator():
+        try:
+            with transaction.atomic():
+                registration = (
+                    EventRegistration.objects.select_for_update()
+                    .select_related("event")
+                    .get(
+                        pk=registration_id,
+                        reminder_sent_at__isnull=True,
+                    )
+                )
+                if send_event_reminder_email(registration):
+                    registration.reminder_sent_at = timezone.now()
+                    registration.save(update_fields=["reminder_sent_at"])
+                    sent_count += 1
+                else:
+                    failed_count += 1
+        except EventRegistration.DoesNotExist:
+            continue
+        except Exception:
+            logger.exception(
+                "Failed to send event reminder for registration %s",
+                registration_id,
+            )
+            failed_count += 1
+
+    final_status = get_event_reminder_status(event)
+    return {
+        "total_registrations": final_status["total_registrations"],
+        "already_sent": status_before_sending["already_sent"],
+        "sent": sent_count,
+        "failed": failed_count,
+    }
 
 
 def send_application_received_email(student):

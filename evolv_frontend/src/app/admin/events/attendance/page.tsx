@@ -10,6 +10,7 @@ interface Event {
   id: number;
   title: string;
   date: string;
+  meeting_link?: string | null;
 }
 
 interface Registration {
@@ -22,6 +23,21 @@ interface Registration {
   created_at: string;
   event_title: string;
   event_date: string;
+  reminder_sent_at: string | null;
+}
+
+interface ReminderResult {
+  total_registrations: number;
+  already_sent: number;
+  sent: number;
+  failed: number;
+}
+
+interface ReminderStatus {
+  total_registrations: number;
+  already_sent: number;
+  pending: number;
+  has_meeting_link: boolean;
 }
 
 export default function EventRegistrationsPage() {
@@ -34,6 +50,12 @@ export default function EventRegistrationsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedEventData, setSelectedEventData] = useState<Event | null>(null);
+  const [meetingLink, setMeetingLink] = useState('');
+  const [isSendingReminders, setIsSendingReminders] = useState(false);
+  const [reminderResult, setReminderResult] = useState<ReminderResult | null>(null);
+  const [reminderStatus, setReminderStatus] = useState<ReminderStatus | null>(null);
+  const [reminderError, setReminderError] = useState('');
 
   useEffect(() => {
     if (!isAuthReady) return;
@@ -42,9 +64,20 @@ export default function EventRegistrationsPage() {
 
   useEffect(() => {
     if (isAuthReady && selectedEvent) {
+      setSelectedEventData(null);
+      setReminderStatus(null);
+      setMeetingLink('');
+      setReminderResult(null);
+      setReminderError('');
       fetchRegistrations(selectedEvent);
+      fetchSelectedEvent(selectedEvent);
     } else {
       setRegistrations([]);
+      setSelectedEventData(null);
+      setMeetingLink('');
+      setReminderStatus(null);
+      setReminderResult(null);
+      setReminderError('');
     }
   }, [selectedEvent, isAuthReady]);
 
@@ -72,13 +105,77 @@ export default function EventRegistrationsPage() {
     }
   };
 
+  const fetchSelectedEvent = async (eventId: number) => {
+    try {
+      const [eventResponse, statusResponse] = await Promise.all([
+        apiClient.get(`/events/${eventId}/`),
+        apiClient.get(`/admin/events/${eventId}/send-reminders/`),
+      ]);
+      setSelectedEventData(eventResponse.data);
+      setMeetingLink(eventResponse.data.meeting_link || '');
+      setReminderStatus(statusResponse.data);
+    } catch (error) {
+      console.error('Failed to fetch selected event:', error);
+      setReminderError('Could not load event details. Refresh and try again.');
+    }
+  };
+
+  const handleSaveLinkAndSendReminders = async () => {
+    if (!selectedEvent || !selectedEventData || !meetingLink.trim()) {
+      setReminderError('Select an event and enter its meeting link first.');
+      return;
+    }
+
+    const unsentCount = reminderStatus?.pending ?? 0;
+    if (unsentCount === 0) {
+      setReminderError('There are no registrants who still need a reminder.');
+      return;
+    }
+
+    if (!confirm(
+      `Save this meeting link and email it to ${unsentCount} registrant(s) who have not yet received a reminder?`
+    )) {
+      return;
+    }
+
+    setIsSendingReminders(true);
+    setReminderError('');
+    setReminderResult(null);
+
+    try {
+      await apiClient.patch(`/events/${selectedEvent}/`, {
+        meeting_link: meetingLink.trim(),
+      });
+      const response = await apiClient.post(
+        `/admin/events/${selectedEvent}/send-reminders/`
+      );
+      setReminderResult(response.data);
+      const statusResponse = await apiClient.get(
+        `/admin/events/${selectedEvent}/send-reminders/`
+      );
+      setReminderStatus(statusResponse.data);
+      setSelectedEventData({
+        ...selectedEventData,
+        meeting_link: meetingLink.trim(),
+      });
+      await fetchRegistrations(selectedEvent);
+    } catch (error) {
+      console.error('Failed to save the event link or send reminders:', error);
+      setReminderError(
+        error instanceof Error
+          ? error.message
+          : 'Could not save the link or send reminders. Check the event and try again.'
+      );
+    } finally {
+      setIsSendingReminders(false);
+    }
+  };
+
   const filteredRegistrations = registrations.filter(r =>
     r.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     r.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     r.organization.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const selectedEventData = events.find(e => e.id === selectedEvent);
 
   const handleCopyEmails = () => {
     const emails = filteredRegistrations.map(r => r.email).join(', ');
@@ -181,6 +278,49 @@ export default function EventRegistrationsPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-gold focus:border-transparent"
               />
             </div>
+
+            <section className="bg-white rounded-xl shadow-lg p-6 mb-6">
+              <h2 className="text-xl font-heading font-bold text-secondary-blue mb-2">
+                Meeting link and reminders
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Save the event link, then send it by email only to registrants who have not already received a reminder.
+              </p>
+              <label htmlFor="event-meeting-link" className="block text-sm font-medium text-gray-700 mb-2">
+                Meeting link
+              </label>
+              <input
+                id="event-meeting-link"
+                type="url"
+                value={meetingLink}
+                onChange={(e) => setMeetingLink(e.target.value)}
+                placeholder="https://discord.gg/..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-gold focus:border-transparent mb-4"
+                required
+              />
+              <Button
+                variant="primary"
+                onClick={handleSaveLinkAndSendReminders}
+                isLoading={isSendingReminders}
+                disabled={
+                  !selectedEventData ||
+                  !meetingLink.trim() ||
+                  !reminderStatus ||
+                  reminderStatus.pending === 0
+                }
+              >
+                Save link and send reminders
+              </Button>
+              {reminderError && (
+                <p role="alert" className="text-igbo-red mt-4">{reminderError}</p>
+              )}
+              {reminderResult && (
+                <p role="status" className="text-gray-700 mt-4">
+                  Reminder run complete: {reminderResult.sent} sent, {reminderResult.failed} failed,{' '}
+                  {reminderResult.already_sent} already sent.
+                </p>
+              )}
+            </section>
           </>
         )}
 
@@ -227,6 +367,7 @@ export default function EventRegistrationsPage() {
                       <th className="px-5 py-4 text-left font-semibold">Organisation</th>
                       <th className="px-5 py-4 text-left font-semibold">How They Heard</th>
                       <th className="px-5 py-4 text-left font-semibold">Registered</th>
+                      <th className="px-5 py-4 text-left font-semibold">Reminder</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -257,6 +398,13 @@ export default function EventRegistrationsPage() {
                           {new Date(reg.created_at).toLocaleDateString('en-GB', {
                             day: 'numeric', month: 'short', year: 'numeric'
                           })}
+                        </td>
+                        <td className="px-5 py-4 text-gray-600">
+                          {reg.reminder_sent_at
+                            ? `Sent ${new Date(reg.reminder_sent_at).toLocaleDateString('en-GB', {
+                                day: 'numeric', month: 'short', year: 'numeric'
+                              })}`
+                            : 'Not sent'}
                         </td>
                       </tr>
                     ))}

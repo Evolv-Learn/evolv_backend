@@ -1,29 +1,55 @@
 from datetime import timedelta
 
-from django.core.management.base import BaseCommand
-from django.db import transaction
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
-from courses.models import EventRegistration
-from courses.utils import send_event_reminder_email
+from courses.models import Event
+from courses.utils import send_event_reminders
 
 
 class Command(BaseCommand):
-    help = "Send meeting-link reminder emails for events happening in two days"
+    help = "Send meeting-link reminder emails to event registrants who have not been reminded"
 
-    def handle(self, *args, **options):
-        target_date = timezone.localdate() + timedelta(days=2)
-        registrations = EventRegistration.objects.select_related("event").filter(
-            reminder_sent_at__isnull=True,
-            event__date__date=target_date,
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--event-id",
+            type=int,
+            help="Send reminders for one event instead of events happening in two days",
         )
 
-        sent_count = 0
-        with transaction.atomic():
-            for registration in registrations:
-                if send_event_reminder_email(registration):
-                    registration.reminder_sent_at = timezone.now()
-                    registration.save(update_fields=["reminder_sent_at"])
-                    sent_count += 1
+    def handle(self, *args, **options):
+        if options["event_id"]:
+            events = Event.objects.filter(pk=options["event_id"])
+            if not events.exists():
+                raise CommandError(f"Event not found: {options['event_id']}")
+        else:
+            target_date = timezone.localdate() + timedelta(days=2)
+            events = Event.objects.filter(date__date=target_date)
 
-        self.stdout.write(self.style.SUCCESS(f"Sent {sent_count} event reminder email(s)."))
+        if not events.exists():
+            self.stdout.write("No matching events found.")
+            return
+
+        totals = {"sent": 0, "failed": 0}
+        for event in events:
+            try:
+                result = send_event_reminders(event)
+            except ValueError as exc:
+                raise CommandError(f"{event.title}: {exc}") from exc
+
+            totals["sent"] += result["sent"]
+            totals["failed"] += result["failed"]
+            self.stdout.write(
+                f"{event.title}: sent {result['sent']}, failed {result['failed']}, "
+                f"already sent {result['already_sent']}."
+            )
+
+        if totals["failed"]:
+            raise CommandError(
+                f"Reminder sending completed with {totals['failed']} failure(s); "
+                f"{totals['sent']} email(s) sent."
+            )
+
+        self.stdout.write(
+            self.style.SUCCESS(f"Sent {totals['sent']} event reminder email(s).")
+        )

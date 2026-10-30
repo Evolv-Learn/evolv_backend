@@ -394,7 +394,12 @@ class EventRegistrationSerializer(serializers.ModelSerializer):
             "how_heard",
             "created_at",
         ]
-        read_only_fields = ["id", "event_title", "event_date", "created_at"]
+        read_only_fields = [
+            "id",
+            "event_title",
+            "event_date",
+            "created_at",
+        ]
 
     def validate_email(self, value):
         return value.strip().lower()
@@ -425,6 +430,7 @@ class EventRegistrationAdminSerializer(serializers.ModelSerializer):
             "organization",
             "how_heard",
             "created_at",
+            "reminder_sent_at",
         ]
         read_only_fields = fields
 
@@ -484,6 +490,13 @@ class EventReadSerializer(serializers.ModelSerializer):
     partners = serializers.StringRelatedField(many=True)
     image = serializers.ImageField(read_only=True)
 
+    def get_fields(self):
+        fields = super().get_fields()
+        request = self.context.get("request")
+        if not getattr(getattr(request, "user", None), "is_staff", False):
+            fields.pop("meeting_link", None)
+        return fields
+
     class Meta:
         model = Event
         fields = [
@@ -491,6 +504,7 @@ class EventReadSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "date",
+            "meeting_link",
             "is_virtual",
             "location",
             "course",

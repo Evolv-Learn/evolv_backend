@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 from django.test import TestCase
+from unittest.mock import patch
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -11,6 +12,7 @@ from .models import (
 	Course,
 	Event,
 	EventAttendance,
+	EventRegistration,
 	LearningSchedule,
 	Location,
 	CourseEnrollment,
@@ -139,6 +141,165 @@ class UserScopedEndpointPermissionTests(APITestCase):
 
 		self.assertEqual(list_response.status_code, status.HTTP_403_FORBIDDEN)
 		self.assertEqual(detail_response.status_code, status.HTTP_403_FORBIDDEN)
+
+	def test_event_reminders_send_only_once_to_registrants(self):
+		event = Event.objects.create(
+			title="Research Workshop",
+			description="Workshop details",
+			date=timezone.now() + timedelta(days=1),
+			is_virtual=True,
+			meeting_link="https://discord.gg/example",
+		)
+		registration = EventRegistration.objects.create(
+			event=event,
+			full_name="Registered Learner",
+			email="registered@example.com",
+		)
+		self.client.force_authenticate(user=self.admin)
+
+		with patch("courses.utils.send_event_reminder_email", return_value=True) as send_email:
+			response = self.client.post(
+				f"/api/v1/admin/events/{event.pk}/send-reminders/"
+			)
+
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data, {
+			"total_registrations": 1,
+			"already_sent": 0,
+			"sent": 1,
+			"failed": 0,
+		})
+		send_email.assert_called_once()
+		registration.refresh_from_db()
+		self.assertIsNotNone(registration.reminder_sent_at)
+
+		with patch("courses.utils.send_event_reminder_email") as send_email:
+			response = self.client.post(
+				f"/api/v1/admin/events/{event.pk}/send-reminders/"
+			)
+
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data["sent"], 0)
+		self.assertEqual(response.data["already_sent"], 1)
+		send_email.assert_not_called()
+
+	def test_event_reminder_requires_meeting_link(self):
+		event = Event.objects.create(
+			title="Research Workshop",
+			description="Workshop details",
+			date=timezone.now() + timedelta(days=1),
+			is_virtual=True,
+		)
+		self.client.force_authenticate(user=self.admin)
+
+		with patch("courses.utils.send_event_reminder_email") as send_email:
+			response = self.client.post(
+				f"/api/v1/admin/events/{event.pk}/send-reminders/"
+			)
+
+		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+		send_email.assert_not_called()
+
+	def test_failed_event_reminder_remains_eligible_for_retry(self):
+		event = Event.objects.create(
+			title="Research Workshop",
+			description="Workshop details",
+			date=timezone.now() + timedelta(days=1),
+			is_virtual=True,
+			meeting_link="https://discord.gg/example",
+		)
+		registration = EventRegistration.objects.create(
+			event=event,
+			full_name="Registered Learner",
+			email="registered@example.com",
+		)
+		self.client.force_authenticate(user=self.admin)
+
+		with patch("courses.utils.send_event_reminder_email", return_value=False):
+			response = self.client.post(
+				f"/api/v1/admin/events/{event.pk}/send-reminders/"
+			)
+
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data["sent"], 0)
+		self.assertEqual(response.data["failed"], 1)
+		registration.refresh_from_db()
+		self.assertIsNone(registration.reminder_sent_at)
+
+	def test_event_reminder_endpoint_is_admin_only(self):
+		event = Event.objects.create(
+			title="Research Workshop",
+			description="Workshop details",
+			date=timezone.now() + timedelta(days=1),
+			is_virtual=True,
+			meeting_link="https://discord.gg/example",
+		)
+		self.client.force_authenticate(user=self.user)
+
+		response = self.client.post(
+			f"/api/v1/admin/events/{event.pk}/send-reminders/"
+		)
+
+		self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+	def test_event_reminder_status_is_admin_only_and_reports_pending(self):
+		event = Event.objects.create(
+			title="Research Workshop",
+			description="Workshop details",
+			date=timezone.now() + timedelta(days=1),
+			is_virtual=True,
+			meeting_link="https://discord.gg/example",
+		)
+		registration = EventRegistration.objects.create(
+			event=event,
+			full_name="Registered Learner",
+			email="registered@example.com",
+		)
+
+		self.client.force_authenticate(user=self.user)
+		response = self.client.get(
+			f"/api/v1/admin/events/{event.pk}/send-reminders/"
+		)
+		self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+		self.client.force_authenticate(user=self.admin)
+		response = self.client.get(
+			f"/api/v1/admin/events/{event.pk}/send-reminders/"
+		)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data, {
+			"total_registrations": 1,
+			"already_sent": 0,
+			"pending": 1,
+			"has_meeting_link": True,
+		})
+
+		registration.reminder_sent_at = timezone.now()
+		registration.save(update_fields=["reminder_sent_at"])
+		response = self.client.get(
+			f"/api/v1/admin/events/{event.pk}/send-reminders/"
+		)
+		self.assertEqual(response.data["pending"], 0)
+		self.assertEqual(response.data["already_sent"], 1)
+
+	def test_event_meeting_link_is_hidden_from_public_event_responses(self):
+		event = Event.objects.create(
+			title="Research Workshop",
+			description="Workshop details",
+			date=timezone.now() + timedelta(days=1),
+			is_virtual=True,
+			meeting_link="https://discord.gg/example",
+		)
+
+		response = self.client.get(f"/api/v1/events/{event.pk}/")
+
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertNotIn("meeting_link", response.data)
+
+		self.client.force_authenticate(user=self.admin)
+		response = self.client.get(f"/api/v1/events/{event.pk}/")
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data["meeting_link"], event.meeting_link)
 
 	def test_only_paid_enrollments_count_as_applications(self):
 		profile = Profile.objects.create(user=self.user, role="Student")
