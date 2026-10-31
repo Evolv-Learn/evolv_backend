@@ -230,15 +230,15 @@ def get_event_reminder_status(event):
     }
 
 
-def send_event_reminders(event):
+def send_event_reminders(event, resend_all=False):
     if not event.meeting_link:
         raise ValueError("A meeting link must be saved before sending reminders.")
 
     registrations = EventRegistration.objects.filter(event=event)
     status_before_sending = get_event_reminder_status(event)
-    registration_ids = registrations.filter(
-        reminder_sent_at__isnull=True
-    ).values_list("id", flat=True)
+    if not resend_all:
+        registrations = registrations.filter(reminder_sent_at__isnull=True)
+    registration_ids = registrations.values_list("id", flat=True)
 
     sent_count = 0
     failed_count = 0
@@ -249,11 +249,10 @@ def send_event_reminders(event):
                 registration = (
                     EventRegistration.objects.select_for_update()
                     .select_related("event")
-                    .get(
-                        pk=registration_id,
-                        reminder_sent_at__isnull=True,
-                    )
+                    .get(pk=registration_id)
                 )
+                if registration.reminder_sent_at and not resend_all:
+                    continue
                 if send_event_reminder_email(registration):
                     registration.reminder_sent_at = timezone.now()
                     registration.save(update_fields=["reminder_sent_at"])

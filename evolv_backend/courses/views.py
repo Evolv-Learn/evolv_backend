@@ -1060,7 +1060,10 @@ class EventReminderAdminView(APIView):
             raise NotFound("Event not found.")
 
         try:
-            result = send_event_reminders(event)
+            result = send_event_reminders(
+                event,
+                resend_all=request.data.get("resend_all") is True,
+            )
         except ValueError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 

@@ -120,20 +120,24 @@ export default function EventRegistrationsPage() {
     }
   };
 
-  const handleSaveLinkAndSendReminders = async () => {
+  const handleSaveLinkAndSendReminders = async (resendAll: boolean) => {
     if (!selectedEvent || !selectedEventData || !meetingLink.trim()) {
       setReminderError('Select an event and enter its meeting link first.');
       return;
     }
 
-    const unsentCount = reminderStatus?.pending ?? 0;
-    if (unsentCount === 0) {
+    const recipientCount = resendAll
+      ? reminderStatus?.total_registrations ?? 0
+      : reminderStatus?.pending ?? 0;
+    if (recipientCount === 0) {
       setReminderError('There are no registrants who still need a reminder.');
       return;
     }
 
     if (!confirm(
-      `Save this meeting link and email it to ${unsentCount} registrant(s) who have not yet received a reminder?`
+      resendAll
+        ? `Save this Google Meet link and resend it to ALL ${recipientCount} registrant(s), including anyone already sent a reminder?`
+        : `Save this meeting link and email it to ${recipientCount} registrant(s) who have not yet received a reminder?`
     )) {
       return;
     }
@@ -147,7 +151,8 @@ export default function EventRegistrationsPage() {
         meeting_link: meetingLink.trim(),
       });
       const response = await apiClient.post(
-        `/admin/events/${selectedEvent}/send-reminders/`
+        `/admin/events/${selectedEvent}/send-reminders/`,
+        { resend_all: resendAll }
       );
       setReminderResult(response.data);
       const statusResponse = await apiClient.get(
@@ -281,13 +286,13 @@ export default function EventRegistrationsPage() {
 
             <section className="bg-white rounded-xl shadow-lg p-6 mb-6">
               <h2 className="text-xl font-heading font-bold text-secondary-blue mb-2">
-                Meeting link and reminders
+                Google Meet link and reminders
               </h2>
               <p className="text-sm text-gray-600 mb-4">
-                Save the event link, then send it by email only to registrants who have not already received a reminder.
+                Save the Google Meet link, then choose whether to email only registrants still awaiting a reminder or resend it to everyone.
               </p>
               <label htmlFor="event-meeting-link" className="block text-sm font-medium text-gray-700 mb-2">
-                Meeting link
+                Google Meet link
               </label>
               <input
                 id="event-meeting-link"
@@ -298,19 +303,34 @@ export default function EventRegistrationsPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-gold focus:border-transparent mb-4"
                 required
               />
-              <Button
-                variant="primary"
-                onClick={handleSaveLinkAndSendReminders}
-                isLoading={isSendingReminders}
-                disabled={
-                  !selectedEventData ||
-                  !meetingLink.trim() ||
-                  !reminderStatus ||
-                  reminderStatus.pending === 0
-                }
-              >
-                Save link and send reminders
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  variant="primary"
+                  onClick={() => handleSaveLinkAndSendReminders(false)}
+                  isLoading={isSendingReminders}
+                  disabled={
+                    !selectedEventData ||
+                    !meetingLink.trim() ||
+                    !reminderStatus ||
+                    reminderStatus.pending === 0
+                  }
+                >
+                  Save link and send to {reminderStatus?.pending ?? 0} not-yet-reminded
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleSaveLinkAndSendReminders(true)}
+                  isLoading={isSendingReminders}
+                  disabled={
+                    !selectedEventData ||
+                    !meetingLink.trim() ||
+                    !reminderStatus ||
+                    reminderStatus.total_registrations === 0
+                  }
+                >
+                  Save link and resend to all ({reminderStatus?.total_registrations ?? 0})
+                </Button>
+              </div>
               {reminderError && (
                 <p role="alert" className="text-igbo-red mt-4">{reminderError}</p>
               )}

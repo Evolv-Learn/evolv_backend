@@ -183,6 +183,36 @@ class UserScopedEndpointPermissionTests(APITestCase):
 		self.assertEqual(response.data["already_sent"], 1)
 		send_email.assert_not_called()
 
+	def test_event_reminders_can_be_explicitly_resent_to_everyone(self):
+		event = Event.objects.create(
+			title="Research Workshop",
+			description="Workshop details",
+			date=timezone.now() + timedelta(days=1),
+			is_virtual=True,
+			meeting_link="https://meet.google.com/example",
+		)
+		registration = EventRegistration.objects.create(
+			event=event,
+			full_name="Registered Learner",
+			email="registered@example.com",
+			reminder_sent_at=timezone.now() - timedelta(hours=1),
+		)
+		self.client.force_authenticate(user=self.admin)
+
+		with patch("courses.utils.send_event_reminder_email", return_value=True) as send_email:
+			response = self.client.post(
+				f"/api/v1/admin/events/{event.pk}/send-reminders/",
+				{"resend_all": True},
+				format="json",
+			)
+
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data["sent"], 1)
+		self.assertEqual(response.data["already_sent"], 1)
+		send_email.assert_called_once()
+		registration.refresh_from_db()
+		self.assertGreater(registration.reminder_sent_at, timezone.now() - timedelta(minutes=1))
+
 	def test_event_reminder_requires_meeting_link(self):
 		event = Event.objects.create(
 			title="Research Workshop",

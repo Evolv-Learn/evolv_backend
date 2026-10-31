@@ -16,6 +16,11 @@ class Command(BaseCommand):
             type=int,
             help="Send reminders for one event instead of events happening in two days",
         )
+        parser.add_argument(
+            "--resend-all",
+            action="store_true",
+            help="Also resend reminders to registrants who were already emailed",
+        )
 
     def handle(self, *args, **options):
         if options["event_id"]:
@@ -33,7 +38,10 @@ class Command(BaseCommand):
         totals = {"sent": 0, "failed": 0}
         for event in events:
             try:
-                result = send_event_reminders(event)
+                result = send_event_reminders(
+                    event,
+                    resend_all=options["resend_all"],
+                )
             except ValueError as exc:
                 raise CommandError(f"{event.title}: {exc}") from exc
 
