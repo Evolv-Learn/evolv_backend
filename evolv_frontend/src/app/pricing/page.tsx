@@ -174,6 +174,22 @@ export default function PricingPage() {
         </div>
       </section>
 
+      <section className="max-w-6xl mx-auto px-4 pt-10">
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 text-sm text-gray-700">
+          <h2 className="font-heading font-bold text-secondary-blue text-lg mb-2">
+            Payment and refund terms
+          </h2>
+          <p>
+            Payment options vary by cohort. Full-payment refunds are 90% in Month 1, 60% in Month 2,
+            and 30% in Month 3. Installment terms apply only when offered for a cohort; the first
+            50% is non-refundable and the unpaid balance is waived if you withdraw or are removed.
+          </p>
+          <Link href="/payment-policy" className="inline-block mt-2 text-secondary-blue font-semibold hover:underline">
+            Read the full Course Payment, Refund and Access Policy
+          </Link>
+        </div>
+      </section>
+
       {/* Currency picker */}
       <section className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
@@ -325,7 +341,7 @@ export default function PricingPage() {
               },
               {
                 q: 'Can I get a refund?',
-                a: 'Full refunds are available up to 7 days before the cohort start date. Contact us if you have concerns.',
+                a: 'Refunds depend on the payment option and when you withdraw. See the Course Payment, Refund and Access Policy for the full-payment refund schedule and installment terms.',
               },
             ].map(({ q, a }) => (
               <div key={q} className="border-b border-blue-700 pb-5">

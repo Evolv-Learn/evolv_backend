@@ -16,7 +16,7 @@ export default function TermsOfServicePage() {
       <main className="container mx-auto px-4 py-14">
         <article className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg border-t-4 border-primary-gold p-6 md:p-10">
           <div className="kente-strip mb-8"></div>
-          <p className="text-sm text-gray-500 mb-8">Last updated: September 2026</p>
+          <p className="text-sm text-gray-500 mb-8">Last updated: November 2026</p>
 
           <div className="space-y-8 text-gray-700 leading-relaxed">
             <section>
@@ -43,7 +43,11 @@ export default function TermsOfServicePage() {
             <section>
               <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-3">Payments And Refunds</h2>
               <p>
-                Payments must be completed through approved payment channels. Refund eligibility may depend on the course, timing of the request, and whether access to live sessions or materials has already started. Contact us before payment if you need clarification.
+                Payment options, installment deadlines, refund eligibility, and course access rules are explained in our{' '}
+                <Link href="/payment-policy" className="text-primary-gold font-semibold hover:underline">
+                  Course Payment, Refund and Access Policy
+                </Link>
+                . Please review the policy for your course before paying.
               </p>
             </section>
 
