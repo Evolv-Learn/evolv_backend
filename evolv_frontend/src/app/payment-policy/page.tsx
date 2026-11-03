@@ -64,11 +64,10 @@ export default function PaymentPolicyPage() {
                 Paying by installments
               </h2>
               <ol className="list-decimal pl-6 space-y-2">
-                <li>Pay 50% of the course fee before the course starts to confirm your place.</li>
+                <li>Pay 50% of the course fee before the course starts to confirm your place. This applies to all currencies (NGN, USD, GBP, EUR).</li>
                 <li>
                   After five weeks, EvolvLearn will remind you that the remaining 50% is due by the
-                  end of Week 6. The cohort information will state the exact payment deadline and
-                  timezone.
+                  end of Week 6. The deadline is <strong>11:59 PM WAT (West Africa Time, UTC+1)</strong> on the date stated in your cohort information.
                 </li>
                 <li>
                   If the balance is not paid by the deadline, you will be removed from the cohort
@@ -84,12 +83,34 @@ export default function PaymentPolicyPage() {
                   If you withdraw or are removed, the unpaid second 50% is waived. You will not be
                   charged for it.
                 </li>
+                <li>
+                  Discount codes and promotional offers are <strong>not applicable</strong> to installment payments. They apply only to full upfront payments.
+                </li>
               </ol>
             </section>
 
             <section>
               <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-3">
-                Course materials and module access
+                Technical payment failures
+              </h2>
+              <p>
+                If your second installment payment fails due to a documented technical issue (such as
+                a card decline, bank error, or processor outage), you have <strong>48 hours</strong> from
+                the Week 6 deadline to contact EvolvLearn with evidence of the failed transaction.
+              </p>
+              <p className="mt-3">
+                You must contact us proactively within this window. EvolvLearn will review your case
+                and, if the failure is verified as technical, work with you to complete the payment
+                before access is revoked. This exception does not apply to payments not attempted by
+                the deadline.
+              </p>
+              <p className="mt-3">
+                To report a technical failure, email <a href="mailto:evolvngo@gmail.com" className="text-primary-gold font-semibold hover:underline">evolvngo@gmail.com</a> with
+                your transaction reference and a screenshot or proof of the failed payment.
+              </p>
+            </section>
+
+            <section>
               </h2>
               <p>
                 Course materials may be released progressively. For cohorts using module-by-module
