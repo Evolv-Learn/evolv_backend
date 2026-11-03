@@ -111,6 +111,8 @@ export default function PaymentPolicyPage() {
             </section>
 
             <section>
+              <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-3">
+                Course materials and module access
               </h2>
               <p>
                 Course materials may be released progressively. For cohorts using module-by-module
