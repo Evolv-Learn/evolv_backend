@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -35,7 +36,19 @@ interface InstallmentPlan {
   installments: InstallmentPayment[];
 }
 
-export default function InstallmentsPage() {
+export default function InstalmentsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-warm-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-primary-gold" />
+      </div>
+    }>
+      <InstalmentsContent />
+    </Suspense>
+  );
+}
+
+function InstalmentsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const enrollmentId = searchParams.get('enrollment_id');
