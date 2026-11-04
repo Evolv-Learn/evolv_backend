@@ -77,6 +77,8 @@ export default function AdmissionPage() {
   const [currency, setCurrency] = useState('NGN');
   const [discountCode, setDiscountCode] = useState('');
   const [isReturning, setIsReturning] = useState(false);
+  const [paymentType, setPaymentType] = useState<'full' | 'installment'>('full');
+  const [installmentCourses, setInstallmentCourses] = useState<number[]>([]);
 
   const [form, setForm] = useState<FormData>({
     email: user?.email || '',
@@ -102,7 +104,10 @@ export default function AdmissionPage() {
   const fetchCourses = async () => {
     try {
       const res = await apiClient.get('/courses/');
-      setCourses(res.data.results || res.data);
+      const all = res.data.results || res.data;
+      setCourses(all);
+      // Track which courses have instalments enabled
+      setInstallmentCourses(all.filter((c: any) => c.installments_enabled).map((c: any) => c.id));
     } catch { /* silent */ }
   };
 
@@ -200,18 +205,39 @@ export default function AdmissionPage() {
 
       if (!unpaid.length) { router.push('/dashboard?success=already-enrolled'); return; }
 
-      const payRes = await apiClient.post('/payments/initiate/', {
-        enrollment_id: unpaid[0].id,
-        currency,
-        ...(discountCode.trim() && { discount_code: discountCode.trim().toUpperCase() }),
-      });
+      // Choose full payment or instalment
+      const firstEnrollment = unpaid[0];
+      const courseAllowsInstalment = installmentCourses.includes(firstEnrollment.course_id);
 
-      const payData = payRes.data;
-      sessionStorage.setItem('evolv_payment_id', String(payData.id));
-      if (payData.authorization_url) {
-        window.location.href = payData.authorization_url;
+      if (paymentType === 'installment' && courseAllowsInstalment) {
+        // Initiate first instalment (50% upfront)
+        const instRes = await apiClient.post('/installments/initiate/', {
+          enrollment_id: firstEnrollment.id,
+          currency,
+          installment_number: 1,
+        });
+        const instData = instRes.data;
+        sessionStorage.setItem('evolv_installment_plan_id', String(firstEnrollment.id));
+        sessionStorage.setItem('evolv_installment_number', '1');
+        if (instData.authorization_url) {
+          window.location.href = instData.authorization_url;
+        } else {
+          router.push('/dashboard?success=application-submitted');
+        }
       } else {
-        router.push('/dashboard?success=application-submitted');
+        // Full payment
+        const payRes = await apiClient.post('/payments/initiate/', {
+          enrollment_id: firstEnrollment.id,
+          currency,
+          ...(discountCode.trim() && { discount_code: discountCode.trim().toUpperCase() }),
+        });
+        const payData = payRes.data;
+        sessionStorage.setItem('evolv_payment_id', String(payData.id));
+        if (payData.authorization_url) {
+          window.location.href = payData.authorization_url;
+        } else {
+          router.push('/dashboard?success=application-submitted');
+        }
       }
     } catch (err: any) {
       const d = err?.response?.data;

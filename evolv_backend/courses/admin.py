@@ -28,6 +28,8 @@ from .models import (
     CoursePrice,
     Payment,
     DiscountCode,
+    InstallmentPlan,
+    InstallmentPayment,
 )
 
 
@@ -177,3 +179,60 @@ class DiscountCodeAdmin(admin.ModelAdmin):
     filter_horizontal = ("courses",)
     readonly_fields = ("uses_count", "created_at")
     ordering = ("-created_at",)
+
+
+class InstallmentPaymentInline(admin.TabularInline):
+    model = InstallmentPayment
+    extra = 0
+    readonly_fields = ('installment_number', 'amount', 'currency', 'status', 'processor', 'processor_reference', 'due_date', 'paid_at', 'created_at')
+    can_delete = False
+
+
+@admin.register(InstallmentPlan)
+class InstallmentPlanAdmin(admin.ModelAdmin):
+    list_display = (
+        'enrollment', 'currency', 'total_amount', 'status',
+        'second_installment_deadline', 'grace_period_requested',
+        'grace_period_approved', 'created_at',
+    )
+    list_filter = ('status', 'currency', 'grace_period_requested', 'grace_period_approved')
+    search_fields = (
+        'enrollment__student__first_name',
+        'enrollment__student__last_name',
+        'enrollment__student__email',
+        'enrollment__course__name',
+    )
+    readonly_fields = (
+        'created_at', 'updated_at', 'grace_period_requested_at',
+        'grace_period_expires_at', 'grace_period_reviewed_at',
+    )
+    inlines = [InstallmentPaymentInline]
+    ordering = ('-created_at',)
+
+    fieldsets = (
+        ('Plan Details', {
+            'fields': ('enrollment', 'currency', 'total_amount', 'status', 'second_installment_deadline'),
+        }),
+        ('Grace Period', {
+            'fields': (
+                'grace_period_requested', 'grace_period_requested_at',
+                'grace_period_expires_at', 'grace_period_evidence',
+                'grace_period_approved', 'grace_period_reviewed_by', 'grace_period_reviewed_at',
+            ),
+        }),
+        ('Reminders & Timestamps', {
+            'fields': ('reminder_sent_at', 'created_at', 'updated_at'),
+        }),
+    )
+
+
+@admin.register(InstallmentPayment)
+class InstallmentPaymentAdmin(admin.ModelAdmin):
+    list_display = (
+        'plan', 'installment_number', 'currency', 'amount',
+        'status', 'processor', 'due_date', 'paid_at',
+    )
+    list_filter = ('status', 'processor', 'currency', 'installment_number')
+    search_fields = ('plan__enrollment__student__email', 'processor_reference')
+    readonly_fields = ('created_at', 'paid_at', 'metadata')
+    ordering = ('-created_at',)

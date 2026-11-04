@@ -125,6 +125,12 @@ class Course(models.Model):
     selection_date = models.DateField(null=True, blank=True, help_text="Date when selections are announced")
     start_date = models.DateField(null=True, blank=True, help_text="Training start date")
     end_date = models.DateField(null=True, blank=True, help_text="Training end date")
+
+    # Payment options
+    installments_enabled = models.BooleanField(
+        default=False,
+        help_text="Allow students to pay in two 50/50 installments for this cohort"
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -405,6 +411,7 @@ class CourseEnrollment(models.Model):
         ("Under Review", "Under Review"),
         ("Approved", "Approved"),
         ("Rejected", "Rejected"),
+        ("Suspended", "Suspended"),  # Removed from cohort due to missed installment payment
     ]
     
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="enrollments")
@@ -636,6 +643,7 @@ class Payment(models.Model):
     currency = models.CharField(max_length=3)
     processor = models.CharField(max_length=20, choices=PROCESSOR_CHOICES, default='manual')
     processor_reference = models.CharField(max_length=255, blank=True, null=True, db_index=True)
+    authorization_url = models.URLField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     paid_at = models.DateTimeField(blank=True, null=True)
@@ -646,6 +654,161 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"{self.enrollment} — {self.currency} {self.amount} ({self.status})"
+
+
+class InstallmentPlan(models.Model):
+    """
+    Defines the installment terms offered for a specific CourseEnrollment.
+    Created when a student chooses to pay by installments.
+
+    Policy (per evolvlearn.org/payment-policy):
+      - 50% upfront to confirm seat (non-refundable)
+      - 50% due by end of Week 6 (11:59 PM WAT / UTC+1)
+      - Grace: 48 hrs for documented technical failures only
+      - Discount codes are NOT applicable to installment plans
+    """
+    PLAN_STATUS_CHOICES = [
+        ('active',    'Active'),       # Plan in progress
+        ('completed', 'Completed'),    # Both installments paid
+        ('defaulted', 'Defaulted'),    # Student removed for non-payment
+        ('cancelled', 'Cancelled'),    # Student withdrew
+    ]
+
+    enrollment = models.OneToOneField(
+        CourseEnrollment, on_delete=models.CASCADE, related_name='installment_plan'
+    )
+    currency = models.CharField(max_length=3)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=PLAN_STATUS_CHOICES, default='active', db_index=True)
+
+    # Deadline for second installment (set to end of Week 6 cohort date)
+    second_installment_deadline = models.DateTimeField(
+        null=True, blank=True,
+        help_text="11:59 PM WAT (UTC+1) on the Week 6 deadline date"
+    )
+
+    # Technical failure grace period tracking
+    grace_period_requested = models.BooleanField(
+        default=False,
+        help_text="Student has reported a technical payment failure"
+    )
+    grace_period_requested_at = models.DateTimeField(null=True, blank=True)
+    grace_period_expires_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="48 hours after grace period was requested"
+    )
+    grace_period_evidence = models.TextField(
+        blank=True,
+        help_text="Student-provided description or reference of the technical failure"
+    )
+    grace_period_approved = models.BooleanField(
+        null=True, blank=True,
+        help_text="Admin decision: True=approved, False=rejected, None=pending review"
+    )
+    grace_period_reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='grace_period_reviews'
+    )
+    grace_period_reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    # Week 5 reminder tracking
+    reminder_sent_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Installment plan for {self.enrollment} — {self.currency} {self.total_amount} ({self.status})"
+
+    @property
+    def first_installment_amount(self):
+        """50% of total, rounded to 2dp."""
+        from decimal import Decimal
+        return (self.total_amount / Decimal('2')).quantize(Decimal('0.01'))
+
+    @property
+    def second_installment_amount(self):
+        """Remaining 50% (handles any rounding residual)."""
+        paid = sum(
+            p.amount for p in self.installments.filter(status='paid')
+        )
+        return max(self.total_amount - paid, 0)
+
+    @property
+    def is_past_deadline(self):
+        from django.utils import timezone
+        if not self.second_installment_deadline:
+            return False
+        return timezone.now() > self.second_installment_deadline
+
+    @property
+    def effective_deadline(self):
+        """
+        Returns the actual enforcement deadline.
+        Grace period expiry is anchored to the original deadline + 48hrs,
+        NOT to the request time, preventing requests near the deadline
+        from extending it to ~96hrs.
+        """
+        if (
+            self.grace_period_requested
+            and self.grace_period_approved is not False
+            and self.second_installment_deadline
+        ):
+            import datetime
+            return self.grace_period_expires_at or (
+                self.second_installment_deadline + datetime.timedelta(hours=48)
+            )
+        return self.second_installment_deadline
+
+
+class InstallmentPayment(models.Model):
+    """
+    Individual payment record within an InstallmentPlan.
+    Each plan has exactly 2 installments:
+      - installment_number=1 → 50% upfront
+      - installment_number=2 → 50% at Week 6
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid',    'Paid'),
+        ('failed',  'Failed'),
+    ]
+    PROCESSOR_CHOICES = [
+        ('paystack',    'Paystack'),
+        ('stripe',      'Stripe'),
+        ('flutterwave', 'Flutterwave'),
+        ('manual',      'Manual'),
+    ]
+
+    plan = models.ForeignKey(
+        InstallmentPlan, on_delete=models.CASCADE, related_name='installments'
+    )
+    installment_number = models.PositiveSmallIntegerField(
+        help_text="1 = first (50% upfront), 2 = second (50% at Week 6)"
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True)
+    processor = models.CharField(max_length=20, choices=PROCESSOR_CHOICES, default='manual')
+    processor_reference = models.CharField(max_length=255, blank=True, null=True, db_index=True)
+    authorization_url = models.URLField(blank=True)
+    due_date = models.DateTimeField(null=True, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['installment_number']
+        unique_together = [('plan', 'installment_number')]
+
+    def __str__(self):
+        return (
+            f"Installment {self.installment_number} of {self.plan} "
+            f"— {self.currency} {self.amount} ({self.status})"
+        )
 
 
 class CTAClick(models.Model):

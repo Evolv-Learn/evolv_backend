@@ -200,3 +200,36 @@ git push origin main
 **Risk Level**: Low (backward compatible)
 
 Good luck with your deployment! 🎉
+
+## Installment payment deadline enforcement on Render
+
+The installment reminder and overdue-suspension command must run on Render.
+Vercel hosts the frontend and should not run this Django management command.
+
+Create a **Cron Job** in Render using the same repository and backend environment
+variables as the Django web service:
+
+- Root directory: `evolv_backend`
+- Build command: `pip install -r requirements.txt`
+- Command: `python manage.py enforce_installment_deadlines`
+- Schedule: `30 23 * * *` (Render schedules use UTC; this is 00:30 in Nigeria)
+
+The job needs the backend's database and email environment variables. Do not
+enable `USE_APSCHEDULER`; deadline enforcement is scheduled by the Render Cron
+Job, not by a scheduler inside the web process. Verify the job's first run in
+the Render dashboard before relying on automatic reminders or suspensions.
+
+## Sequential course-module access
+
+The student materials page now loads lesson content through the authenticated
+`/api/v1/students/me/learning-modules/` endpoint. Only approved students who are
+enrolled in the schedule can see its first module; a pending installment plan
+must have its first payment recorded. Each lesson in the current module must be
+marked complete before the next module's content is returned. The legacy
+`/materials` page redirects to `/dashboard/materials`.
+
+Do not distribute direct GitHub or other external links that expose the complete
+course repository, since those links bypass module-level access checks. Add
+course materials as lesson content/resources so the API can enforce release
+order. The public curriculum endpoint continues to show module and lesson
+titles, but not lesson content or resource URLs.

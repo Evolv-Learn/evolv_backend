@@ -17,6 +17,7 @@ export default function StudentDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [payingEnrollmentId, setPayingEnrollmentId] = useState<number | null>(null);
+  const [installmentPlans, setInstallmentPlans] = useState<any[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -53,6 +54,17 @@ export default function StudentDashboard() {
         } else {
           setApplicationStatus('Under Review');
         }
+
+        // Fetch installment plans for all enrollments
+        const enrollments = studentRes.data.enrollments || [];
+        const planPromises = enrollments.map((enrollment: any) =>
+          apiClient.get(`/installments/my-plan/?enrollment_id=${enrollment.id}`)
+            .then(res => ({ ...res.data, enrollment_id: enrollment.id }))
+            .catch(() => null)
+        );
+        const plans = (await Promise.all(planPromises)).filter(Boolean);
+        setInstallmentPlans(plans);
+
       } catch (error) {
         // Student profile doesn't exist yet
         setApplicationStatus('Not Applied');
@@ -228,7 +240,7 @@ export default function StudentDashboard() {
               </Link>
 
               {applicationStatus === 'Approved' ? (
-                <Link href="/materials">
+                <Link href="/dashboard/materials">
                   <div className="bg-success rounded-xl p-4 text-white hover:opacity-90 transition-opacity cursor-pointer">
                     <svg className="w-6 h-6 mb-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                     <p className="font-bold text-sm">Materials</p>
@@ -329,7 +341,89 @@ export default function StudentDashboard() {
           </>
         )}
 
-        {/* Event Calendar */}
+            {/* Instalment Plans */}
+            {installmentPlans.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6">
+                <h2 className="text-base font-heading font-bold text-secondary-blue mb-3">
+                  Instalment Plans
+                </h2>
+                <div className="space-y-3">
+                  {installmentPlans.map((plan: any) => {
+                    const firstInstallment = plan.installments?.find((i: any) => i.installment_number === 1);
+                    const secondInstallment = plan.installments?.find((i: any) => i.installment_number === 2);
+                    const bothPaid = firstInstallment?.status === 'paid' && secondInstallment?.status === 'paid';
+                    const firstPaid = firstInstallment?.status === 'paid';
+                    const isDefaulted = plan.status === 'defaulted';
+                    const isCompleted = plan.status === 'completed';
+
+                    const statusColor = isCompleted
+                      ? 'bg-green-100 text-green-800'
+                      : isDefaulted
+                      ? 'bg-red-100 text-red-800'
+                      : plan.is_past_deadline
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-blue-100 text-blue-800';
+
+                    const statusLabel = isCompleted
+                      ? 'Completed'
+                      : isDefaulted
+                      ? 'Access Ended'
+                      : plan.is_past_deadline
+                      ? 'Deadline Passed'
+                      : firstPaid
+                      ? 'Balance Due'
+                      : 'Awaiting 1st Payment';
+
+                    return (
+                      <div
+                        key={plan.id}
+                        className="flex items-center justify-between p-4 bg-warm-white rounded-lg border-l-4 border-primary-gold"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-secondary-blue text-sm truncate">
+                            {plan.course_name}
+                          </p>
+                          <div className="flex items-center gap-3 mt-1">
+                            {/* Progress dots */}
+                            <div className="flex items-center gap-1">
+                              <div className={`w-2.5 h-2.5 rounded-full ${firstInstallment?.status === 'paid' ? 'bg-green-500' : 'bg-gray-300'}`} title="1st instalment" />
+                              <div className="w-4 h-px bg-gray-300" />
+                              <div className={`w-2.5 h-2.5 rounded-full ${secondInstallment?.status === 'paid' ? 'bg-green-500' : 'bg-gray-300'}`} title="2nd instalment" />
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              {isCompleted
+                                ? 'Both instalments paid'
+                                : firstPaid
+                                ? `Balance due: ${plan.currency} ${plan.second_installment_amount}`
+                                : `First instalment: ${plan.currency} ${plan.first_installment_amount}`}
+                            </p>
+                          </div>
+                          {plan.second_installment_deadline && !isCompleted && !isDefaulted && (
+                            <p className={`text-xs mt-1 ${plan.is_past_deadline ? 'text-red-500 font-semibold' : 'text-gray-400'}`}>
+                              {plan.is_past_deadline ? '⚠️ Deadline passed' : `Due: ${new Date(plan.second_installment_deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 ml-3 shrink-0">
+                          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusColor}`}>
+                            {statusLabel}
+                          </span>
+                          {!isCompleted && !isDefaulted && (
+                            <Link href={`/dashboard/installments?enrollment_id=${plan.enrollment_id}`}>
+                              <button className="text-xs font-semibold bg-primary-gold text-secondary-blue-dark px-3 py-1.5 rounded-lg hover:bg-yellow-400 transition-colors">
+                                {firstPaid ? 'Pay Balance' : 'View Plan'}
+                              </button>
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Event Calendar */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6">
           <h2 className="text-base font-heading font-bold text-secondary-blue mb-3">
             Event Calendar

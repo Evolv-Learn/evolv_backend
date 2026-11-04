@@ -60,6 +60,7 @@ from .views_extended import (
     StudentApplicationStatusView,
     EnrollScheduleView,
     LearningMaterialsView,
+    StudentLearningModulesView,
     my_courses,
     my_events,
     LessonProgressView,
@@ -84,6 +85,15 @@ from .views_payment import (
     ValidateDiscountView,
     PaymentStatusView,
     PaymentWebhookView,
+    # Installment views
+    InstallmentPlanView,
+    InitiateInstallmentPaymentView,
+    VerifyInstallmentPaymentView,
+    RequestGracePeriodView,
+    AdminGracePeriodReviewView,
+    AdminInstallmentPlanListView,
+    AdminInstallmentPlanDetailView,
+    AdminSetInstallmentDeadlineView,
 )
 
 app_name = "courses"
@@ -154,6 +164,7 @@ urlpatterns = [
     path("students/me/application-status/", StudentApplicationStatusView.as_view(), name="application-status"),
     path("students/me/enroll/<int:schedule_id>/", EnrollScheduleView.as_view(), name="enroll-schedule"),
     path("students/me/learning-materials/", LearningMaterialsView.as_view(), name="learning-materials"),
+    path("students/me/learning-modules/", StudentLearningModulesView.as_view(), name="learning-modules"),
     path("students/me/courses/", my_courses, name="my-courses"),
     path("students/me/events/", my_events, name="my-events"),
     path("students/me/progress/", LessonProgressView.as_view(), name="lesson-progress"),
@@ -195,6 +206,18 @@ urlpatterns = [
     path("payments/<int:pk>/", PaymentStatusView.as_view(), name="payment-status"),
     path("payments/verify/", VerifyPaymentView.as_view(), name="payment-verify"),
     path("payments/webhook/", PaymentWebhookView.as_view(), name="payment-webhook"),
+
+    # ── Installment Payments ────────────────────────────────────────────────
+    path("installments/my-plan/", InstallmentPlanView.as_view(), name="installment-my-plan"),
+    path("installments/initiate/", InitiateInstallmentPaymentView.as_view(), name="installment-initiate"),
+    path("installments/verify/", VerifyInstallmentPaymentView.as_view(), name="installment-verify"),
+    path("installments/<int:plan_id>/request-grace-period/", RequestGracePeriodView.as_view(), name="installment-grace-period"),
+
+    # ── Admin: Installments ─────────────────────────────────────────────────
+    path("admin/installments/", AdminInstallmentPlanListView.as_view(), name="admin-installment-list"),
+    path("admin/installments/<int:pk>/", AdminInstallmentPlanDetailView.as_view(), name="admin-installment-detail"),
+    path("admin/installments/<int:plan_id>/review-grace-period/", AdminGracePeriodReviewView.as_view(), name="admin-installment-grace-review"),
+    path("admin/installments/<int:plan_id>/set-deadline/", AdminSetInstallmentDeadlineView.as_view(), name="admin-installment-set-deadline"),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

@@ -32,6 +32,8 @@ from .models import (
     Payment,
     DiscountCode,
     CTAClick,
+    InstallmentPlan,
+    InstallmentPayment,
 )
 
 User = get_user_model()
@@ -1172,3 +1174,77 @@ class CTAClickSerializer(serializers.ModelSerializer):
         model = CTAClick
         fields = ['id', 'cta_name', 'page', 'session_id', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+
+# ── Installment Payments ───────────────────────────────────────────────────────
+
+class InstallmentPaymentSerializer(serializers.ModelSerializer):
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    processor_display = serializers.CharField(source='get_processor_display', read_only=True)
+
+    class Meta:
+        model = InstallmentPayment
+        fields = [
+            'id', 'installment_number', 'amount', 'currency',
+            'status', 'status_display', 'processor', 'processor_display',
+            'processor_reference', 'due_date', 'paid_at', 'created_at',
+        ]
+        read_only_fields = fields
+
+
+class InstallmentPlanSerializer(serializers.ModelSerializer):
+    installments = InstallmentPaymentSerializer(many=True, read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    first_installment_amount = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
+    second_installment_amount = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
+    course_name = serializers.CharField(
+        source='enrollment.course.name', read_only=True
+    )
+    enrollment_id = serializers.IntegerField(source='enrollment.id', read_only=True)
+    effective_deadline = serializers.DateTimeField(read_only=True)
+    is_past_deadline = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = InstallmentPlan
+        fields = [
+            'id', 'enrollment_id', 'course_name',
+            'currency', 'total_amount',
+            'first_installment_amount', 'second_installment_amount',
+            'status', 'status_display',
+            'second_installment_deadline', 'effective_deadline', 'is_past_deadline',
+            'grace_period_requested', 'grace_period_requested_at',
+            'grace_period_expires_at', 'grace_period_evidence',
+            'grace_period_approved',
+            'reminder_sent_at',
+            'created_at', 'updated_at',
+            'installments',
+        ]
+        read_only_fields = fields
+
+
+class GracePeriodRequestSerializer(serializers.Serializer):
+    """Used by students to request a 48-hr technical failure grace period."""
+    evidence = serializers.CharField(
+        required=True,
+        min_length=20,
+        help_text="Describe the technical failure and provide transaction reference if available."
+    )
+
+
+class GracePeriodReviewSerializer(serializers.Serializer):
+    """Used by admins to approve or reject a grace period request."""
+    approved = serializers.BooleanField(required=True)
+
+
+class InitiateInstallmentView_Serializer(serializers.Serializer):
+    """Input serializer for initiating an installment plan."""
+    enrollment_id = serializers.IntegerField(required=True)
+    currency = serializers.CharField(max_length=3, default='USD')
+    installment_number = serializers.IntegerField(
+        required=True, min_value=1, max_value=2,
+        help_text="1 = first installment (50% upfront), 2 = second installment (50% at Week 6)"
+    )

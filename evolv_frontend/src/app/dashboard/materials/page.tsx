@@ -1,110 +1,206 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
-import { Button } from '@/components/ui/Button';
+import apiClient from '@/lib/api/client';
+
+const getApiError = (error: unknown, fallback: string) => {
+  if (
+    typeof error === 'object'
+    && error !== null
+    && 'response' in error
+    && typeof error.response === 'object'
+    && error.response !== null
+    && 'data' in error.response
+    && typeof error.response.data === 'object'
+    && error.response.data !== null
+    && 'detail' in error.response.data
+    && typeof error.response.data.detail === 'string'
+  ) {
+    return error.response.data.detail;
+  }
+  return fallback;
+};
+
+interface Lesson {
+  id: number;
+  title: string;
+  description: string | null;
+  content: string | null;
+  resources: string | null;
+  completed: boolean;
+}
+
+interface Module {
+  id: number;
+  title: string;
+  description: string | null;
+  order: number;
+  unlocked: boolean;
+  completed: boolean;
+  completed_lessons: number;
+  total_lessons: number;
+  lessons: Lesson[];
+}
+
+interface Schedule {
+  id: number;
+  course: string;
+  start_date: string;
+  end_date: string;
+  modules: Module[];
+}
 
 export default function MaterialsPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSavingLesson, setIsSavingLesson] = useState<number | null>(null);
+  const [error, setError] = useState('');
+
+  const fetchModules = useCallback(async () => {
+    try {
+      const response = await apiClient.get('/students/me/learning-modules/');
+      setSchedules(response.data.schedules || []);
+      setError('');
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Unable to load your learning modules.'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.push('/login');
+      return;
     }
-  }, [isAuthenticated, router]);
+    fetchModules();
+  }, [fetchModules, isAuthenticated, router]);
 
-  const isApproved = false; // This will come from API later
+  const completeLesson = async (lessonId: number) => {
+    setIsSavingLesson(lessonId);
+    setError('');
+    try {
+      await apiClient.post('/students/me/progress/', { lesson: lessonId });
+      await fetchModules();
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Could not save lesson progress.'));
+    } finally {
+      setIsSavingLesson(null);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-warm-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-gold" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-warm-white py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="bg-white rounded-lg shadow-md p-8">
-          <div className="kente-strip mb-6"></div>
-          
-          <h1 className="text-3xl font-heading font-bold text-secondary-blue mb-6">
+          <div className="kente-strip mb-6" />
+          <h1 className="text-3xl font-heading font-bold text-secondary-blue mb-3">
             Learning Materials
           </h1>
+          <p className="text-gray-600 mb-6">
+            Complete every lesson in a module to unlock the next module.
+          </p>
 
-          {!isApproved ? (
-            // Locked State
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">🔒</div>
-              <h2 className="text-2xl font-heading font-bold mb-4">
-                Access Pending
-              </h2>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Complete your application and get approved to access our exclusive learning materials including GitHub repositories, Discord community, and video tutorials.
-              </p>
-              <Button variant="primary" onClick={() => router.push('/dashboard/apply')}>
-                Complete Application
-              </Button>
+          {error && (
+            <div role="alert" className="mb-6 rounded-lg bg-red-50 p-4 text-red-700">
+              {error}
+            </div>
+          )}
+
+          {schedules.length === 0 ? (
+            <div className="rounded-lg bg-gray-50 p-6 text-gray-700">
+              No learning modules are available yet. Your course must be approved and
+              you must be enrolled in its schedule before materials can be released.
             </div>
           ) : (
-            // Approved State
-            <div className="space-y-6">
-              {/* GitHub */}
-              <div className="border-l-4 border-primary-gold bg-gray-50 p-6 rounded-r-lg">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-heading font-bold mb-2">GitHub Repository</h3>
-                    <p className="text-gray-600 mb-4">
-                      Access course code, projects, and resources
-                    </p>
-                    <a href="https://github.com/your-org/learning-materials" target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline">
-                        Open GitHub →
-                      </Button>
-                    </a>
-                  </div>
-                </div>
-              </div>
+            <div className="space-y-8">
+              {schedules.map((schedule) => (
+                <section key={schedule.id} aria-label={`${schedule.course} modules`}>
+                  <h2 className="text-2xl font-heading font-bold text-secondary-blue mb-4">
+                    {schedule.course}
+                  </h2>
+                  <div className="space-y-4">
+                    {schedule.modules.map((module) => (
+                      <article
+                        key={module.id}
+                        className={`rounded-lg border p-5 ${
+                          module.unlocked ? 'border-primary-gold bg-white' : 'border-gray-200 bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <h3 className="text-lg font-semibold text-secondary-blue">
+                              Module {module.order}: {module.title}
+                            </h3>
+                            {module.description && (
+                              <p className="mt-1 text-sm text-gray-600">{module.description}</p>
+                            )}
+                          </div>
+                          <span className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">
+                            {module.unlocked
+                              ? `${module.completed_lessons}/${module.total_lessons} lessons`
+                              : 'Locked'}
+                          </span>
+                        </div>
 
-              {/* Discord */}
-              <div className="border-l-4 border-igbo-red bg-gray-50 p-6 rounded-r-lg">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl">💬</span>
+                        {module.unlocked && (
+                          <div className="mt-4 space-y-4">
+                            {module.lessons.map((lesson) => (
+                              <div key={lesson.id} className="rounded-md border border-gray-100 p-4">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                  <h4 className="font-semibold text-gray-900">{lesson.title}</h4>
+                                  {lesson.completed ? (
+                                    <span className="text-sm font-medium text-green-700">Completed</span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      disabled={isSavingLesson === lesson.id}
+                                      onClick={() => completeLesson(lesson.id)}
+                                      className="rounded-md bg-secondary-blue px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
+                                    >
+                                      {isSavingLesson === lesson.id ? 'Saving…' : 'Mark complete'}
+                                    </button>
+                                  )}
+                                </div>
+                                {lesson.description && (
+                                  <p className="mt-2 text-sm text-gray-600">{lesson.description}</p>
+                                )}
+                                {lesson.content && (
+                                  <div className="mt-3 whitespace-pre-wrap text-sm text-gray-800">
+                                    {lesson.content}
+                                  </div>
+                                )}
+                                {lesson.resources && (
+                                  <a
+                                    className="mt-3 inline-block text-sm font-medium text-blue-700 underline"
+                                    href={lesson.resources}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    Open lesson resource
+                                  </a>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </article>
+                    ))}
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-heading font-bold mb-2">Discord Community</h3>
-                    <p className="text-gray-600 mb-4">
-                      Join our community and get support from instructors and peers
-                    </p>
-                    <a href="https://discord.gg/your-invite" target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline">
-                        Join Discord →
-                      </Button>
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              {/* Video Materials */}
-              <div className="border-l-4 border-success bg-gray-50 p-6 rounded-r-lg">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl">🎥</span>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-heading font-bold mb-2">Video Tutorials</h3>
-                    <p className="text-gray-600 mb-4">
-                      Watch comprehensive video lectures and tutorials
-                    </p>
-                    <a href="https://youtube.com/playlist/your-playlist" target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline">
-                        Watch Videos →
-                      </Button>
-                    </a>
-                  </div>
-                </div>
-              </div>
+                </section>
+              ))}
             </div>
           )}
         </div>

@@ -16,6 +16,11 @@ from .models import (
     LessonProgress, LiveSession, Assignment, Module, Lesson,
     CourseEnrollment,
 )
+from .learning_access import (
+    get_student_schedule_modules,
+    get_unlocked_module_ids,
+    has_learning_access,
+)
 from .serializers import (
     StudentReadSerializer, StudentSelectionSerializer,
     CourseReadSerializer, EventReadSerializer,
@@ -86,7 +91,7 @@ class StudentDashboardView(APIView):
                 for event in upcoming_events
             ],
             "learning_materials": {
-                "github": "https://github.com/your-org/learning-materials" if application_status == "approved" else None,
+                "url": "/dashboard/materials" if application_status == "approved" else None,
                 "discord": "https://discord.gg/your-invite" if application_status == "approved" else None,
                 "message": "Your application needs to be approved to access learning materials" if application_status != "approved" else "Access granted"
             }
@@ -228,24 +233,42 @@ class EnrollScheduleView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Check if application is approved via CourseEnrollment
-        has_approved = CourseEnrollment.objects.filter(
-            student=student,
-            status='Approved'
-        ).exists()
-
-        if not has_approved:
-            return Response(
-                {"detail": "Your application must be approved before enrolling in a schedule."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
         try:
             schedule = LearningSchedule.objects.get(id=schedule_id)
         except LearningSchedule.DoesNotExist:
             return Response(
                 {"detail": "Schedule not found."},
                 status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            enrollment = CourseEnrollment.objects.get(
+                student=student,
+                course=schedule.course,
+                status='Approved',
+            )
+        except CourseEnrollment.DoesNotExist:
+            return Response(
+                {"detail": "Your application for this course must be approved before enrolling in its schedule."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        from .models import InstallmentPlan
+        try:
+            plan = enrollment.installment_plan
+        except InstallmentPlan.DoesNotExist:
+            plan = None
+
+        if plan and (
+            plan.status not in ('active', 'completed')
+            or not plan.installments.filter(
+                installment_number=1,
+                status='paid',
+            ).exists()
+        ):
+            return Response(
+                {"detail": "Your first installment must be paid before enrolling in this schedule."},
+                status=status.HTTP_403_FORBIDDEN
             )
 
         # Check if already enrolled
@@ -273,8 +296,13 @@ class EnrollScheduleView(APIView):
 
 class LearningMaterialsView(APIView):
     """
-    Get learning materials (GitHub, Discord, etc.)
+    Get student learning resources.
     GET /api/v1/students/me/learning-materials/
+
+    Access rules:
+    - Enrollment must be Approved
+    - An installment plan grants access after the first installment is paid.
+      Defaulted or cancelled plans do not grant access.
     """
     permission_classes = [IsAuthenticated]
 
@@ -287,42 +315,131 @@ class LearningMaterialsView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Check if student has at least one approved course enrollment
-        has_approved = CourseEnrollment.objects.filter(
+        approved_enrollments = CourseEnrollment.objects.filter(
             student=student,
-            status='Approved'
-        ).exists()
+            status="Approved",
+        )
+        access_granted = approved_enrollments.exists()
+        for enrollment in approved_enrollments:
+            if not has_learning_access(enrollment):
+                access_granted = False
+                break
 
-        if not has_approved:
+        if not access_granted:
             return Response({
                 "access_granted": False,
-                "message": "Your application must be approved before you can access learning materials.",
+                "message": (
+                    "Your application must be approved and your first installment must be paid "
+                    "before you can access learning materials."
+                ),
                 "materials": None
             })
 
         # Return learning materials
         return Response({
             "access_granted": True,
-            "message": "You have access to all learning materials!",
+            "message": "You have access to the first available learning module.",
             "materials": {
-                "github": {
-                    "url": "https://github.com/your-org/learning-materials",
-                    "description": "Access course code, projects, and resources"
+                "modules_api": {
+                    "url": "/api/v1/students/me/learning-modules/",
+                    "description": "Access course materials one module at a time"
                 },
                 "discord": {
                     "url": "https://discord.gg/ksa9s6P95N",
                     "description": "Join our Discord community and get support"
                 },
-                "video_materials": {
-                    "url": "https://youtube.com/playlist/your-playlist",
-                    "description": "Watch video tutorials and lectures"
-                },
-                "documentation": {
-                    "url": "https://docs.yoursite.com",
-                    "description": "Read comprehensive documentation"
-                }
             }
         })
+
+
+class StudentLearningModulesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            student = request.user.student
+        except Student.DoesNotExist:
+            return Response(
+                {"detail": "Student profile not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        schedule_id = request.query_params.get("schedule_id")
+        if schedule_id:
+            try:
+                schedule_id = int(schedule_id)
+            except ValueError:
+                return Response(
+                    {"detail": "schedule_id must be a positive integer."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if schedule_id < 1:
+                return Response(
+                    {"detail": "schedule_id must be a positive integer."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        schedules = student.schedules.select_related("course").order_by(
+            "start_date", "id"
+        )
+        if schedule_id:
+            schedules = schedules.filter(pk=schedule_id)
+
+        schedules_data = []
+        for schedule in schedules:
+            module_access = get_student_schedule_modules(student, schedule)
+            if module_access is None:
+                continue
+
+            completed_lesson_ids = set(
+                LessonProgress.objects.filter(
+                    student=student,
+                    lesson__module__schedule=schedule,
+                    completed_at__isnull=False,
+                ).values_list("lesson_id", flat=True)
+            )
+            modules_data = []
+            for module, unlocked, lessons in module_access:
+                completed_count = sum(
+                    lesson.pk in completed_lesson_ids for lesson in lessons
+                )
+                modules_data.append({
+                    "id": module.pk,
+                    "title": module.title,
+                    "description": module.description,
+                    "order": module.order,
+                    "unlocked": unlocked,
+                    "completed": bool(lessons) and completed_count == len(lessons),
+                    "completed_lessons": completed_count,
+                    "total_lessons": len(lessons),
+                    "lessons": [
+                        {
+                            "id": lesson.pk,
+                            "title": lesson.title,
+                            "description": lesson.description,
+                            "content": lesson.content,
+                            "resources": lesson.resources,
+                            "order": lesson.order,
+                            "completed": lesson.pk in completed_lesson_ids,
+                        }
+                        for lesson in lessons
+                    ] if unlocked else [],
+                })
+
+            schedules_data.append({
+                "id": schedule.pk,
+                "course": schedule.course.name,
+                "start_date": schedule.start_date,
+                "end_date": schedule.end_date,
+                "modules": modules_data,
+            })
+
+        if schedule_id and not schedules_data:
+            return Response(
+                {"detail": "This schedule is not available to your account."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        return Response({"schedules": schedules_data})
 
 
 @api_view(['GET'])
@@ -389,6 +506,7 @@ class LessonProgressView(APIView):
             return Response({"detail": "Student profile not found."}, status=status.HTTP_404_NOT_FOUND)
 
         progress = LessonProgress.objects.filter(student=student).select_related("lesson", "lesson__module")
+        progress = progress.filter(lesson__module_id__in=get_unlocked_module_ids(student))
         serializer = LessonProgressSerializer(progress, many=True)
         return Response(serializer.data)
 
@@ -407,6 +525,12 @@ class LessonProgressView(APIView):
             lesson = Lesson.objects.get(pk=lesson_id)
         except Lesson.DoesNotExist:
             return Response({"detail": "Lesson not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if lesson.module_id not in get_unlocked_module_ids(student):
+            return Response(
+                {"detail": "Complete the current module before accessing this lesson."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         progress, _ = LessonProgress.objects.get_or_create(student=student, lesson=lesson)
         if not progress.completed_at:
