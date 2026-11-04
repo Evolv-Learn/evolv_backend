@@ -22,7 +22,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .permissions import IsAdmin, IsAdminOrReadOnly, AllowAnyCreateReadAdminModify, IsAdminOrInstructorOwner, AuthenticatedCreateReadAdminModify, IsAdminOrInstructor
+from .permissions import IsAdmin, IsAdminOrReadOnly, IsAdminOrAuthenticatedReadOnly, AllowAnyCreateReadAdminModify, IsAdminOrInstructorOwner, AuthenticatedCreateReadAdminModify, IsAdminOrInstructor
 
 from .models import (
     Profile, Location, Partner, Course, Student, CourseEnrollment, SelectionProcedure, StudentSelection, ContactUs, EventAttendance, EventRegistration,
@@ -438,7 +438,7 @@ class AlumniDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class EventListCreateView(generics.ListCreateAPIView):
-    queryset = Event.objects.all()
+    queryset = Event.objects.all().order_by('date')
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -676,7 +676,7 @@ class ModuleDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class LessonListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminOrAuthenticatedReadOnly]
     queryset = Lesson.objects.select_related("module", "module__schedule").all()
 
     def get_serializer_class(self):
@@ -687,7 +687,23 @@ class LessonListCreateView(generics.ListCreateAPIView):
         module_id = self.kwargs.get("module_id")
         if module_id:
             qs = qs.filter(module_id=module_id)
+        if not self.request.user.is_staff:
+            if self._is_instructor():
+                return qs
+            from .learning_access import get_unlocked_module_ids
+
+            try:
+                student = self.request.user.student
+            except Student.DoesNotExist:
+                return qs.none()
+            qs = qs.filter(module_id__in=get_unlocked_module_ids(student))
         return qs
+
+    def _is_instructor(self):
+        try:
+            return self.request.user.profile.role == "Instructor"
+        except Profile.DoesNotExist:
+            return False
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["module", "module__schedule", "order"]
@@ -697,11 +713,30 @@ class LessonListCreateView(generics.ListCreateAPIView):
 
 
 class LessonDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminOrAuthenticatedReadOnly]
     queryset = Lesson.objects.select_related("module", "module__schedule").all()
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if user.is_staff:
+            return qs
+        try:
+            if user.profile.role == "Instructor":
+                return qs
+        except Profile.DoesNotExist:
+            pass
+
+        from .learning_access import get_unlocked_module_ids
+
+        try:
+            student = user.student
+        except Student.DoesNotExist:
+            return qs.none()
+        return qs.filter(module_id__in=get_unlocked_module_ids(student))
+
 class StudentListCreateView(generics.ListCreateAPIView):
-    queryset = Student.objects.prefetch_related("courses", "schedules").all()
+    queryset = Student.objects.prefetch_related("courses", "schedules").all().order_by('-id')
 
     def get_permissions(self):
         if self.request.method == 'GET':
