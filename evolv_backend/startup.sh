@@ -1,11 +1,24 @@
 #!/bin/bash
-# Azure App Service Startup Script for Django
+# Render Startup Script for EvolvLearn Django Backend
 
-echo "Starting EvolvLearn Backend..."
+set -e  # Exit immediately if any command fails
 
-# Change to the evolv_backend directory
-cd "$(dirname "$0")"
+echo "=== EvolvLearn Backend Starting ==="
 
-# Start Gunicorn
+# ── Run database migrations ───────────────────────────────────────────────────
+echo "Applying database migrations..."
+python manage.py migrate --no-input
+
+# ── Collect static files ──────────────────────────────────────────────────────
+echo "Collecting static files..."
+python manage.py collectstatic --no-input
+
+# ── Start Gunicorn ────────────────────────────────────────────────────────────
 echo "Starting Gunicorn server..."
-gunicorn --bind=0.0.0.0:8000 --workers=4 --timeout=600 --access-logfile '-' --error-logfile '-' evolv_backend.wsgi:application
+gunicorn \
+  --bind 0.0.0.0:$PORT \
+  --workers 4 \
+  --timeout 120 \
+  --access-logfile '-' \
+  --error-logfile '-' \
+  evolv_backend.wsgi:application

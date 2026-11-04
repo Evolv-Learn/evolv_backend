@@ -1,0 +1,125 @@
+services:
+  # ── Django Web Service ─────────────────────────────────────────────────────
+  - type: web
+    name: evolvlearn-backend
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: evolv_backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: bash evolv_backend/startup.sh
+    healthCheckPath: /api/v1/health/
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        sync: false          # Set manually in Render dashboard — never commit
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        sync: false          # Set to your Render URL e.g. evolvlearn-backend.onrender.com
+      - key: FRONTEND_ORIGINS
+        sync: false          # Set to your Vercel URL e.g. https://evolvlearn.org
+      - key: DB_NAME
+        fromDatabase:
+          name: evolvlearn-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: evolvlearn-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: evolvlearn-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: evolvlearn-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: evolvlearn-db
+          property: port
+      - key: EMAIL_BACKEND
+        value: "django.core.mail.backends.smtp.EmailBackend"
+      - key: EMAIL_HOST
+        value: "smtp.gmail.com"
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        value: "EvolvLearn <evolvngo@gmail.com>"
+      - key: FRONTEND_URL
+        sync: false          # e.g. https://evolvlearn.org
+      - key: PAYSTACK_SECRET_KEY
+        sync: false          # Set in Render dashboard
+      - key: PYTHON_VERSION
+        value: "3.11.8"
+
+  # ── Render Cron Job — Enforce Instalment Deadlines ─────────────────────────
+  # Runs daily at 00:30 WAT (23:30 UTC) — shortly after the 11:59 PM WAT cutoff
+  - type: cron
+    name: enforce-instalment-deadlines
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: evolv_backend
+    buildCommand: pip install -r ../requirements.txt
+    schedule: "30 23 * * *"
+    startCommand: python manage.py enforce_installment_deadlines
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        sync: false
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: "localhost"
+      - key: DB_NAME
+        fromDatabase:
+          name: evolvlearn-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: evolvlearn-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: evolvlearn-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: evolvlearn-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: evolvlearn-db
+          property: port
+      - key: EMAIL_BACKEND
+        value: "django.core.mail.backends.smtp.EmailBackend"
+      - key: EMAIL_HOST
+        value: "smtp.gmail.com"
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        value: "EvolvLearn <evolvngo@gmail.com>"
+      - key: FRONTEND_URL
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.11.8"
+
+databases:
+  # ── PostgreSQL Database ────────────────────────────────────────────────────
+  - name: evolvlearn-db
+    databaseName: evolv_db
+    user: evolv_user
+    region: oregon
+    plan: free
