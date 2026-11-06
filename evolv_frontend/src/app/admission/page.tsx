@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import axios from 'axios';
 import apiClient from '@/lib/api/client';
 import { useAuthStore } from '@/store/auth';
 
@@ -56,8 +55,6 @@ const STEPS = [
 ];
 
 const ENGLISH_LABELS: Record<number, string> = { 1: 'Beginner', 2: 'Elementary', 3: 'Intermediate', 4: 'Upper-Intermediate', 5: 'Fluent / Native' };
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const Field = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
   <div>
@@ -112,27 +109,45 @@ export default function AdmissionPage() {
   };
 
   const checkExistingApplication = async () => {
-    if (!isAuthenticated || !API_BASE_URL) return;
+    if (!isAuthenticated) return;
 
     try {
-      const token = localStorage.getItem('access_token');
-      if (!token) return;
+      const studentRes = await apiClient.get('/students/me/');
+      const student = studentRes.data;
 
-      const [studentRes, coursesRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/students/me/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        apiClient.get('/courses/'),
-      ]);
-      if (studentRes.data) {
+      if (student) {
         setIsReturning(true);
-        const existingNames = studentRes.data.courses || [];
-        const allCourses = coursesRes.data.results || coursesRes.data;
-        const ids = allCourses.filter((c: any) => existingNames.includes(c.name)).map((c: any) => c.id);
-        setForm(prev => ({ ...prev, ...studentRes.data, courses: ids }));
+
+        // Map student profile fields to form
+        const existingCourseNames = student.courses || [];
+        const allCourses = (await apiClient.get('/courses/')).data.results || [];
+        const existingIds = allCourses
+          .filter((c: any) => existingCourseNames.includes(c.name))
+          .map((c: any) => c.id);
+
+        setForm(prev => ({
+          ...prev,
+          email:            student.email || prev.email,
+          phone:            student.phone || prev.phone,
+          first_name:       student.first_name || prev.first_name,
+          last_name:        student.last_name || prev.last_name,
+          gender:           student.gender || prev.gender,
+          birth_date:       student.birth_date || prev.birth_date,
+          country_of_birth: student.country_of_birth || prev.country_of_birth,
+          diploma_level:    student.diploma_level || prev.diploma_level,
+          job_status:       student.job_status || prev.job_status,
+          english_level:    student.english_level || prev.english_level,
+          has_laptop:       student.has_laptop ?? prev.has_laptop,
+          how_heard:        student.how_heard || prev.how_heard,
+          courses:          existingIds,
+        }));
+
+        // Skip Step 1 — go straight to course selection
         setStep(2);
       }
-    } catch { /* new student */ }
+    } catch {
+      // New student — stay on Step 1
+    }
   };
 
   const update = (field: string, value: any) => {
@@ -318,7 +333,6 @@ export default function AdmissionPage() {
           We found your existing profile. Your details are pre-filled, jump to course selection if nothing has changed.
         </div>
       )}
-
       {/* Name row */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <Field label="First Name *">
