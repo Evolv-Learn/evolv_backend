@@ -35,6 +35,7 @@ export default function CreateCoursePage() {
     locations: [] as number[],
     partners: [] as number[],
     price_ngn: '',
+    installments_enabled: false,
   });
 
   useEffect(() => {
@@ -73,6 +74,7 @@ export default function CreateCoursePage() {
         end_date: formData.end_date || null,
         locations: formData.location_id ? [Number(formData.location_id)] : [],
         partners: [],
+        installments_enabled: formData.installments_enabled,
       };
 
       const courseRes = await apiClient.post('/courses/', payload);
@@ -305,6 +307,36 @@ export default function CreateCoursePage() {
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">Leave blank if not yet decided. Additional currencies can be added later.</p>
+              </div>
+            </div>
+
+            {/* Payment Options */}
+            <div className="pt-6 border-t">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Payment Options</h2>
+              <div
+                onClick={() => setFormData({ ...formData, installments_enabled: !formData.installments_enabled })}
+                className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  formData.installments_enabled
+                    ? 'border-green-500 bg-green-50'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                }`}
+              >
+                <div className={`w-6 h-6 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                  formData.installments_enabled ? 'bg-green-500 border-green-500' : 'border-gray-300'
+                }`}>
+                  {formData.installments_enabled && (
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/>
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-800">Enable Instalment Payments</p>
+                  <p className="text-sm text-gray-500 mt-0.5">
+                    Allow students to pay 50% upfront and 50% by end of Week 6.
+                    Discount codes will not apply to instalment payments.
+                  </p>
+                </div>
               </div>
             </div>
 
