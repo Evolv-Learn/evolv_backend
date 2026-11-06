@@ -103,9 +103,22 @@ class EventRegistrationAdmin(admin.ModelAdmin):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ("name", "category", "instructor", "registration_deadline", "start_date", "end_date")
-    list_filter = ("category",)
+    list_display = ("name", "category", "instructor", "registration_deadline", "start_date", "end_date", "installments_enabled")
+    list_filter = ("category", "installments_enabled")
+    list_editable = ("installments_enabled",)
     search_fields = ("name",)
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'category', 'parent', 'description', 'software_tools', 'topics_covered', 'instructor', 'locations', 'partners'),
+        }),
+        ('Timeline', {
+            'fields': ('registration_deadline', 'selection_date', 'start_date', 'end_date'),
+        }),
+        ('Payment Options', {
+            'fields': ('installments_enabled',),
+            'description': 'Enable instalment payments (50/50 split) for this course cohort.',
+        }),
+    )
 
 
 @admin.register(LearningSchedule)
