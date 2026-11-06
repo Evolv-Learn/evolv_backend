@@ -19,6 +19,7 @@ interface Course {
   selection_date: string;
   start_date: string;
   end_date: string;
+  installments_enabled: boolean;
 }
 
 export default function CoursesPage() {
@@ -178,6 +179,13 @@ export default function CoursesPage() {
                         {course.category}
                       </span>
                     </div>
+
+                    {course.installments_enabled && (
+                      <div className="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-800">
+                        <span aria-hidden="true">✓</span>
+                        Instalments available
+                      </div>
+                    )}
                     
                     <p className="text-gray-600 mb-4 line-clamp-3">                      {course.description}
                     </p>

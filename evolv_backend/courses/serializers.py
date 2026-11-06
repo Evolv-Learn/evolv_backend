@@ -1064,6 +1064,7 @@ class CoursePublicDetailSerializer(serializers.ModelSerializer):
             "id", "name", "category", "description", "software_tools",
             "topics_covered", "instructor", "locations",
             "registration_deadline", "selection_date", "start_date", "end_date",
+            "installments_enabled",
             "schedules",
         ]
 

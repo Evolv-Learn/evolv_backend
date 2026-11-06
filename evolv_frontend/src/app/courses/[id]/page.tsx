@@ -45,6 +45,7 @@ interface CourseDetail {
   selection_date: string;
   start_date: string;
   end_date: string;
+  installments_enabled: boolean;
   schedules: Schedule[];
 }
 
@@ -148,6 +149,24 @@ export default function CurriculumPage() {
             <p className="text-lg text-gray-200 leading-relaxed mb-8">
               {course.description}
             </p>
+
+            {course.installments_enabled && (
+              <div className="mb-8 max-w-2xl rounded-xl border border-green-200 bg-white/10 p-4">
+                <p className="font-semibold text-white">
+                  Instalment payments are available for this cohort
+                </p>
+                <p className="mt-1 text-sm text-gray-200">
+                  Pay 50% upfront and the remaining 50% by the end of Week 6.
+                  Discount codes do not apply to instalments.
+                </p>
+                <Link
+                  href="/payment-policy"
+                  className="mt-2 inline-block text-sm font-semibold text-primary-gold underline"
+                >
+                  Read the payment and refund policy
+                </Link>
+              </div>
+            )}
 
             {/* Quick facts */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -280,6 +299,17 @@ export default function CurriculumPage() {
                     </div>
                   ))}
                 </div>
+                {course.installments_enabled && (
+                  <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+                    <p className="font-semibold">Flexible payment available</p>
+                    <p className="mt-1">
+                      Pay 50% now and 50% by the end of Week 6.
+                    </p>
+                    <Link href="/payment-policy" className="mt-1 inline-block font-medium underline">
+                      View payment terms
+                    </Link>
+                  </div>
+                )}
                 <Link href="/admission">
                   <Button variant="primary" size="lg" className="w-full">
                     Apply for This Cohort

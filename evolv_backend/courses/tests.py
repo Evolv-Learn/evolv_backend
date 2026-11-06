@@ -156,6 +156,12 @@ class UserScopedEndpointPermissionTests(APITestCase):
 		priced_course = next(item for item in priced_courses if item["id"] == self.course.pk)
 		self.assertTrue(priced_course["installments_enabled"])
 
+		curriculum_response = self.client.get(
+			f"/api/v1/courses/{self.course.pk}/curriculum/"
+		)
+		self.assertEqual(curriculum_response.status_code, status.HTTP_200_OK)
+		self.assertTrue(curriculum_response.data["installments_enabled"])
+
 	def test_student_selection_endpoints_are_admin_only(self):
 		step = SelectionProcedure.objects.create(step_name="Review", description="Admin review", order=1)
 		selection = StudentSelection.objects.create(student=self.student, step=step, status="Pending")
