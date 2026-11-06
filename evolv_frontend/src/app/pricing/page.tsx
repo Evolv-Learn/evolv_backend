@@ -299,7 +299,7 @@ export default function PricingPage() {
                             )}
                           </div>
                           <Link
-                            href="/courses"
+                            href="/admission"
                             className="inline-block bg-primary-gold text-secondary-blue-dark text-sm font-semibold px-4 py-2 rounded-lg hover:bg-yellow-400 transition-colors"
                           >
                             Enrol Now

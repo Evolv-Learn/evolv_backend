@@ -540,20 +540,71 @@ export default function AdmissionPage() {
         {/* Payment options */}
         <div className="bg-white rounded-xl border border-gray-200 p-5 mb-5">
           <p className="text-sm font-bold text-gray-700 mb-4">Payment Details</p>
+
+          {/* Payment type toggle — only show if selected course has instalments enabled */}
+          {form.courses.some(id => installmentCourses.includes(id)) && (
+            <div className="mb-4">
+              <p className="text-sm font-semibold text-gray-700 mb-2">How would you like to pay?</p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {/* Full payment */}
+                <div
+                  onClick={() => setPaymentType('full')}
+                  className={`cursor-pointer rounded-xl border-2 p-4 transition-all ${
+                    paymentType === 'full'
+                      ? 'border-secondary-blue bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                      paymentType === 'full' ? 'border-secondary-blue' : 'border-gray-300'
+                    }`}>
+                      {paymentType === 'full' && <div className="w-2 h-2 rounded-full bg-secondary-blue" />}
+                    </div>
+                    <p className="font-semibold text-sm text-gray-800">Pay in Full</p>
+                  </div>
+                  <p className="text-xs text-gray-500 pl-6">Pay the full course fee now. Discount codes apply.</p>
+                </div>
+
+                {/* Instalment */}
+                <div
+                  onClick={() => setPaymentType('installment')}
+                  className={`cursor-pointer rounded-xl border-2 p-4 transition-all ${
+                    paymentType === 'installment'
+                      ? 'border-green-500 bg-green-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                      paymentType === 'installment' ? 'border-green-500' : 'border-gray-300'
+                    }`}>
+                      {paymentType === 'installment' && <div className="w-2 h-2 rounded-full bg-green-500" />}
+                    </div>
+                    <p className="font-semibold text-sm text-gray-800">Pay by Instalment</p>
+                  </div>
+                  <p className="text-xs text-gray-500 pl-6">50% now to confirm your place, 50% by end of Week 6. No discount codes.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Currency">
               <select className={selectClass} value={currency} onChange={e => setCurrency(e.target.value)}>
                 {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.label}</option>)}
               </select>
             </Field>
-            <Field label="Discount Code (optional)">
-              <input
-                className={inputClass}
-                value={discountCode}
-                onChange={e => setDiscountCode(e.target.value.toUpperCase())}
-                placeholder="e.g. EVOLVLEARN10"
-              />
-            </Field>
+            {paymentType === 'full' && (
+              <Field label="Discount Code (optional)">
+                <input
+                  className={inputClass}
+                  value={discountCode}
+                  onChange={e => setDiscountCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. EVOLVLEARN10"
+                />
+              </Field>
+            )}
           </div>
         </div>
 
