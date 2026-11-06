@@ -267,6 +267,7 @@ class CourseReadSerializer(serializers.ModelSerializer):
             "selection_date",
             "start_date",
             "end_date",
+            "installments_enabled",
             "created_at",
         ]
 
@@ -302,6 +303,7 @@ class CourseWriteSerializer(serializers.ModelSerializer):
             "selection_date",
             "start_date",
             "end_date",
+            "installments_enabled",
         ]
 
     def validate(self, attrs):
@@ -1086,7 +1088,8 @@ class CourseWithPricesSerializer(serializers.ModelSerializer):
         model = Course
         fields = [
             'id', 'name', 'category', 'description', 'instructor_name',
-            'start_date', 'end_date', 'registration_deadline', 'prices',
+            'start_date', 'end_date', 'registration_deadline',
+            'installments_enabled', 'prices',
         ]
 
     def get_prices(self, obj):

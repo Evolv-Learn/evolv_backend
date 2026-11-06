@@ -123,6 +123,39 @@ class UserScopedEndpointPermissionTests(APITestCase):
 		admin_response = self.client.get(f"/api/v1/students/{self.other_student.pk}/")
 		self.assertEqual(admin_response.status_code, status.HTTP_200_OK)
 
+	def test_course_api_exposes_and_saves_installment_availability(self):
+		self.client.force_authenticate(user=self.admin)
+
+		update_response = self.client.patch(
+			f"/api/v1/courses/{self.course.pk}/",
+			{"installments_enabled": True},
+			format="json",
+		)
+
+		self.assertEqual(update_response.status_code, status.HTTP_200_OK)
+		self.assertTrue(update_response.data["installments_enabled"])
+		self.course.refresh_from_db()
+		self.assertTrue(self.course.installments_enabled)
+
+		public_response = self.client.get("/api/v1/courses/?public=true")
+
+		self.assertEqual(public_response.status_code, status.HTTP_200_OK)
+		public_courses = public_response.data.get("results", public_response.data)
+		course_data = next(item for item in public_courses if item["id"] == self.course.pk)
+		self.assertTrue(course_data["installments_enabled"])
+
+		CoursePrice.objects.create(
+			course=self.course,
+			currency="NGN",
+			amount="10000.00",
+			is_active=True,
+		)
+		pricing_response = self.client.get("/api/v1/pricing/")
+		self.assertEqual(pricing_response.status_code, status.HTTP_200_OK)
+		priced_courses = pricing_response.data.get("results", pricing_response.data)
+		priced_course = next(item for item in priced_courses if item["id"] == self.course.pk)
+		self.assertTrue(priced_course["installments_enabled"])
+
 	def test_student_selection_endpoints_are_admin_only(self):
 		step = SelectionProcedure.objects.create(step_name="Review", description="Admin review", order=1)
 		selection = StudentSelection.objects.create(student=self.student, step=step, status="Pending")

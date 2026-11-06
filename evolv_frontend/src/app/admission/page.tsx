@@ -22,6 +22,23 @@ interface FormData {
   courses: number[];
 }
 
+interface CourseOption {
+  id: number;
+  name: string;
+  category?: string;
+  description?: string;
+  registration_deadline?: string | null;
+  start_date?: string | null;
+  installments_enabled: boolean;
+}
+
+interface EnrollmentPaymentStatus {
+  id: number;
+  course_id: number;
+  course_name: string;
+  payment_status: string | null;
+}
+
 const CURRENCIES = [
   { code: 'NGN', label: 'NGN — Nigerian Naira' },
   { code: 'USD', label: 'USD — US Dollar' },
@@ -70,12 +87,12 @@ export default function AdmissionPage() {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] = useState<CourseOption[]>([]);
   const [currency, setCurrency] = useState('NGN');
   const [discountCode, setDiscountCode] = useState('');
   const [isReturning, setIsReturning] = useState(false);
   const [paymentType, setPaymentType] = useState<'full' | 'installment'>('full');
-  const [installmentCourses, setInstallmentCourses] = useState<number[]>([]);
+  const [enrollments, setEnrollments] = useState<EnrollmentPaymentStatus[]>([]);
 
   const [form, setForm] = useState<FormData>({
     email: user?.email || '',
@@ -101,10 +118,8 @@ export default function AdmissionPage() {
   const fetchCourses = async () => {
     try {
       const res = await apiClient.get('/courses/');
-      const all = res.data.results || res.data;
+      const all: CourseOption[] = res.data.results || res.data;
       setCourses(all);
-      // Track which courses have instalments enabled
-      setInstallmentCourses(all.filter((c: any) => c.installments_enabled).map((c: any) => c.id));
     } catch { /* silent */ }
   };
 
@@ -114,13 +129,14 @@ export default function AdmissionPage() {
     try {
       const studentRes = await apiClient.get('/students/me/');
       const student = studentRes.data;
+      setEnrollments(student.enrollments || []);
 
       if (student) {
         setIsReturning(true);
 
         // Map student profile fields to form
         const existingCourseNames = student.courses || [];
-        const allCourses = (await apiClient.get('/courses/')).data.results || [];
+        const allCourses: CourseOption[] = (await apiClient.get('/courses/')).data.results || [];
         const existingIds = allCourses
           .filter((c: any) => existingCourseNames.includes(c.name))
           .map((c: any) => c.id);
@@ -155,11 +171,15 @@ export default function AdmissionPage() {
     setError('');
   };
 
+  const courseAllowsInstallment = (courseId: number) =>
+    courses.some(course => course.id === courseId && course.installments_enabled);
+
   const toggleCourse = (id: number) => {
     setForm(prev => ({
       ...prev,
       courses: prev.courses.includes(id) ? prev.courses.filter(c => c !== id) : [...prev.courses, id],
     }));
+    setPaymentType('full');
     setError('');
   };
 
@@ -192,12 +212,12 @@ export default function AdmissionPage() {
       const validIds = form.courses.filter(id => typeof id === 'number');
       if (!validIds.length) { setError('Please select at least one course'); setIsLoading(false); return; }
 
-      let enrollments: any[] = [];
+      let enrollments: EnrollmentPaymentStatus[] = [];
       try {
         const existing = await apiClient.get('/students/me/');
         const existingNames = existing.data.courses || [];
-        const allCourses = (await apiClient.get('/courses/')).data.results || [];
-        const existingIds = allCourses.filter((c: any) => existingNames.includes(c.name)).map((c: any) => c.id);
+        const allCourses: CourseOption[] = (await apiClient.get('/courses/')).data.results || [];
+        const existingIds = allCourses.filter(c => existingNames.includes(c.name)).map(c => c.id);
         const merged = [...new Set([...existingIds, ...validIds])];
         await apiClient.patch('/students/me/', { courses: merged });
       } catch (e: any) {
@@ -216,15 +236,27 @@ export default function AdmissionPage() {
 
       const fresh = await apiClient.get('/students/me/');
       enrollments = fresh.data.enrollments || [];
-      const unpaid = enrollments.filter((e: any) => validIds.includes(e.course_id) && e.payment_status !== 'paid');
+      setEnrollments(enrollments);
+      const unpaid = enrollments.filter(e => validIds.includes(e.course_id) && e.payment_status !== 'paid');
 
       if (!unpaid.length) { router.push('/dashboard?success=already-enrolled'); return; }
 
-      // Choose full payment or instalment
-      const firstEnrollment = unpaid[0];
-      const courseAllowsInstalment = installmentCourses.includes(firstEnrollment.course_id);
+      // Start checkout for the first unpaid course in the student's selected order.
+      const firstEnrollment = validIds
+        .map(id => unpaid.find(enrollment => enrollment.course_id === id))
+        .find((enrollment): enrollment is EnrollmentPaymentStatus => Boolean(enrollment));
+      if (!firstEnrollment) {
+        setError('No unpaid course enrollment was found. Please refresh and try again.');
+        return;
+      }
+      const courseAllowsInstalment = courseAllowsInstallment(firstEnrollment.course_id);
 
-      if (paymentType === 'installment' && courseAllowsInstalment) {
+      if (paymentType === 'installment' && !courseAllowsInstalment) {
+        setError(`Instalment payment is not available for ${firstEnrollment.course_name}. Please choose full payment.`);
+        return;
+      }
+
+      if (paymentType === 'installment') {
         // Initiate first instalment (50% upfront)
         const instRes = await apiClient.post('/installments/initiate/', {
           enrollment_id: firstEnrollment.id,
@@ -514,6 +546,16 @@ export default function AdmissionPage() {
   // ─── STEP 3: Review & Pay ─────────────────────────────────────────────────
   const renderStep3 = () => {
     const selectedCourses = courses.filter(c => form.courses.includes(c.id));
+    const firstUnpaidCourse = form.courses
+      .map(id => courses.find(course => course.id === id))
+      .find(course => {
+        if (!course) return false;
+        const enrollment = enrollments.find(item => item.course_id === course.id);
+        return !enrollment || enrollment.payment_status !== 'paid';
+      });
+    const canPayByInstallment = Boolean(
+      firstUnpaidCourse && courseAllowsInstallment(firstUnpaidCourse.id)
+    );
     return (
       <div>
         <div className="mb-6">
@@ -555,14 +597,15 @@ export default function AdmissionPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-5 mb-5">
           <p className="text-sm font-bold text-gray-700 mb-4">Payment Details</p>
 
-          {/* Payment type toggle — only show if selected course has instalments enabled */}
-          {form.courses.some(id => installmentCourses.includes(id)) && (
-            <div className="mb-4">
-              <p className="text-sm font-semibold text-gray-700 mb-2">How would you like to pay?</p>
-              <div className="grid sm:grid-cols-2 gap-3">
+          <fieldset className="mb-4">
+            <legend className="text-sm font-semibold text-gray-700 mb-2">
+              {firstUnpaidCourse
+                ? `How would you like to pay for ${firstUnpaidCourse.name}?`
+                : 'Payment option'}
+            </legend>
+            <div className={`grid ${canPayByInstallment ? 'sm:grid-cols-2' : 'sm:grid-cols-1'} gap-3`}>
                 {/* Full payment */}
-                <div
-                  onClick={() => setPaymentType('full')}
+                <label
                   className={`cursor-pointer rounded-xl border-2 p-4 transition-all ${
                     paymentType === 'full'
                       ? 'border-secondary-blue bg-blue-50'
@@ -570,38 +613,54 @@ export default function AdmissionPage() {
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      paymentType === 'full' ? 'border-secondary-blue' : 'border-gray-300'
-                    }`}>
-                      {paymentType === 'full' && <div className="w-2 h-2 rounded-full bg-secondary-blue" />}
-                    </div>
+                    <input
+                      type="radio"
+                      name="paymentType"
+                      value="full"
+                      checked={paymentType === 'full'}
+                      onChange={() => setPaymentType('full')}
+                      className="h-4 w-4 accent-blue-900"
+                    />
                     <p className="font-semibold text-sm text-gray-800">Pay in Full</p>
                   </div>
                   <p className="text-xs text-gray-500 pl-6">Pay the full course fee now. Discount codes apply.</p>
-                </div>
+                </label>
 
                 {/* Instalment */}
-                <div
-                  onClick={() => setPaymentType('installment')}
-                  className={`cursor-pointer rounded-xl border-2 p-4 transition-all ${
-                    paymentType === 'installment'
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      paymentType === 'installment' ? 'border-green-500' : 'border-gray-300'
-                    }`}>
-                      {paymentType === 'installment' && <div className="w-2 h-2 rounded-full bg-green-500" />}
+                {canPayByInstallment && (
+                  <label
+                    className={`cursor-pointer rounded-xl border-2 p-4 transition-all ${
+                      paymentType === 'installment'
+                        ? 'border-green-500 bg-green-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <input
+                        type="radio"
+                        name="paymentType"
+                        value="installment"
+                        checked={paymentType === 'installment'}
+                        onChange={() => setPaymentType('installment')}
+                        className="h-4 w-4 accent-green-700"
+                      />
+                      <p className="font-semibold text-sm text-gray-800">Pay by Instalment</p>
                     </div>
-                    <p className="font-semibold text-sm text-gray-800">Pay by Instalment</p>
-                  </div>
-                  <p className="text-xs text-gray-500 pl-6">50% now to confirm your place, 50% by end of Week 6. No discount codes.</p>
-                </div>
-              </div>
+                    <p className="text-xs text-gray-500 pl-6">50% now to confirm your place, 50% by end of Week 6. No discount codes.</p>
+                  </label>
+                )}
             </div>
-          )}
+            {firstUnpaidCourse && !canPayByInstallment && (
+              <p className="mt-2 text-xs text-gray-500">
+                Instalment payment is not available for this course. Any other selected courses can be paid for separately.
+              </p>
+            )}
+            {form.courses.length > 1 && (
+              <p className="mt-2 text-xs text-gray-500">
+                This checkout is for the first unpaid course shown above. You can pay for other selected courses separately.
+              </p>
+            )}
+          </fieldset>
 
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Currency">
@@ -706,7 +765,9 @@ export default function AdmissionPage() {
                 </>
               ) : (
                 <>
-                  Pay & Submit Application
+                  {paymentType === 'installment'
+                    ? 'Pay First Instalment & Submit Application'
+                    : 'Pay & Submit Application'}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
                 </>
               )}
