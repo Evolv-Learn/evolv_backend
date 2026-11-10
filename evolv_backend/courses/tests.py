@@ -663,9 +663,19 @@ class UserScopedEndpointPermissionTests(APITestCase):
 		self.assertEqual(payment.status, "pending")
 		self.assertFalse(InstallmentPlan.objects.filter(enrollment=enrollment).exists())
 
-	def test_paystack_unauthorized_does_not_allow_unsafe_installment_switch(self):
+	def test_paystack_unauthorized_marks_pending_payment_failed_and_allows_installment_switch(self):
+		"""
+		When Paystack returns 401 (e.g. test key used while live key is now configured),
+		the pending full-payment record is marked failed and the student is allowed
+		to switch to instalments rather than being permanently blocked.
+		"""
 		self.course.installments_enabled = True
 		self.course.save(update_fields=["installments_enabled"])
+		CoursePrice.objects.create(
+			course=self.course,
+			currency="NGN",
+			amount="1000.00",
+		)
 		enrollment = CourseEnrollment.objects.create(
 			student=self.student,
 			course=self.course,
@@ -676,7 +686,7 @@ class UserScopedEndpointPermissionTests(APITestCase):
 			currency="NGN",
 			status="pending",
 			processor="paystack",
-			processor_reference="missing-full-payment",
+			processor_reference="old-test-key-reference",
 		)
 		self.client.force_authenticate(user=self.user)
 		verification_response = Mock(ok=False, status_code=401)
@@ -684,12 +694,21 @@ class UserScopedEndpointPermissionTests(APITestCase):
 			"status": False,
 			"message": "Unauthorized",
 		}
+		initialization_response = Mock(ok=True)
+		initialization_response.json.return_value = {
+			"status": True,
+			"data": {"authorization_url": "https://checkout.paystack.com/installment"},
+		}
 
 		with (
 			override_settings(PAYSTACK_SECRET_KEY="test-secret"),
 			patch(
 				"courses.views_payment.http_requests.get",
 				return_value=verification_response,
+			),
+			patch(
+				"courses.views_payment.http_requests.post",
+				return_value=initialization_response,
 			),
 		):
 			response = self.client.post(
@@ -702,11 +721,12 @@ class UserScopedEndpointPermissionTests(APITestCase):
 				format="json",
 			)
 
-		self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
-		self.assertIn("PAYSTACK_SECRET_KEY in Render", response.data["detail"])
+		# Student should be unblocked — 401 treated as abandoned
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 		payment.refresh_from_db()
-		self.assertEqual(payment.status, "pending")
-		self.assertFalse(InstallmentPlan.objects.filter(enrollment=enrollment).exists())
+		self.assertEqual(payment.status, "failed")
+		self.assertIsNone(payment.processor_reference)
+		self.assertTrue(InstallmentPlan.objects.filter(enrollment=enrollment).exists())
 
 	def test_installment_checkout_reuses_existing_pending_attempt(self):
 		self.course.installments_enabled = True
@@ -894,7 +914,7 @@ class UserScopedEndpointPermissionTests(APITestCase):
 		self.assertEqual(installment.status, "paid")
 		initialize_request.assert_not_called()
 
-	def test_unauthorized_installment_verification_blocks_duplicate_checkout(self):
+	def test_unauthorized_installment_verification_reuses_saved_checkout(self):
 		self.course.installments_enabled = True
 		self.course.save(update_fields=["installments_enabled"])
 		CoursePrice.objects.create(
@@ -939,8 +959,11 @@ class UserScopedEndpointPermissionTests(APITestCase):
 				format="json",
 			)
 
-		self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
-		self.assertIn("PAYSTACK_SECRET_KEY in Render", response.data["detail"])
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(
+			response.data["authorization_url"],
+			"https://checkout.paystack.com/old",
+		)
 		installment.refresh_from_db()
 		self.assertEqual(installment.status, "pending")
 		self.assertEqual(installment.processor_reference, "test-checkout-on-live-key")
