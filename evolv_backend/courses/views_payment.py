@@ -760,6 +760,139 @@ def _block_if_installment_plan_exists(enrollment):
     )
 
 
+def _resolve_pending_full_payment_for_installment(enrollment):
+    """
+    Allow switching to installments only after a full-payment attempt is known
+    not to have succeeded or remain payable.
+    """
+    try:
+        payment = Payment.objects.get(enrollment=enrollment)
+    except Payment.DoesNotExist:
+        return None
+
+    if payment.status == 'paid':
+        return Response(
+            {'detail': 'A full payment has already been completed for this enrollment.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if payment.status != 'pending':
+        return None
+
+    verify_data = None
+    reference = payment.processor_reference
+    if reference:
+        if payment.processor != 'paystack':
+            return Response(
+                {'detail': 'The existing payment attempt must be resolved before switching to installments.'},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        paystack_secret = getattr(settings, 'PAYSTACK_SECRET_KEY', '')
+        if not paystack_secret:
+            return Response(
+                {'detail': 'The existing payment attempt cannot be verified right now. Please try again later.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        try:
+            response = http_requests.get(
+                f'https://api.paystack.co/transaction/verify/{reference}',
+                headers={'Authorization': f'******'},
+                timeout=10,
+            )
+        except http_requests.RequestException as exc:
+            logger.error('Could not verify previous full-payment attempt %s: %s', payment.pk, exc)
+            return Response(
+                {'detail': 'Could not verify your previous payment attempt. Please try again later.'},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        if not response.ok:
+            logger.error(
+                'Paystack verification failed for previous full-payment attempt %s: %s',
+                payment.pk,
+                response.status_code,
+            )
+            return Response(
+                {'detail': 'Could not verify your previous payment attempt. Please try again later.'},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        try:
+            verify_data = response.json()
+            transaction_data = verify_data.get('data') if isinstance(verify_data, dict) else None
+            gateway_status = transaction_data.get('status') if isinstance(transaction_data, dict) else None
+        except (AttributeError, TypeError, ValueError):
+            verify_data = None
+            gateway_status = None
+
+        if gateway_status == 'success':
+            if (
+                transaction_data.get('reference') != reference
+                or str(transaction_data.get('currency', '')).upper() != payment.currency.upper()
+            ):
+                return Response(
+                    {'detail': 'The previous payment could not be verified. Please contact support.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            try:
+                paid_amount = Decimal(str(transaction_data.get('amount', 0))) / Decimal('100')
+            except (ArithmeticError, TypeError, ValueError):
+                paid_amount = None
+            if paid_amount is None or abs(paid_amount - payment.amount) > Decimal('0.01'):
+                return Response(
+                    {'detail': 'The previous payment could not be verified. Please contact support.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            payment.status = 'paid'
+            payment.paid_at = timezone.now()
+            payment.metadata = verify_data
+            payment.authorization_url = ''
+            payment.save(update_fields=['status', 'paid_at', 'metadata', 'authorization_url'])
+            if payment.enrollment.status == 'Pending':
+                payment.enrollment.status = 'Under Review'
+                payment.enrollment.save(update_fields=['status'])
+            return Response(
+                {'detail': 'A full payment has already been completed for this enrollment.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if gateway_status not in ('failed', 'abandoned'):
+            return Response(
+                {
+                    'detail': (
+                        'Your previous full-payment checkout is still active. '
+                        'Complete it or wait for it to be abandoned before choosing installments.'
+                    )
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+    from django.db import transaction
+
+    with transaction.atomic():
+        payment = Payment.objects.select_for_update().get(pk=payment.pk)
+        if payment.status == 'paid':
+            return Response(
+                {'detail': 'A full payment has already been completed for this enrollment.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if payment.status == 'pending':
+            if payment.processor_reference != reference:
+                return Response(
+                    {'detail': 'The payment attempt changed while being checked. Please retry.'},
+                    status=status.HTTP_409_CONFLICT,
+                )
+            payment.status = 'failed'
+            payment.authorization_url = ''
+            if verify_data is not None:
+                payment.metadata = verify_data
+            payment.save(update_fields=['status', 'authorization_url', 'metadata'])
+
+    return None
+
+
 class InstallmentPlanView(APIView):
     """
     GET  /installments/my-plan/?enrollment_id=<id>
@@ -829,15 +962,9 @@ class InitiateInstallmentPaymentView(APIView):
 
         # ── First installment: create plan ────────────────────────────────────
         if installment_number == 1:
-            # Do not let a pending full-payment checkout race an installment payment.
-            if Payment.objects.filter(
-                enrollment=enrollment,
-                status__in=('pending', 'paid'),
-            ).exists():
-                return Response(
-                    {'detail': 'A full-payment transaction already exists for this enrollment.'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+            conflict = _resolve_pending_full_payment_for_installment(enrollment)
+            if conflict:
+                return conflict
 
             # Resolve course price for initial plan creation
             price = (

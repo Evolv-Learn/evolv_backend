@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.test import TestCase
 from django.test import override_settings
 from django.core.management import call_command
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -452,14 +452,19 @@ class UserScopedEndpointPermissionTests(APITestCase):
 		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 		self.assertIn("not available", response.data["detail"])
 
-	def test_pending_full_payment_blocks_installment_checkout(self):
+	def test_pending_full_payment_without_processor_reference_can_switch_to_installments(self):
 		self.course.installments_enabled = True
 		self.course.save(update_fields=["installments_enabled"])
+		CoursePrice.objects.create(
+			course=self.course,
+			currency="NGN",
+			amount="1000.00",
+		)
 		enrollment = CourseEnrollment.objects.create(
 			student=self.student,
 			course=self.course,
 		)
-		Payment.objects.create(
+		payment = Payment.objects.create(
 			enrollment=enrollment,
 			amount="1000.00",
 			currency="NGN",
@@ -467,17 +472,132 @@ class UserScopedEndpointPermissionTests(APITestCase):
 		)
 		self.client.force_authenticate(user=self.user)
 
-		response = self.client.post(
-			"/api/v1/installments/initiate/",
-			{
-				"enrollment_id": enrollment.pk,
-				"currency": "NGN",
-				"installment_number": 1,
-			},
-			format="json",
-		)
+		with override_settings(PAYSTACK_SECRET_KEY=""):
+			response = self.client.post(
+				"/api/v1/installments/initiate/",
+				{
+					"enrollment_id": enrollment.pk,
+					"currency": "NGN",
+					"installment_number": 1,
+				},
+				format="json",
+			)
 
-		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+		payment.refresh_from_db()
+		self.assertEqual(payment.status, "failed")
+		self.assertTrue(InstallmentPlan.objects.filter(enrollment=enrollment).exists())
+
+	def test_abandoned_full_payment_allows_installment_checkout(self):
+		self.course.installments_enabled = True
+		self.course.save(update_fields=["installments_enabled"])
+		CoursePrice.objects.create(
+			course=self.course,
+			currency="NGN",
+			amount="1000.00",
+		)
+		enrollment = CourseEnrollment.objects.create(
+			student=self.student,
+			course=self.course,
+		)
+		payment = Payment.objects.create(
+			enrollment=enrollment,
+			amount="1000.00",
+			currency="NGN",
+			status="pending",
+			processor="paystack",
+			processor_reference="abandoned-full-payment",
+			authorization_url="https://checkout.paystack.com/old",
+		)
+		self.client.force_authenticate(user=self.user)
+		verification_response = Mock(ok=True)
+		verification_response.json.return_value = {
+			"status": True,
+			"data": {
+				"status": "abandoned",
+				"reference": "abandoned-full-payment",
+			},
+		}
+		initialization_response = Mock(ok=True)
+		initialization_response.json.return_value = {
+			"status": True,
+			"data": {"authorization_url": "https://checkout.paystack.com/installment"},
+		}
+
+		with (
+			override_settings(PAYSTACK_SECRET_KEY="test-secret"),
+			patch(
+				"courses.views_payment.http_requests.get",
+				return_value=verification_response,
+			),
+			patch(
+				"courses.views_payment.http_requests.post",
+				return_value=initialization_response,
+			),
+		):
+			response = self.client.post(
+				"/api/v1/installments/initiate/",
+				{
+					"enrollment_id": enrollment.pk,
+					"currency": "NGN",
+					"installment_number": 1,
+				},
+				format="json",
+			)
+
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+		payment.refresh_from_db()
+		self.assertEqual(payment.status, "failed")
+		self.assertEqual(payment.authorization_url, "")
+		self.assertTrue(InstallmentPlan.objects.filter(enrollment=enrollment).exists())
+
+	def test_active_full_payment_checkout_still_blocks_installments(self):
+		self.course.installments_enabled = True
+		self.course.save(update_fields=["installments_enabled"])
+		enrollment = CourseEnrollment.objects.create(
+			student=self.student,
+			course=self.course,
+		)
+		payment = Payment.objects.create(
+			enrollment=enrollment,
+			amount="1000.00",
+			currency="NGN",
+			status="pending",
+			processor="paystack",
+			processor_reference="active-full-payment",
+		)
+		self.client.force_authenticate(user=self.user)
+		verification_response = Mock(ok=True)
+		verification_response.json.return_value = {
+			"status": True,
+			"data": {
+				"status": "ongoing",
+				"reference": "active-full-payment",
+			},
+		}
+
+		with (
+			override_settings(PAYSTACK_SECRET_KEY="test-secret"),
+			patch(
+				"courses.views_payment.http_requests.get",
+				return_value=verification_response,
+			),
+		):
+			response = self.client.post(
+				"/api/v1/installments/initiate/",
+				{
+					"enrollment_id": enrollment.pk,
+					"currency": "NGN",
+					"installment_number": 1,
+				},
+				format="json",
+			)
+
+		self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+		self.assertIn("still active", response.data["detail"])
+		payment.refresh_from_db()
+		self.assertEqual(payment.status, "pending")
+		self.assertFalse(InstallmentPlan.objects.filter(enrollment=enrollment).exists())
 
 	def test_installment_checkout_reuses_existing_pending_attempt(self):
 		self.course.installments_enabled = True
