@@ -551,6 +551,70 @@ class UserScopedEndpointPermissionTests(APITestCase):
 		self.assertEqual(payment.authorization_url, "")
 		self.assertTrue(InstallmentPlan.objects.filter(enrollment=enrollment).exists())
 
+	def test_abandoned_full_payment_can_be_retried_with_a_new_checkout(self):
+		CoursePrice.objects.create(
+			course=self.course,
+			currency="NGN",
+			amount="1000.00",
+		)
+		enrollment = CourseEnrollment.objects.create(
+			student=self.student,
+			course=self.course,
+		)
+		payment = Payment.objects.create(
+			enrollment=enrollment,
+			amount="1000.00",
+			currency="NGN",
+			status="pending",
+			processor="paystack",
+			processor_reference="abandoned-full-checkout",
+			authorization_url="https://checkout.paystack.com/old",
+		)
+		self.client.force_authenticate(user=self.user)
+		verification_response = Mock(ok=True)
+		verification_response.json.return_value = {
+			"status": True,
+			"data": {
+				"status": "abandoned",
+				"reference": "abandoned-full-checkout",
+			},
+		}
+		initialization_response = Mock(ok=True)
+		initialization_response.json.return_value = {
+			"status": True,
+			"data": {"authorization_url": "https://checkout.paystack.com/full-retry"},
+		}
+
+		with (
+			override_settings(PAYSTACK_SECRET_KEY="test-secret"),
+			patch(
+				"courses.views_payment.http_requests.get",
+				return_value=verification_response,
+			),
+			patch(
+				"courses.views_payment.http_requests.post",
+				return_value=initialization_response,
+			),
+		):
+			verify_result = self.client.post(
+				"/api/v1/payments/verify/",
+				{"reference": "abandoned-full-checkout"},
+				format="json",
+			)
+			retry_result = self.client.post(
+				"/api/v1/payments/initiate/",
+				{"enrollment_id": enrollment.pk, "currency": "NGN"},
+				format="json",
+			)
+
+		self.assertEqual(verify_result.status_code, status.HTTP_200_OK)
+		self.assertEqual(verify_result.data["status"], "failed")
+		self.assertEqual(retry_result.status_code, status.HTTP_200_OK)
+		self.assertEqual(retry_result.data["authorization_url"], "https://checkout.paystack.com/full-retry")
+		payment.refresh_from_db()
+		self.assertEqual(payment.status, "pending")
+		self.assertNotEqual(payment.processor_reference, "abandoned-full-checkout")
+
 	def test_active_full_payment_checkout_still_blocks_installments(self):
 		self.course.installments_enabled = True
 		self.course.save(update_fields=["installments_enabled"])
@@ -599,7 +663,7 @@ class UserScopedEndpointPermissionTests(APITestCase):
 		self.assertEqual(payment.status, "pending")
 		self.assertFalse(InstallmentPlan.objects.filter(enrollment=enrollment).exists())
 
-	def test_missing_paystack_transaction_does_not_allow_unsafe_installment_switch(self):
+	def test_paystack_unauthorized_does_not_allow_unsafe_installment_switch(self):
 		self.course.installments_enabled = True
 		self.course.save(update_fields=["installments_enabled"])
 		enrollment = CourseEnrollment.objects.create(
@@ -615,10 +679,10 @@ class UserScopedEndpointPermissionTests(APITestCase):
 			processor_reference="missing-full-payment",
 		)
 		self.client.force_authenticate(user=self.user)
-		verification_response = Mock(ok=False, status_code=404)
+		verification_response = Mock(ok=False, status_code=401)
 		verification_response.json.return_value = {
 			"status": False,
-			"message": "Transaction reference not found",
+			"message": "Unauthorized",
 		}
 
 		with (
@@ -639,7 +703,7 @@ class UserScopedEndpointPermissionTests(APITestCase):
 			)
 
 		self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
-		self.assertIn("same Paystack test/live environment", response.data["detail"])
+		self.assertIn("PAYSTACK_SECRET_KEY in Render", response.data["detail"])
 		payment.refresh_from_db()
 		self.assertEqual(payment.status, "pending")
 		self.assertFalse(InstallmentPlan.objects.filter(enrollment=enrollment).exists())
@@ -672,9 +736,18 @@ class UserScopedEndpointPermissionTests(APITestCase):
 			authorization_url="https://checkout.paystack.com/existing",
 		)
 		self.client.force_authenticate(user=self.user)
+		verification_response = Mock(ok=True)
+		verification_response.json.return_value = {
+			"status": True,
+			"data": {"status": "ongoing", "reference": "existing-reference"},
+		}
 
 		with (
 			override_settings(PAYSTACK_SECRET_KEY="test-secret"),
+			patch(
+				"courses.views_payment.http_requests.get",
+				return_value=verification_response,
+			) as verify_request,
 			patch("courses.views_payment.http_requests.post") as initialize_request,
 		):
 			response = self.client.post(
@@ -692,6 +765,185 @@ class UserScopedEndpointPermissionTests(APITestCase):
 			response.data["authorization_url"],
 			"https://checkout.paystack.com/existing",
 		)
+		verify_request.assert_called_once()
+		initialize_request.assert_not_called()
+
+	def test_abandoned_installment_checkout_creates_a_fresh_attempt(self):
+		self.course.installments_enabled = True
+		self.course.save(update_fields=["installments_enabled"])
+		CoursePrice.objects.create(
+			course=self.course,
+			currency="NGN",
+			amount="1000.00",
+		)
+		enrollment = CourseEnrollment.objects.create(student=self.student, course=self.course)
+		plan = InstallmentPlan.objects.create(
+			enrollment=enrollment,
+			currency="NGN",
+			total_amount="1000.00",
+		)
+		installment = InstallmentPayment.objects.create(
+			plan=plan,
+			installment_number=1,
+			amount="500.00",
+			currency="NGN",
+			status="pending",
+			processor="paystack",
+			processor_reference="abandoned-installment",
+			authorization_url="https://checkout.paystack.com/old",
+		)
+		self.client.force_authenticate(user=self.user)
+		verification_response = Mock(ok=True)
+		verification_response.json.return_value = {
+			"status": True,
+			"data": {
+				"status": "abandoned",
+				"reference": "abandoned-installment",
+			},
+		}
+		initialization_response = Mock(ok=True)
+		initialization_response.json.return_value = {
+			"status": True,
+			"data": {"authorization_url": "https://checkout.paystack.com/fresh"},
+		}
+
+		with (
+			override_settings(PAYSTACK_SECRET_KEY="test-secret"),
+			patch(
+				"courses.views_payment.http_requests.get",
+				return_value=verification_response,
+			),
+			patch(
+				"courses.views_payment.http_requests.post",
+				return_value=initialization_response,
+			),
+		):
+			response = self.client.post(
+				"/api/v1/installments/initiate/",
+				{
+					"enrollment_id": enrollment.pk,
+					"currency": "NGN",
+					"installment_number": 1,
+				},
+				format="json",
+			)
+
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+		self.assertEqual(response.data["authorization_url"], "https://checkout.paystack.com/fresh")
+		installment.refresh_from_db()
+		self.assertEqual(installment.status, "pending")
+		self.assertNotEqual(installment.processor_reference, "abandoned-installment")
+		self.assertEqual(installment.authorization_url, "https://checkout.paystack.com/fresh")
+
+	def test_successful_pending_installment_is_verified_without_new_checkout(self):
+		self.course.installments_enabled = True
+		self.course.save(update_fields=["installments_enabled"])
+		CoursePrice.objects.create(
+			course=self.course,
+			currency="NGN",
+			amount="1000.00",
+		)
+		enrollment = CourseEnrollment.objects.create(student=self.student, course=self.course)
+		plan = InstallmentPlan.objects.create(
+			enrollment=enrollment,
+			currency="NGN",
+			total_amount="1000.00",
+		)
+		installment = InstallmentPayment.objects.create(
+			plan=plan,
+			installment_number=1,
+			amount="500.00",
+			currency="NGN",
+			status="pending",
+			processor="paystack",
+			processor_reference="successful-installment",
+			authorization_url="https://checkout.paystack.com/old",
+		)
+		self.client.force_authenticate(user=self.user)
+		verification_response = Mock(ok=True)
+		verification_response.json.return_value = {
+			"status": True,
+			"data": {
+				"status": "success",
+				"reference": "successful-installment",
+				"amount": 50000,
+				"currency": "NGN",
+			},
+		}
+
+		with (
+			override_settings(PAYSTACK_SECRET_KEY="test-secret"),
+			patch(
+				"courses.views_payment.http_requests.get",
+				return_value=verification_response,
+			),
+			patch("courses.views_payment.http_requests.post") as initialize_request,
+		):
+			response = self.client.post(
+				"/api/v1/installments/initiate/",
+				{
+					"enrollment_id": enrollment.pk,
+					"currency": "NGN",
+					"installment_number": 1,
+				},
+				format="json",
+			)
+
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		installment.refresh_from_db()
+		self.assertEqual(installment.status, "paid")
+		initialize_request.assert_not_called()
+
+	def test_unauthorized_installment_verification_blocks_duplicate_checkout(self):
+		self.course.installments_enabled = True
+		self.course.save(update_fields=["installments_enabled"])
+		CoursePrice.objects.create(
+			course=self.course,
+			currency="NGN",
+			amount="1000.00",
+		)
+		enrollment = CourseEnrollment.objects.create(student=self.student, course=self.course)
+		plan = InstallmentPlan.objects.create(
+			enrollment=enrollment,
+			currency="NGN",
+			total_amount="1000.00",
+		)
+		installment = InstallmentPayment.objects.create(
+			plan=plan,
+			installment_number=1,
+			amount="500.00",
+			currency="NGN",
+			status="pending",
+			processor="paystack",
+			processor_reference="test-checkout-on-live-key",
+			authorization_url="https://checkout.paystack.com/old",
+		)
+		self.client.force_authenticate(user=self.user)
+		verification_response = Mock(ok=False, status_code=401)
+
+		with (
+			override_settings(PAYSTACK_SECRET_KEY="test-secret"),
+			patch(
+				"courses.views_payment.http_requests.get",
+				return_value=verification_response,
+			),
+			patch("courses.views_payment.http_requests.post") as initialize_request,
+		):
+			response = self.client.post(
+				"/api/v1/installments/initiate/",
+				{
+					"enrollment_id": enrollment.pk,
+					"currency": "NGN",
+					"installment_number": 1,
+				},
+				format="json",
+			)
+
+		self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
+		self.assertIn("PAYSTACK_SECRET_KEY in Render", response.data["detail"])
+		installment.refresh_from_db()
+		self.assertEqual(installment.status, "pending")
+		self.assertEqual(installment.processor_reference, "test-checkout-on-live-key")
 		initialize_request.assert_not_called()
 
 	def test_payment_webhook_rejects_missing_signature(self):

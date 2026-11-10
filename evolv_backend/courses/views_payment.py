@@ -17,7 +17,7 @@ Wire a real processor by:
 import hmac
 import hashlib
 import logging
-import time as _time
+import uuid
 
 import requests as http_requests
 
@@ -336,7 +336,7 @@ class InitiatePaymentView(APIView):
                     {'detail': 'A payment attempt is being initialized. Please retry shortly.'},
                     status=status.HTTP_409_CONFLICT,
                 )
-            reference = f"EVOLVLEARN-{payment.id}-{int(_time.time())}"
+            reference = f"EVOLVLEARN-{payment.id}-{uuid.uuid4().hex}"
             payment.processor_reference = reference
             payment.processor = 'paystack'
             payment.save(update_fields=['processor_reference', 'processor'])
@@ -780,110 +780,119 @@ def _resolve_pending_full_payment_for_installment(enrollment):
 
     verify_data = None
     reference = payment.processor_reference
-    if reference:
-        if payment.processor != 'paystack':
-            return Response(
-                {'detail': 'The existing payment attempt must be resolved before switching to installments.'},
-                status=status.HTTP_409_CONFLICT,
-            )
 
-        paystack_secret = getattr(settings, 'PAYSTACK_SECRET_KEY', '')
-        if not paystack_secret:
-            return Response(
-                {'detail': 'The existing payment attempt cannot be verified right now. Please try again later.'},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
+    # No processor reference means the student never reached Paystack checkout
+    # (e.g. they closed the page before redirecting). Safe to treat as abandoned.
+    if not reference:
+        payment.status = 'failed'
+        payment.save(update_fields=['status'])
+        return None
 
+    if payment.processor != 'paystack':
+        return Response(
+            {'detail': 'The existing payment attempt must be resolved before switching to installments.'},
+            status=status.HTTP_409_CONFLICT,
+        )
+
+    paystack_secret = getattr(settings, 'PAYSTACK_SECRET_KEY', '')
+    if not paystack_secret:
+        return Response(
+            {'detail': 'The existing payment attempt cannot be verified right now. Please try again later.'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    try:
+        response = http_requests.get(
+            f'https://api.paystack.co/transaction/verify/{reference}',
+            headers={'Authorization': f'******'},
+            timeout=10,
+        )
+    except http_requests.RequestException as exc:
+        logger.error('Could not verify previous full-payment attempt %s: %s', payment.pk, exc)
+        return Response(
+            {'detail': 'Could not verify your previous payment attempt. Please try again later.'},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+    if not response.ok:
         try:
-            response = http_requests.get(
-                f'https://api.paystack.co/transaction/verify/{reference}',
-                headers={'Authorization': f'******'},
-                timeout=10,
-            )
-        except http_requests.RequestException as exc:
-            logger.error('Could not verify previous full-payment attempt %s: %s', payment.pk, exc)
-            return Response(
-                {'detail': 'Could not verify your previous payment attempt. Please try again later.'},
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
-
-        if not response.ok:
-            try:
-                provider_message = response.json().get('message', '')
-            except (AttributeError, TypeError, ValueError):
-                provider_message = ''
-            logger.error(
-                'Paystack verification failed for previous full-payment attempt %s: HTTP %s; %s',
-                payment.pk,
-                response.status_code,
-                str(provider_message)[:300],
-            )
-            if response.status_code == 404:
-                detail = (
-                    'Paystack could not find the previous checkout using the current credentials. '
-                    'Check that Render is using the same Paystack test/live environment that '
-                    'started the checkout, or contact support before trying another payment.'
-                )
-            else:
-                detail = (
-                    f'Paystack could not verify the previous checkout (HTTP {response.status_code}). '
-                    'Please try again later or contact support before trying another payment.'
-                )
-            return Response(
-                {'detail': detail},
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
-
-        try:
-            verify_data = response.json()
-            transaction_data = verify_data.get('data') if isinstance(verify_data, dict) else None
-            gateway_status = transaction_data.get('status') if isinstance(transaction_data, dict) else None
+            provider_message = response.json().get('message', '')
         except (AttributeError, TypeError, ValueError):
-            verify_data = None
-            gateway_status = None
+            provider_message = ''
+        logger.error(
+            'Paystack verification failed for previous full-payment attempt %s: HTTP %s; %s',
+            payment.pk,
+            response.status_code,
+            str(provider_message)[:300],
+        )
+        if response.status_code == 401:
+            detail = (
+                'Paystack rejected the backend credentials. Check the PAYSTACK_SECRET_KEY in Render '
+                'and its test/live environment. The previous checkout has not been cleared.'
+            )
+        elif response.status_code == 404:
+            detail = (
+                'Paystack could not find the previous checkout with the configured account or environment. '
+                'The previous checkout has not been cleared; contact support before retrying.'
+            )
+        else:
+            detail = (
+                f'Paystack could not verify the previous checkout (HTTP {response.status_code}). '
+                'Please try again later or contact support before trying another payment.'
+            )
+        return Response({'detail': detail}, status=status.HTTP_502_BAD_GATEWAY)
 
-        if gateway_status == 'success':
-            if (
-                transaction_data.get('reference') != reference
-                or str(transaction_data.get('currency', '')).upper() != payment.currency.upper()
-            ):
-                return Response(
-                    {'detail': 'The previous payment could not be verified. Please contact support.'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            try:
-                paid_amount = Decimal(str(transaction_data.get('amount', 0))) / Decimal('100')
-            except (ArithmeticError, TypeError, ValueError):
-                paid_amount = None
-            if paid_amount is None or abs(paid_amount - payment.amount) > Decimal('0.01'):
-                return Response(
-                    {'detail': 'The previous payment could not be verified. Please contact support.'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+    try:
+        verify_data = response.json()
+        transaction_data = verify_data.get('data') if isinstance(verify_data, dict) else None
+        gateway_status = transaction_data.get('status') if isinstance(transaction_data, dict) else None
+    except (AttributeError, TypeError, ValueError):
+        verify_data = None
+        transaction_data = None
+        gateway_status = None
 
-            payment.status = 'paid'
-            payment.paid_at = timezone.now()
-            payment.metadata = verify_data
-            payment.authorization_url = ''
-            payment.save(update_fields=['status', 'paid_at', 'metadata', 'authorization_url'])
-            if payment.enrollment.status == 'Pending':
-                payment.enrollment.status = 'Under Review'
-                payment.enrollment.save(update_fields=['status'])
+    if gateway_status == 'success':
+        if (
+            transaction_data.get('reference') != reference
+            or str(transaction_data.get('currency', '')).upper() != payment.currency.upper()
+        ):
             return Response(
-                {'detail': 'A full payment has already been completed for this enrollment.'},
+                {'detail': 'The previous payment could not be verified. Please contact support.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            paid_amount = Decimal(str(transaction_data.get('amount', 0))) / Decimal('100')
+        except (ArithmeticError, TypeError, ValueError):
+            paid_amount = None
+        if paid_amount is None or abs(paid_amount - payment.amount) > Decimal('0.01'):
+            return Response(
+                {'detail': 'The previous payment could not be verified. Please contact support.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if gateway_status not in ('failed', 'abandoned'):
-            return Response(
-                {
-                    'detail': (
-                        'Your previous full-payment checkout is still active. '
-                        'Complete it or wait for it to be abandoned before choosing installments.'
-                    )
-                },
-                status=status.HTTP_409_CONFLICT,
-            )
+        payment.status = 'paid'
+        payment.paid_at = timezone.now()
+        payment.metadata = verify_data
+        payment.authorization_url = ''
+        payment.save(update_fields=['status', 'paid_at', 'metadata', 'authorization_url'])
+        if payment.enrollment.status == 'Pending':
+            payment.enrollment.status = 'Under Review'
+            payment.enrollment.save(update_fields=['status'])
+        return Response(
+            {'detail': 'A full payment has already been completed for this enrollment.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if gateway_status not in ('failed', 'abandoned'):
+        return Response(
+            {
+                'detail': (
+                    'Your previous full-payment checkout is still active. '
+                    'Complete it or wait for it to be abandoned before choosing installments.'
+                )
+            },
+            status=status.HTTP_409_CONFLICT,
+        )
 
     from django.db import transaction
 
@@ -907,6 +916,160 @@ def _resolve_pending_full_payment_for_installment(enrollment):
             payment.save(update_fields=['status', 'authorization_url', 'metadata'])
 
     return None
+
+
+def _resolve_pending_installment_attempt(installment, installment_number):
+    """Reuse an active checkout, or release a confirmed abandoned attempt for retry."""
+    reference = installment.processor_reference
+    if installment.status != 'pending' or not reference:
+        return None
+
+    if installment.processor != 'paystack':
+        return Response(
+            {'detail': 'The existing installment attempt must be resolved before retrying.'},
+            status=status.HTTP_409_CONFLICT,
+        )
+
+    paystack_secret = getattr(settings, 'PAYSTACK_SECRET_KEY', '')
+    if not paystack_secret:
+        return Response(
+            {'detail': 'The existing installment attempt cannot be verified right now.'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    try:
+        response = http_requests.get(
+            f'https://api.paystack.co/transaction/verify/{reference}',
+            headers={'Authorization': f'******'},
+            timeout=10,
+        )
+    except http_requests.RequestException as exc:
+        logger.error('Could not verify installment attempt %s: %s', installment.pk, exc)
+        return Response(
+            {'detail': 'Could not verify the previous installment checkout. Please try again later.'},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+    if not response.ok:
+        logger.error(
+            'Paystack verification failed for installment attempt %s: HTTP %s',
+            installment.pk,
+            response.status_code,
+        )
+        if response.status_code == 401:
+            detail = (
+                'Paystack rejected the backend credentials. Check the PAYSTACK_SECRET_KEY in Render '
+                'and its test/live environment before retrying.'
+            )
+        elif response.status_code == 404:
+            detail = (
+                'Paystack could not find this checkout in the configured account or environment. '
+                'Contact support before retrying.'
+            )
+        else:
+            detail = 'Could not verify the previous installment checkout. Please try again later.'
+        return Response(
+            {'detail': detail},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+    try:
+        verify_data = response.json()
+        transaction_data = verify_data.get('data') if isinstance(verify_data, dict) else None
+        gateway_status = transaction_data.get('status') if isinstance(transaction_data, dict) else None
+    except (AttributeError, TypeError, ValueError):
+        verify_data = None
+        transaction_data = None
+        gateway_status = None
+
+    if gateway_status == 'success':
+        try:
+            paid_amount = Decimal(str(transaction_data.get('amount', 0))) / Decimal('100')
+        except (ArithmeticError, TypeError, ValueError):
+            paid_amount = None
+        if (
+            transaction_data.get('reference') != reference
+            or str(transaction_data.get('currency', '')).upper() != installment.currency.upper()
+            or paid_amount is None
+            or abs(paid_amount - installment.amount) > Decimal('0.01')
+        ):
+            return Response(
+                {'detail': 'The previous installment payment could not be verified. Please contact support.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        from django.db import transaction
+
+        with transaction.atomic():
+            installment = InstallmentPayment.objects.select_for_update().select_related(
+                'plan__enrollment'
+            ).get(pk=installment.pk)
+            if installment.status == 'pending' and installment.processor_reference == reference:
+                installment.status = 'paid'
+                installment.paid_at = timezone.now()
+                installment.metadata = verify_data
+                installment.authorization_url = ''
+                installment.save(update_fields=[
+                    'status', 'paid_at', 'metadata', 'authorization_url',
+                ])
+                plan = installment.plan
+                enrollment = plan.enrollment
+                if plan.installments.filter(status='paid').count() == 2:
+                    plan.status = 'completed'
+                    plan.save(update_fields=['status'])
+                if enrollment.status == 'Pending':
+                    enrollment.status = 'Under Review'
+                    enrollment.save(update_fields=['status'])
+            elif installment.status != 'paid':
+                return Response(
+                    {'detail': 'The installment attempt changed while being checked. Please retry.'},
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+        plan = InstallmentPlan.objects.prefetch_related('installments').get(
+            pk=installment.plan_id
+        )
+        return Response(InstallmentPlanSerializer(plan).data)
+
+    if gateway_status in ('failed', 'abandoned'):
+        from django.db import transaction
+
+        with transaction.atomic():
+            installment = InstallmentPayment.objects.select_for_update().get(pk=installment.pk)
+            if installment.status == 'paid':
+                plan = InstallmentPlan.objects.prefetch_related('installments').get(
+                    pk=installment.plan_id
+                )
+                return Response(InstallmentPlanSerializer(plan).data)
+            if (
+                installment.status != 'pending'
+                or installment.processor_reference != reference
+            ):
+                return Response(
+                    {'detail': 'The installment attempt changed while being checked. Please retry.'},
+                    status=status.HTTP_409_CONFLICT,
+                )
+            installment.status = 'failed'
+            installment.authorization_url = ''
+            installment.metadata = verify_data
+            installment.save(update_fields=['status', 'authorization_url', 'metadata'])
+        return None
+
+    if gateway_status in ('ongoing', 'pending', 'queued') and installment.authorization_url:
+        plan_data = InstallmentPlanSerializer(installment.plan).data
+        plan_data['authorization_url'] = installment.authorization_url
+        plan_data['installment_number'] = installment_number
+        return Response(plan_data)
+
+    logger.error(
+        'Unexpected Paystack status %r for installment attempt %s',
+        gateway_status,
+        installment.pk,
+    )
+    return Response(
+        {'detail': 'The previous installment checkout status is unclear. Please contact support before retrying.'},
+        status=status.HTTP_409_CONFLICT,
+    )
 
 
 class InstallmentPlanView(APIView):
@@ -1108,6 +1271,13 @@ class InitiateInstallmentPaymentView(APIView):
         plan_data = InstallmentPlanSerializer(plan).data
         charge_amount = installment.amount  # always from the locked installment record
 
+        existing_attempt = _resolve_pending_installment_attempt(
+            installment,
+            installment_number,
+        )
+        if existing_attempt:
+            return existing_attempt
+
         if not paystack_secret:
             return Response(plan_data, status=status.HTTP_201_CREATED)
 
@@ -1135,7 +1305,7 @@ class InitiateInstallmentPaymentView(APIView):
                 installment.processor_reference = None
                 installment.authorization_url = ''
 
-            reference = f"EVOLVLEARN-INST-{plan.id}-{installment_number}-{int(_time.time())}"
+            reference = f"EVOLVLEARN-INST-{plan.id}-{installment_number}-{uuid.uuid4().hex}"
             installment.processor_reference = reference
             installment.processor = 'paystack'
             installment.save(update_fields=[

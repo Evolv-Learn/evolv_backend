@@ -18,6 +18,38 @@ export default function StudentDashboard() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [payingEnrollmentId, setPayingEnrollmentId] = useState<number | null>(null);
   const [installmentPlans, setInstallmentPlans] = useState<any[]>([]);
+  const [paymentError, setPaymentError] = useState<{ enrollmentId: number; message: string } | null>(null);
+
+  const startFullPayment = async (enrollmentId: number) => {
+    setPayingEnrollmentId(enrollmentId);
+    setPaymentError(null);
+    try {
+      const res = await apiClient.post('/payments/initiate/', {
+        enrollment_id: enrollmentId,
+        currency: 'NGN',
+      });
+      if (!res.data.authorization_url) {
+        setPaymentError({
+          enrollmentId,
+          message: 'Payment checkout is not available right now. Please try again later.',
+        });
+        return;
+      }
+
+      sessionStorage.setItem('evolv_payment_id', String(res.data.id));
+      window.location.href = res.data.authorization_url;
+    } catch (error: unknown) {
+      const detail = (
+        error as { response?: { data?: { detail?: string } } }
+      )?.response?.data?.detail;
+      setPaymentError({
+        enrollmentId,
+        message: detail || 'Could not start payment. Please try again.',
+      });
+    } finally {
+      setPayingEnrollmentId(null);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -273,28 +305,15 @@ export default function StudentDashboard() {
                         <h3 className="font-bold text-secondary-blue">{enrollment.course_name}</h3>
                         <p className="text-xs text-gray-600">{enrollment.course_category}</p>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="flex items-center gap-3">
                         <div className={`px-4 py-2 rounded-full font-bold text-sm ${getStatusColor(enrollment.status)}`}>
                           {enrollment.status}
                         </div>
                         {enrollment.status === 'Approved' && !enrollment.payment_status && (
                           <button
                             disabled={payingEnrollmentId === enrollment.id}
-                            onClick={async () => {
-                              setPayingEnrollmentId(enrollment.id);
-                              try {
-                                const res = await apiClient.post('/payments/initiate/', {
-                                  enrollment_id: enrollment.id,
-                                  currency: 'NGN',
-                                });
-                                if (res.data.authorization_url) {
-                                  sessionStorage.setItem('evolv_payment_id', String(res.data.id));
-                                  window.location.href = res.data.authorization_url;
-                                }
-                              } catch {
-                                setPayingEnrollmentId(null);
-                              }
-                            }}
+                            onClick={() => { void startFullPayment(enrollment.id); }}
                             className="bg-primary-gold text-secondary-blue-dark text-xs font-semibold px-3 py-2 rounded-lg hover:bg-yellow-400 disabled:opacity-60 transition-colors whitespace-nowrap"
                           >
                             {payingEnrollmentId === enrollment.id ? 'Redirecting…' : 'Pay Now'}
@@ -308,25 +327,17 @@ export default function StudentDashboard() {
                         {enrollment.payment_status === 'pending' && (
                           <button
                             disabled={payingEnrollmentId === enrollment.id}
-                            onClick={async () => {
-                              setPayingEnrollmentId(enrollment.id);
-                              try {
-                                const res = await apiClient.post('/payments/initiate/', {
-                                  enrollment_id: enrollment.id,
-                                  currency: 'NGN',
-                                });
-                                if (res.data.authorization_url) {
-                                  sessionStorage.setItem('evolv_payment_id', String(res.data.id));
-                                  window.location.href = res.data.authorization_url;
-                                }
-                              } catch {
-                                setPayingEnrollmentId(null);
-                              }
-                            }}
+                            onClick={() => { void startFullPayment(enrollment.id); }}
                             className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg hover:bg-amber-100 disabled:opacity-60 transition-colors whitespace-nowrap"
                           >
                             {payingEnrollmentId === enrollment.id ? 'Redirecting…' : 'Complete Payment'}
                           </button>
+                        )}
+                        </div>
+                        {paymentError && paymentError.enrollmentId === enrollment.id && (
+                          <p role="alert" className="max-w-sm text-right text-xs text-red-600">
+                            {paymentError.message}
+                          </p>
                         )}
                       </div>
                     </div>

@@ -89,6 +89,7 @@ function InstalmentsContent() {
   const handlePay = async (installmentNumber: number) => {
     if (!plan) return;
     setIsPaying(true);
+    setError(null);
     try {
       const res = await apiClient.post('/installments/initiate/', {
         enrollment_id: plan.enrollment_id,
