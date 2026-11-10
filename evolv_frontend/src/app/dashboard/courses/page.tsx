@@ -26,6 +26,8 @@ interface Enrollment {
   status: string;
   payment_status: string | null;
   payment_id: number | null;
+  has_installment_plan?: boolean;
+  first_installment_paid?: boolean;
 }
 
 interface PayPanelState {
@@ -60,6 +62,7 @@ export default function MyCoursesPage() {
   const { user } = useAuthStore();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [payPanel, setPayPanel] = useState<PayPanelState | null>(null);
 
   useEffect(() => {
@@ -70,13 +73,46 @@ export default function MyCoursesPage() {
   const fetchData = async () => {
     try {
       const res = await apiClient.get('/students/me/');
-      setEnrollments(res.data.enrollments || []);
+      const studentEnrollments: Enrollment[] = res.data.enrollments || [];
+      const plans = await Promise.all(studentEnrollments.map(async (enrollment) => {
+        try {
+          const planRes = await apiClient.get(
+            `/installments/my-plan/?enrollment_id=${enrollment.id}`
+          );
+          return { enrollmentId: enrollment.id, plan: planRes.data };
+        } catch (error: unknown) {
+          const responseStatus = (
+            error as { response?: { status?: number } }
+          )?.response?.status;
+          if (responseStatus === 404) return null;
+          throw error;
+        }
+      }));
+      const plansByEnrollment = new Map(
+        plans.filter((item) => item !== null).map((item) => [item.enrollmentId, item.plan])
+      );
+      setEnrollments(studentEnrollments.map((enrollment) => {
+        const plan = plansByEnrollment.get(enrollment.id);
+        return {
+          ...enrollment,
+          has_installment_plan: Boolean(plan),
+          first_installment_paid: Boolean(plan?.installments?.some(
+            (installment: { installment_number: number; status: string }) =>
+              installment.installment_number === 1 && installment.status === 'paid'
+          )),
+        };
+      }));
     } catch (error) {
       console.error('Failed to fetch enrollments:', error);
+      setLoadError('Could not load your course and payment status. Please refresh the page.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const visibleEnrollments = enrollments.filter((enrollment) => {
+    return enrollment.payment_status === 'paid' || enrollment.first_installment_paid;
+  });
 
   const openPayPanel = (enrollmentId: number) => {
     setPayPanel({ enrollmentId, currency: 'USD', discountCode: '', isLoading: false, error: null });
@@ -150,7 +186,7 @@ export default function MyCoursesPage() {
           <div>
             <h1 className="text-3xl font-heading font-bold text-secondary-blue mb-1">My Courses</h1>
             <p className="text-gray-500 text-sm">
-              {enrollments.length} {enrollments.length === 1 ? 'enrolment' : 'enrolments'}
+              {visibleEnrollments.length} {visibleEnrollments.length === 1 ? 'course' : 'courses'} enrolled
             </p>
           </div>
           <Link href="/admission">
@@ -158,23 +194,38 @@ export default function MyCoursesPage() {
           </Link>
         </div>
 
+        {loadError && (
+          <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {loadError}
+          </p>
+        )}
+
         {/* Enrolments */}
-        {enrollments.length === 0 ? (
+        {visibleEnrollments.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-14 text-center">
             <svg className="w-14 h-14 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
-            <h2 className="text-xl font-heading font-bold text-gray-800 mb-2">No Enrolments Yet</h2>
-            <p className="text-gray-500 mb-6">You haven't applied for any courses. Start your learning journey today.</p>
-            <Link href="/admission">
-              <Button variant="primary" size="lg">Apply for Courses</Button>
+            <h2 className="text-xl font-heading font-bold text-gray-800 mb-2">No Enrolled Courses Yet</h2>
+            <p className="text-gray-500 mb-6">
+              {enrollments.some((enrollment) => enrollment.has_installment_plan)
+                ? 'Your application is recorded. The course will appear here after the first instalment is confirmed. You can track it on your dashboard.'
+                : enrollments.length > 0
+                  ? 'Your application is recorded. The course will appear here once your payment is confirmed. You can track its status on your dashboard.'
+                  : 'You have not applied for any courses. Start your learning journey today.'}
+            </p>
+            <Link href={enrollments.length > 0 ? '/dashboard' : '/admission'}>
+              <Button variant="primary" size="lg">
+                {enrollments.length > 0 ? 'View Application Status' : 'Apply for Courses'}
+              </Button>
             </Link>
           </div>
         ) : (
           <div className="space-y-4">
-            {enrollments.map((enr) => {
-                  const needsPayment = enr.payment_status === 'failed' || enr.payment_status === 'pending';
+            {visibleEnrollments.map((enr) => {
+              const needsPayment = enr.payment_status === 'failed' || enr.payment_status === 'pending';
               const isPaid = enr.payment_status === 'paid';
+              const firstInstallmentPaid = enr.first_installment_paid;
               const isActive = payPanel?.enrollmentId === enr.id;
 
               return (
@@ -197,6 +248,11 @@ export default function MyCoursesPage() {
                              enr.payment_status === 'pending' ? 'Payment Pending' :
                              enr.payment_status === 'failed' ? 'Payment Failed' :
                              enr.payment_status}
+                          </span>
+                        )}
+                        {firstInstallmentPaid && (
+                          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-green-100 text-green-800">
+                            First instalment paid
                           </span>
                         )}
                       </div>
