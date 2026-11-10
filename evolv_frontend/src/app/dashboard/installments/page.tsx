@@ -107,8 +107,10 @@ function InstalmentsContent() {
         // Local dev — no Paystack configured
         await fetchPlan();
       }
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Could not initiate payment. Please try again.');
+    } catch {
+      setError(
+        'We could not start your payment. Please try again. If the problem continues, contact support for help.'
+      );
     } finally {
       setIsPaying(false);
     }
