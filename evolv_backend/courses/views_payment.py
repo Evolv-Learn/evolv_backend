@@ -808,13 +808,29 @@ def _resolve_pending_full_payment_for_installment(enrollment):
             )
 
         if not response.ok:
+            try:
+                provider_message = response.json().get('message', '')
+            except (AttributeError, TypeError, ValueError):
+                provider_message = ''
             logger.error(
-                'Paystack verification failed for previous full-payment attempt %s: %s',
+                'Paystack verification failed for previous full-payment attempt %s: HTTP %s; %s',
                 payment.pk,
                 response.status_code,
+                str(provider_message)[:300],
             )
+            if response.status_code == 404:
+                detail = (
+                    'Paystack could not find the previous checkout using the current credentials. '
+                    'Check that Render is using the same Paystack test/live environment that '
+                    'started the checkout, or contact support before trying another payment.'
+                )
+            else:
+                detail = (
+                    f'Paystack could not verify the previous checkout (HTTP {response.status_code}). '
+                    'Please try again later or contact support before trying another payment.'
+                )
             return Response(
-                {'detail': 'Could not verify your previous payment attempt. Please try again later.'},
+                {'detail': detail},
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 

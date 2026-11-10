@@ -599,6 +599,51 @@ class UserScopedEndpointPermissionTests(APITestCase):
 		self.assertEqual(payment.status, "pending")
 		self.assertFalse(InstallmentPlan.objects.filter(enrollment=enrollment).exists())
 
+	def test_missing_paystack_transaction_does_not_allow_unsafe_installment_switch(self):
+		self.course.installments_enabled = True
+		self.course.save(update_fields=["installments_enabled"])
+		enrollment = CourseEnrollment.objects.create(
+			student=self.student,
+			course=self.course,
+		)
+		payment = Payment.objects.create(
+			enrollment=enrollment,
+			amount="1000.00",
+			currency="NGN",
+			status="pending",
+			processor="paystack",
+			processor_reference="missing-full-payment",
+		)
+		self.client.force_authenticate(user=self.user)
+		verification_response = Mock(ok=False, status_code=404)
+		verification_response.json.return_value = {
+			"status": False,
+			"message": "Transaction reference not found",
+		}
+
+		with (
+			override_settings(PAYSTACK_SECRET_KEY="test-secret"),
+			patch(
+				"courses.views_payment.http_requests.get",
+				return_value=verification_response,
+			),
+		):
+			response = self.client.post(
+				"/api/v1/installments/initiate/",
+				{
+					"enrollment_id": enrollment.pk,
+					"currency": "NGN",
+					"installment_number": 1,
+				},
+				format="json",
+			)
+
+		self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
+		self.assertIn("same Paystack test/live environment", response.data["detail"])
+		payment.refresh_from_db()
+		self.assertEqual(payment.status, "pending")
+		self.assertFalse(InstallmentPlan.objects.filter(enrollment=enrollment).exists())
+
 	def test_installment_checkout_reuses_existing_pending_attempt(self):
 		self.course.installments_enabled = True
 		self.course.save(update_fields=["installments_enabled"])
