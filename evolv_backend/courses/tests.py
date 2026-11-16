@@ -914,7 +914,7 @@ class UserScopedEndpointPermissionTests(APITestCase):
 		self.assertEqual(installment.status, "paid")
 		initialize_request.assert_not_called()
 
-	def test_unauthorized_installment_verification_reuses_saved_checkout(self):
+	def test_unauthorized_installment_verification_does_not_reuse_stale_checkout(self):
 		self.course.installments_enabled = True
 		self.course.save(update_fields=["installments_enabled"])
 		CoursePrice.objects.create(
@@ -959,11 +959,8 @@ class UserScopedEndpointPermissionTests(APITestCase):
 				format="json",
 			)
 
-		self.assertEqual(response.status_code, status.HTTP_200_OK)
-		self.assertEqual(
-			response.data["authorization_url"],
-			"https://checkout.paystack.com/old",
-		)
+		self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
+		self.assertNotIn("authorization_url", response.data)
 		installment.refresh_from_db()
 		self.assertEqual(installment.status, "pending")
 		self.assertEqual(installment.processor_reference, "test-checkout-on-live-key")

@@ -953,9 +953,6 @@ def _resolve_pending_installment_attempt(installment, installment_number):
         )
     except http_requests.RequestException as exc:
         logger.error('Could not verify installment attempt %s: %s', installment.pk, exc)
-        resumed_checkout = resume_saved_checkout()
-        if resumed_checkout:
-            return resumed_checkout
         return Response(
             {'detail': 'Could not verify the previous installment checkout. Please try again later.'},
             status=status.HTTP_502_BAD_GATEWAY,
@@ -967,9 +964,6 @@ def _resolve_pending_installment_attempt(installment, installment_number):
             installment.pk,
             response.status_code,
         )
-        resumed_checkout = resume_saved_checkout()
-        if resumed_checkout:
-            return resumed_checkout
         if response.status_code == 401:
             detail = (
                 'Paystack rejected the backend credentials. Check the PAYSTACK_SECRET_KEY in Render '
@@ -1077,9 +1071,6 @@ def _resolve_pending_installment_attempt(installment, installment_number):
         gateway_status,
         installment.pk,
     )
-    resumed_checkout = resume_saved_checkout()
-    if resumed_checkout:
-        return resumed_checkout
     return Response(
         {'detail': 'The previous installment checkout status is unclear. Please contact support before retrying.'},
         status=status.HTTP_409_CONFLICT,
