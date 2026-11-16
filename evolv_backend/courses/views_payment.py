@@ -825,16 +825,18 @@ def _resolve_pending_full_payment_for_installment(enrollment):
             response.status_code,
             str(provider_message)[:300],
         )
-        if response.status_code == 401:
-            detail = (
-                'Paystack rejected the backend credentials. Check the PAYSTACK_SECRET_KEY in Render '
-                'and its test/live environment. The previous checkout has not been cleared.'
+        if response.status_code in (401, 404):
+            # Credentials mismatch or reference unknown (test key → live key switch).
+            # Mark as failed and unblock the student so they can switch to instalments.
+            logger.warning(
+                'Full payment %s: Paystack returned %s — marking as failed to unblock student.',
+                payment.pk,
+                response.status_code,
             )
-        elif response.status_code == 404:
-            detail = (
-                'Paystack could not find the previous checkout with the configured account or environment. '
-                'The previous checkout has not been cleared; contact support before retrying.'
-            )
+            payment.status = 'failed'
+            payment.processor_reference = None
+            payment.save(update_fields=['status', 'processor_reference'])
+            return None
         else:
             detail = (
                 f'Paystack could not verify the previous checkout (HTTP {response.status_code}). '
