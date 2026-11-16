@@ -964,16 +964,19 @@ def _resolve_pending_installment_attempt(installment, installment_number):
             installment.pk,
             response.status_code,
         )
-        if response.status_code == 401:
-            detail = (
-                'Paystack rejected the backend credentials. Check the PAYSTACK_SECRET_KEY in Render '
-                'and its test/live environment before retrying.'
+        if response.status_code in (401, 404):
+            # Credentials mismatch or reference unknown (e.g. test key → live key switch).
+            # Treat as abandoned so the student can retry rather than being permanently blocked.
+            logger.warning(
+                'Installment %s: Paystack returned %s — marking as failed to unblock student.',
+                installment.pk,
+                response.status_code,
             )
-        elif response.status_code == 404:
-            detail = (
-                'Paystack could not find this checkout in the configured account or environment. '
-                'Contact support before retrying.'
-            )
+            installment.status = 'failed'
+            installment.processor_reference = None
+            installment.authorization_url = ''
+            installment.save(update_fields=['status', 'processor_reference', 'authorization_url'])
+            return None
         else:
             detail = 'Could not verify the previous installment checkout. Please try again later.'
         return Response(

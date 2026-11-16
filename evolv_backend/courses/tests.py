@@ -914,7 +914,12 @@ class UserScopedEndpointPermissionTests(APITestCase):
 		self.assertEqual(installment.status, "paid")
 		initialize_request.assert_not_called()
 
-	def test_unauthorized_installment_verification_does_not_reuse_stale_checkout(self):
+	def test_unauthorized_installment_verification_unblocks_student_for_fresh_attempt(self):
+		"""
+		When Paystack returns 401 on an existing pending installment reference
+		(e.g. test key was used before switching to live key), the stale record
+		is marked failed and a fresh checkout is created so the student is not blocked.
+		"""
 		self.course.installments_enabled = True
 		self.course.save(update_fields=["installments_enabled"])
 		CoursePrice.objects.create(
@@ -940,6 +945,11 @@ class UserScopedEndpointPermissionTests(APITestCase):
 		)
 		self.client.force_authenticate(user=self.user)
 		verification_response = Mock(ok=False, status_code=401)
+		initialization_response = Mock(ok=True)
+		initialization_response.json.return_value = {
+			"status": True,
+			"data": {"authorization_url": "https://checkout.paystack.com/fresh"},
+		}
 
 		with (
 			override_settings(PAYSTACK_SECRET_KEY="test-secret"),
@@ -947,7 +957,10 @@ class UserScopedEndpointPermissionTests(APITestCase):
 				"courses.views_payment.http_requests.get",
 				return_value=verification_response,
 			),
-			patch("courses.views_payment.http_requests.post") as initialize_request,
+			patch(
+				"courses.views_payment.http_requests.post",
+				return_value=initialization_response,
+			) as initialize_request,
 		):
 			response = self.client.post(
 				"/api/v1/installments/initiate/",
@@ -959,12 +972,15 @@ class UserScopedEndpointPermissionTests(APITestCase):
 				format="json",
 			)
 
-		self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
-		self.assertNotIn("authorization_url", response.data)
+		# Student should be unblocked with a fresh checkout
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+		self.assertIn("authorization_url", response.data)
+		self.assertEqual(response.data["authorization_url"], "https://checkout.paystack.com/fresh")
 		installment.refresh_from_db()
-		self.assertEqual(installment.status, "pending")
-		self.assertEqual(installment.processor_reference, "test-checkout-on-live-key")
-		initialize_request.assert_not_called()
+		self.assertEqual(installment.status, "failed")
+		self.assertIsNone(installment.processor_reference)
+		self.assertEqual(installment.authorization_url, "")
+		initialize_request.assert_called_once()
 
 	def test_payment_webhook_rejects_missing_signature(self):
 		with override_settings(PAYSTACK_SECRET_KEY="test-secret"):

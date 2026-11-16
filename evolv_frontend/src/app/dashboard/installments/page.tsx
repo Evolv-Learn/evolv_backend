@@ -107,10 +107,20 @@ function InstalmentsContent() {
         // Local dev — no Paystack configured
         await fetchPlan();
       }
-    } catch {
-      setError(
-        'We could not start your payment. Please try again. If the problem continues, contact support for help.'
-      );
+    } catch (err: any) {
+      const backendMessage = err?.response?.data?.detail;
+      const httpStatus = err?.response?.status;
+
+      if (backendMessage) {
+        // Show the actual backend error so student knows what to do
+        setError(backendMessage);
+      } else if (httpStatus === 503) {
+        setError('Payment processor is temporarily unavailable. Please try again in a few minutes.');
+      } else if (httpStatus === 409) {
+        setError('You have an active payment in progress. Please complete or wait for it to expire before trying again.');
+      } else {
+        setError('We could not start your payment. Please try again. If the problem continues, contact us at evolvngo@gmail.com.');
+      }
     } finally {
       setIsPaying(false);
     }
