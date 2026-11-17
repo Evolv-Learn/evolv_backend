@@ -56,9 +56,16 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ["id", "user", "role", "has_application"]
 
     def get_has_application(self, obj):
+        from django.db.models import Q
+        # Has application if either:
+        # 1. A full payment has been completed, OR
+        # 2. The first instalment has been paid (50% upfront confirms the place)
         return Student.objects.filter(
             user=obj.user,
-            enrollments__payment__status='paid',
+        ).filter(
+            Q(enrollments__payment__status='paid') |
+            Q(enrollments__installment_plan__installments__installment_number=1,
+              enrollments__installment_plan__installments__status='paid')
         ).exists()
 
 

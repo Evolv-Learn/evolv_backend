@@ -973,13 +973,21 @@ class CourseEnrollmentAdminListView(generics.ListAPIView):
     """Admin: list all enrollments with student details."""
     serializer_class = CourseEnrollmentAdminSerializer
     permission_classes = [IsAdminUser]
-    queryset = CourseEnrollment.objects.filter(
-        payment__status='paid'
-    ).select_related('student', 'course').order_by('-applied_at')
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['status', 'course']
     search_fields = ['student__first_name', 'student__last_name', 'student__email', 'course__name']
     ordering_fields = ['applied_at', 'updated_at', 'status']
+
+    def get_queryset(self):
+        from django.db.models import Q
+        # Show enrollments that have either:
+        # 1. A completed full payment, OR
+        # 2. A paid first instalment (50% upfront confirms the application)
+        return CourseEnrollment.objects.filter(
+            Q(payment__status='paid') |
+            Q(installment_plan__installments__installment_number=1,
+              installment_plan__installments__status='paid')
+        ).select_related('student', 'course').distinct().order_by('-applied_at')
 
 
 class CourseEnrollmentUpdateStatusView(generics.UpdateAPIView):
