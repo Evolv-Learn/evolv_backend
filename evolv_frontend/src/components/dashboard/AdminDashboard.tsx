@@ -236,6 +236,23 @@ export default function AdminDashboard() {
               </div>
             </div>
           </Link>
+
+          <Link href="/admin/broadcast">
+            <div className="group relative bg-gradient-to-br from-pink-600 via-rose-500 to-red-600 rounded-2xl p-4 text-white hover:shadow-2xl transition-all cursor-pointer transform hover:-translate-y-2 border-2 border-pink-300 overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-white opacity-10 rounded-full -mr-8 -mt-8"></div>
+              <div className="relative z-10">
+                <div className="mb-3 group-hover:scale-110 transition-transform">
+                  <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                </div>
+                <h3 className="text-base font-bold mb-1 drop-shadow-md">Broadcast Email</h3>
+                <p className="text-xs opacity-95">Send to all users</p>
+                <div className="mt-3 flex items-center text-xs font-semibold bg-white bg-opacity-20 rounded-lg px-2 py-1 w-fit backdrop-blur-sm">
+                  <span>Send now</span>
+                  <span className="ml-2 group-hover:ml-3 transition-all">→</span>
+                </div>
+              </div>
+            </div>
+          </Link>
         </div>
 
 
