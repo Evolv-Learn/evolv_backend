@@ -73,6 +73,11 @@ from .views_extended import (
     CourseCurriculumView,
 )
 
+from .views_broadcast import (
+    BroadcastPreviewView,
+    BroadcastSendView,
+)
+
 from .views_payment import (
     VerifyPaymentView,
     PublicPricingListView,
@@ -191,6 +196,9 @@ urlpatterns = [
     path("instructors/<int:user_id>/profile/", PublicInstructorProfileView.as_view(), name="public-instructor-profile"),
 
     path("health/", health_check, name="health-check"),
+
+    path("admin/broadcast/preview/", BroadcastPreviewView.as_view(), name="admin-broadcast-preview"),
+    path("admin/broadcast/send/", BroadcastSendView.as_view(), name="admin-broadcast-send"),
 
     # ── Pricing & Payments ──────────────────────────────────────────────────
     path("pricing/", PublicPricingListView.as_view(), name="pricing-list"),
